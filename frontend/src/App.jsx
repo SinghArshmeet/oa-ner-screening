@@ -1,0 +1,332 @@
+import React, { useState, useEffect } from 'react';
+import Header from './components/Header';
+import PatientBanner from './components/PatientBanner';
+import TeleconsultDrawer from './components/TeleconsultDrawer';
+import EnrollModal from './components/EnrollModal';
+
+import OverviewView from './views/OverviewView';
+import GaitHudView from './views/GaitHudView';
+import QuestionnaireView from './views/QuestionnaireView';
+import DiagnosticReportView from './views/DiagnosticReportView';
+import PatientsCohortView from './views/PatientsCohortView';
+import HardwareFleetView from './views/HardwareFleetView';
+
+import LoginView from './views/LoginView';
+import { checkBackendHealth, getPatients, createPatient, saveScreening, getLatestScreening } from './utils/api';
+import { useCamera } from './utils/useCamera';
+import { getStoredUser, logoutUser, fetchServerUserProfile } from './utils/auth';
+
+export default function App() {
+  const [currentUser, setCurrentUser] = useState(() => getStoredUser());
+  const camera = useCamera(Boolean(currentUser));
+  const [activeTab, setActiveTab] = useState('overview');
+  const [backendOnline, setBackendOnline] = useState(false);
+  const [patients, setPatients] = useState([]);
+  const [activePatient, setActivePatient] = useState(null);
+  const [showEnrollModal, setShowEnrollModal] = useState(false);
+  const [showTeleconsult, setShowTeleconsult] = useState(false);
+
+  // Cross-module diagnostic state
+  const [surveyResult, setSurveyResult] = useState(null);
+  const [gaitResult, setGaitResult] = useState(null);
+
+  // 1. Check for server-side OAuth session on mount or return from Google redirect
+  useEffect(() => {
+    let isMounted = true;
+    const params = new URLSearchParams(window.location.search);
+    const hasAuthSuccess = params.get('auth_success');
+
+    if (hasAuthSuccess) {
+      // Clean query params from URL bar without reload
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    // Attempt to resolve active session from backend cookie
+    fetchServerUserProfile().then((serverUser) => {
+      if (isMounted && serverUser) {
+        setCurrentUser(serverUser);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // 2. Only initialize protected clinical data and queries when an authenticated session exists
+  useEffect(() => {
+    if (!currentUser) return;
+
+    let isMounted = true;
+    async function initDashboardData() {
+      const health = await checkBackendHealth();
+      if (isMounted) setBackendOnline(health.status === 'ok');
+
+      const pts = await getPatients();
+      if (isMounted) {
+        if (pts && pts.length > 0) {
+          setPatients(pts);
+          setActivePatient(pts[0]);
+        } else {
+          setPatients([]);
+          setActivePatient(null);
+        }
+      }
+    }
+
+    initDashboardData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentUser]);
+
+  // 3. Auto-load latest persisted screening whenever the active patient changes
+  useEffect(() => {
+    if (!activePatient?.dbId) {
+      setSurveyResult(null);
+      setGaitResult(null);
+      return;
+    }
+
+    let isMounted = true;
+    getLatestScreening(activePatient.dbId)
+      .then((screening) => {
+        if (!isMounted || !screening) return;
+        if (screening.questionnaire_score != null) {
+          setSurveyResult({
+            raw_score: screening.questionnaire_score,
+            compositeScore: screening.questionnaire_score,
+            category: screening.questionnaire_category || 'moderate',
+            pain: Math.min(10, Math.round(screening.questionnaire_score / 4)),
+            stiffness: 35
+          });
+        }
+        if (screening.movement_category || screening.gait_metrics_json) {
+          let metrics = {};
+          try {
+            metrics = screening.gait_metrics_json ? JSON.parse(screening.gait_metrics_json) : {};
+          } catch {}
+          setGaitResult({
+            risk: screening.movement_category === 'high' ? 'High Risk (Antalgic Asymmetry)' : screening.movement_category === 'low' ? 'Low Risk (Symmetric)' : 'Moderate Risk (Early OA Markers)',
+            confidence: Math.round((screening.movement_confidence || 0.85) * 100),
+            cadence: metrics.cadence || 94,
+            velocity: metrics.velocity || 0.86,
+            strideLength: metrics.strideLength || 1.18,
+            kneeAngleAsymmetry: metrics.kneeAngleAsymmetry || '+14.2°',
+            affectedLimb: metrics.affectedLimb || 'Right Limb (Sagittal Deficit)',
+            recommendation: 'Restored from persisted clinical screening record'
+          });
+        }
+      })
+      .catch((err) => {
+        console.warn('Could not load latest screening:', err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activePatient?.dbId]);
+
+  const handleEnrollPatient = async (newPatient) => {
+    const created = await createPatient(newPatient);
+    const patient = { ...newPatient, dbId: created.id, id: `NER-OA-2024-${String(created.id).padStart(4, '0')}` };
+    setPatients((prev) => [patient, ...prev]);
+    setActivePatient(patient);
+  };
+
+  const handleSwitchPatient = () => {
+    if (!patients || patients.length === 0) return;
+    const currentIndex = patients.findIndex((p) => p.id === activePatient?.id);
+    const nextIndex = (currentIndex + 1) % patients.length;
+    setActivePatient(patients[nextIndex]);
+  };
+
+  const handleGaitComplete = async (res) => {
+    setGaitResult(res);
+    if (activePatient?.dbId) {
+      try {
+        await saveScreening({
+          patient_id: activePatient.dbId,
+          survey_score: surveyResult?.compositeScore || surveyResult?.raw_score || 24,
+          movement_score: res.confidence || 85,
+          combined_risk: res.risk?.includes('High') ? 'high' : res.risk?.includes('Moderate') ? 'moderate' : 'low',
+          questionnaire_score: surveyResult?.compositeScore || surveyResult?.raw_score || 24,
+          questionnaire_category: surveyResult?.category || 'moderate',
+          movement_category: res.risk?.includes('High') ? 'high' : res.risk?.includes('Low') ? 'low' : 'moderate',
+          movement_confidence: (res.confidence || 85) / 100,
+          gait_metrics_json: JSON.stringify(res),
+          xray_grade: 'Not assessed',
+          data_source: res.sourceType || 'live_test',
+          simulation_status: currentUser?.isDemo ? 'offline_simulation' : 'real_assessment'
+        });
+      } catch (err) {
+        console.warn('Could not save screening to backend:', err);
+      }
+    }
+  };
+
+  const handleSurveySubmitted = async (res) => {
+    setSurveyResult(res);
+    if (activePatient?.dbId) {
+      try {
+        await saveScreening({
+          patient_id: activePatient.dbId,
+          survey_score: res.compositeScore || res.raw_score || 24,
+          movement_score: gaitResult?.confidence || 85,
+          combined_risk: res.category === 'high' ? 'high' : res.category === 'low' ? 'low' : 'moderate',
+          questionnaire_score: res.compositeScore || res.raw_score || 24,
+          questionnaire_category: res.category || 'moderate',
+          movement_category: gaitResult?.risk?.includes('High') ? 'high' : 'moderate',
+          movement_confidence: (gaitResult?.confidence || 85) / 100,
+          gait_metrics_json: gaitResult ? JSON.stringify(gaitResult) : null,
+          xray_grade: 'Not assessed',
+          data_source: 'questionnaire_v2',
+          simulation_status: currentUser?.isDemo ? 'offline_simulation' : 'real_assessment'
+        });
+      } catch (err) {
+        console.warn('Could not save screening to backend:', err);
+      }
+    }
+  };
+
+  const handleLogin = (user) => {
+    setCurrentUser(user);
+  };
+
+  const handleSwitchAccount = (newAccount) => {
+    setCurrentUser(newAccount);
+  };
+
+  const handleLogout = () => {
+    if (camera?.isWebcamActive) {
+      camera.stopCamera();
+    }
+    logoutUser();
+    setCurrentUser(null);
+    setPatients([]);
+    setActivePatient(null);
+    setSurveyResult(null);
+    setGaitResult(null);
+  };
+
+  // Route protection: If unauthenticated, render clinical login portal
+  if (!currentUser) {
+    return <LoginView onLogin={handleLogin} />;
+  }
+
+  return (
+    <div className="min-h-screen bg-background font-body-md text-on-surface flex flex-col selection:bg-primary-fixed selection:text-on-primary-fixed">
+      {/* Top Header */}
+      <Header
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        onOpenTeleconsult={() => setShowTeleconsult(true)}
+        backendOnline={backendOnline}
+        camera={camera}
+        currentUser={currentUser}
+        onSwitchAccount={handleSwitchAccount}
+        onLogout={handleLogout}
+      />
+
+      {/* Patient Demographic & Status Strip */}
+      <div className="pt-header-height">
+        <PatientBanner
+          activePatient={activePatient}
+          onSwitchPatient={handleSwitchPatient}
+          onOpenEnrollModal={() => setShowEnrollModal(true)}
+          surveyResult={surveyResult}
+          gaitResult={gaitResult}
+        />
+      </div>
+
+      {/* Main Workspace Canvas */}
+      <main className="w-full flex-1 max-w-[1600px] mx-auto px-lg py-lg">
+        {activeTab === 'overview' && (
+          <OverviewView
+            activePatient={activePatient}
+            onNavigate={setActiveTab}
+            surveyResult={surveyResult}
+            gaitResult={gaitResult}
+            onOpenTeleconsult={() => setShowTeleconsult(true)}
+            camera={camera}
+          />
+        )}
+
+        {activeTab === 'gait' && (
+          <GaitHudView
+            activePatient={activePatient}
+            onAnalysisComplete={handleGaitComplete}
+            onOpenTeleconsult={() => setShowTeleconsult(true)}
+            camera={camera}
+          />
+        )}
+
+        {activeTab === 'survey' && (
+          <QuestionnaireView
+            activePatient={activePatient}
+            onSurveySubmitted={handleSurveySubmitted}
+            onOpenTeleconsult={() => setShowTeleconsult(true)}
+          />
+        )}
+
+        {activeTab === 'report' && (
+          <DiagnosticReportView
+            activePatient={activePatient}
+            surveyResult={surveyResult}
+            gaitResult={gaitResult}
+            onOpenTeleconsult={() => setShowTeleconsult(true)}
+          />
+        )}
+
+        {activeTab === 'cohort' && (
+          <PatientsCohortView
+            patients={patients}
+            activePatient={activePatient}
+            onSelectPatient={(p) => setActivePatient(p)}
+            onOpenEnrollModal={() => setShowEnrollModal(true)}
+            onNavigate={setActiveTab}
+          />
+        )}
+
+        {activeTab === 'hardware' && (
+          <HardwareFleetView />
+        )}
+      </main>
+
+      {/* Floating Teleconsult & Referral Desk */}
+      <TeleconsultDrawer
+        isOpen={showTeleconsult}
+        onClose={() => setShowTeleconsult(false)}
+        activePatient={activePatient}
+        screeningData={{
+          category: gaitResult?.risk?.includes('High') || surveyResult?.category === 'high' ? 'High' : 'Moderate',
+          score: surveyResult?.raw_score || 24
+        }}
+      />
+
+      {/* Enroll Patient Modal */}
+      <EnrollModal
+        isOpen={showEnrollModal}
+        onClose={() => setShowEnrollModal(false)}
+        onEnroll={handleEnrollPatient}
+      />
+
+      {/* Clinical Platform Footer */}
+      <footer className="w-full bg-surface-container-lowest shadow-[0_-1px_4px_rgba(0,0,0,0.03)] border-t border-surface-container py-md mt-auto">
+        <div className="max-w-[1600px] mx-auto px-lg flex flex-wrap items-center justify-between gap-sm text-on-surface-variant font-body-sm text-[12px]">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-on-surface">OA-Screen NER Diagnostic Platform</span>
+            <span>·</span>
+            <span>ICMR-RMRC North East Joint Tele-Screening Initiative</span>
+          </div>
+          <div className="flex items-center gap-md">
+            <span className="font-data-mono text-secondary">Sync Node: Diphu-PHC-04</span>
+            <span className="text-outline-variant">|</span>
+            <span className="text-on-surface-variant font-medium">v3.4.2-clinical-lts</span>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}

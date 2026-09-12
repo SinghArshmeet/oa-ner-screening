@@ -1,0 +1,621 @@
+import React, { useState } from 'react';
+import { ROLES, DEMO_ACCOUNTS, loginUser, loginAsDemo } from '../utils/auth';
+
+export default function LoginView({ onLogin }) {
+  const [selectedRole, setSelectedRole] = useState('screener');
+  const [identifier, setIdentifier] = useState('screener@phc.assam.gov.in');
+  const [password, setPassword] = useState('demo123');
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberDevice, setRememberDevice] = useState(true);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [showForgotModal, setShowForgotModal] = useState(false);
+
+  // Switch role and update default demo credential suggestion
+  const handleRoleSelect = (roleId) => {
+    setSelectedRole(roleId);
+    setErrorMessage('');
+    const demo = DEMO_ACCOUNTS.find((d) => d.role === roleId);
+    if (demo) {
+      setIdentifier(demo.email);
+      setPassword(demo.password);
+    }
+  };
+
+  // Quick fill active demo credentials
+  const handleQuickFill = () => {
+    const demo = DEMO_ACCOUNTS.find((d) => d.role === selectedRole);
+    if (demo) {
+      setIdentifier(demo.email);
+      setPassword(demo.password);
+      setErrorMessage('');
+    }
+  };
+
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    setErrorMessage('');
+
+    if (!identifier.trim()) {
+      setErrorMessage('Please enter your Staff ID or registered PHC email address.');
+      return;
+    }
+
+    if (!password.trim()) {
+      setErrorMessage('Please enter your station access password.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const user = await loginUser({
+        identifier,
+        password,
+        roleId: selectedRole,
+        rememberDevice
+      });
+      setIsSubmitting(false);
+      onLogin(user);
+    } catch (err) {
+      setIsSubmitting(false);
+      setErrorMessage(err.message || 'Authentication failed. Please verify credentials.');
+    }
+  };
+
+  const [googleAuthConfigured, setGoogleAuthConfigured] = useState(false);
+  const [googleNotice, setGoogleNotice] = useState('');
+
+  // Check if backend has Google credentials configured
+  React.useEffect(() => {
+    let active = true;
+    fetch('http://localhost:8000/auth/status', {
+      headers: { Accept: 'application/json' },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (active && data) {
+          setGoogleAuthConfigured(Boolean(data.google_configured));
+        }
+      })
+      .catch(() => {
+        // backend offline / edge mode
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const handleDemoBypass = () => {
+    const user = loginAsDemo(selectedRole);
+    onLogin(user);
+  };
+
+  const handleGoogleLogin = () => {
+    setGoogleNotice('');
+    setErrorMessage('');
+    if (!googleAuthConfigured) {
+      setGoogleNotice(
+        'Google authentication is not configured. For development and field testing, please use Station Credentials or continue in Offline Simulation / Demo Mode.'
+      );
+      return;
+    }
+    // Secure backend-managed OAuth 2.0 PKCE flow (Redirects to backend -> Google -> callback -> frontend)
+    window.location.href = `http://localhost:8000/auth/google/login?role=${encodeURIComponent(selectedRole)}`;
+  };
+
+  const currentRoleConfig = ROLES[selectedRole] || ROLES.screener;
+
+  return (
+    <div className="min-h-screen bg-background font-body-md text-on-surface flex flex-col justify-between selection:bg-primary-fixed selection:text-on-primary-fixed">
+      {/* Top Clinical Agency Bar */}
+      <header className="w-full bg-inverse-surface text-surface py-2 px-lg border-b border-white/10 flex items-center justify-between text-xs">
+        <div className="flex items-center gap-xs">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span className="font-data-mono text-tertiary-fixed font-semibold uppercase tracking-wider">
+            ICMR-RMRC Frontline Tele-Screening Network
+          </span>
+          <span className="text-white/20 hidden sm:inline">|</span>
+          <span className="text-surface-dim hidden sm:inline">Station ID: PHC-DIPHU-NODE-01</span>
+        </div>
+        <div className="flex items-center gap-sm">
+          <span className="font-label-sm text-[11px] text-surface-dim flex items-center gap-1">
+            <span className="material-symbols-outlined text-[14px] text-tertiary">location_on</span>
+            Karbi Anglong, Assam
+          </span>
+          <span className="px-1.5 py-0.5 rounded bg-white/10 font-data-mono text-[10px] text-tertiary-fixed">
+            Offline Edge Ready
+          </span>
+        </div>
+      </header>
+
+      {/* Main Two-Column Portal Container */}
+      <main className="flex-1 max-w-[1400px] w-full mx-auto px-md sm:px-lg py-lg lg:py-2xl flex items-center justify-center">
+        <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-xl lg:gap-2xl items-stretch">
+          
+          {/* LEFT COLUMN: Branded Operational Clinical Showcase */}
+          <section
+            aria-label="OA-Screen NER Clinical Overview"
+            className="lg:col-span-6 xl:col-span-7 flex flex-col justify-between p-lg sm:p-xl rounded-2xl bg-surface-container-low border border-surface-container shadow-sm"
+          >
+            <div>
+              {/* Institution & App Header */}
+              <div className="flex items-center gap-md mb-md">
+                <div className="w-14 h-14 rounded-2xl bg-inverse-surface border border-white/15 p-1.5 shadow-md flex items-center justify-center shrink-0">
+                  <img
+                    src="/logo.png"
+                    alt="OA-Screen NER Logo"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                <div>
+                  <div className="flex items-center gap-xs flex-wrap">
+                    <h1 className="font-headline-lg text-[26px] sm:text-[30px] text-on-surface font-extrabold tracking-tight">
+                      OA-Screen NER
+                    </h1>
+                    <span className="px-xs py-2xs rounded bg-primary text-on-primary font-data-mono text-[10px] uppercase font-bold tracking-wider">
+                      ICMR/NER Protocol
+                    </span>
+                  </div>
+                  <p className="font-label-sm text-body-sm text-secondary font-medium">
+                    Multimodal AI Musculoskeletal Screening · North Eastern Region
+                  </p>
+                </div>
+              </div>
+
+              {/* Station Deployment Badge */}
+              <div className="inline-flex items-center gap-xs px-sm py-1.5 rounded-full bg-surface-container text-on-surface font-label-sm text-[12px] font-semibold mb-lg border border-outline-variant/30">
+                <span className="material-symbols-outlined text-[16px] text-primary">local_hospital</span>
+                <span>Frontline Field Station: Diphu CHC & Sub-Centers, Assam Hub</span>
+              </div>
+
+              {/* Core Operational Capabilities Matrix */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-sm mb-lg">
+                <div className="p-md rounded-xl bg-surface-container-lowest border border-surface-container flex flex-col justify-between">
+                  <div className="flex items-center gap-xs mb-1">
+                    <span className="material-symbols-outlined text-primary text-[20px]">directions_walk</span>
+                    <h3 className="font-headline-sm text-sm font-bold text-on-surface">
+                      Gait Biomechanics HUD
+                    </h3>
+                  </div>
+                  <p className="font-body-sm text-secondary text-xs leading-relaxed">
+                    MediaPipe 33-point sagittal skeleton capture at 30 FPS. Measures antalgic lag and knee ROM asymmetry in 8-second walking trials.
+                  </p>
+                </div>
+
+                <div className="p-md rounded-xl bg-surface-container-lowest border border-surface-container flex flex-col justify-between">
+                  <div className="flex items-center gap-xs mb-1">
+                    <span className="material-symbols-outlined text-tertiary text-[20px]">checklist</span>
+                    <h3 className="font-headline-sm text-sm font-bold text-on-surface">
+                      KOOS-NER Symptom Survey
+                    </h3>
+                  </div>
+                  <p className="font-body-sm text-secondary text-xs leading-relaxed">
+                    Visual Analog Scales (VAS) and tea plantation agrarian workload matrix available in English, Assamese, Bengali, and Hindi.
+                  </p>
+                </div>
+
+                <div className="p-md rounded-xl bg-surface-container-lowest border border-surface-container flex flex-col justify-between">
+                  <div className="flex items-center gap-xs mb-1">
+                    <span className="material-symbols-outlined text-error text-[20px]">radiology</span>
+                    <h3 className="font-headline-sm text-sm font-bold text-on-surface">
+                      Multimodal Decision Support
+                    </h3>
+                  </div>
+                  <p className="font-body-sm text-secondary text-xs leading-relaxed">
+                    Tri-modal risk fusion combining kinematic stance, symptom burden, and Kellgren-Lawrence radiographic grade estimation (ROC-AUC 74.4%).
+                  </p>
+                </div>
+
+                <div className="p-md rounded-xl bg-surface-container-lowest border border-surface-container flex flex-col justify-between">
+                  <div className="flex items-center gap-xs mb-1">
+                    <span className="material-symbols-outlined text-primary text-[20px]">cell_tower</span>
+                    <h3 className="font-headline-sm text-sm font-bold text-on-surface">
+                      Rural Specialist Mesh
+                    </h3>
+                  </div>
+                  <p className="font-body-sm text-secondary text-xs leading-relaxed">
+                    Instant 1-click clinical dossier transfer to orthopedic specialists at GMCH Guwahati, Diphu Civil Hospital, and AMCH Dibrugarh.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Edge AI & Offline Diagnostics Status Card */}
+            <div className="p-md rounded-xl bg-inverse-surface text-surface border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-md">
+              <div className="flex items-center gap-sm">
+                <div className="w-10 h-10 rounded-xl bg-tertiary-container/30 border border-tertiary-fixed-dim/40 flex items-center justify-center text-tertiary-fixed shrink-0">
+                  <span className="material-symbols-outlined text-[22px]">memory</span>
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <h4 className="font-headline-sm text-xs font-bold text-surface-container-lowest uppercase tracking-wider">
+                      Edge-AI Baseline Loaded
+                    </h4>
+                    <span className="px-1.5 py-0.5 rounded bg-emerald-900/60 text-emerald-300 font-data-mono text-[9px] font-bold border border-emerald-500/40">
+                      OFFLINE ACTIVE
+                    </span>
+                  </div>
+                  <p className="font-body-sm text-surface-dim text-[11px] mt-0.5">
+                    Local inference runs on frontline station CPU without requiring constant cloud connectivity.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex sm:flex-col items-end gap-xs text-right shrink-0">
+                <span className="font-data-mono text-tertiary-fixed text-[11px] font-semibold">
+                  MediaPipe Pose v2.4
+                </span>
+                <span className="font-data-mono text-surface-dim text-[10px]">
+                  Mesh Bus: 192.168.1.105
+                </span>
+              </div>
+            </div>
+          </section>
+
+          {/* RIGHT COLUMN: Focused Clinical Login Terminal */}
+          <section
+            aria-label="Clinical Sign In Form"
+            className="lg:col-span-6 xl:col-span-5 flex flex-col justify-center"
+          >
+            <div className="w-full bg-surface-container-lowest rounded-2xl shadow-xl border border-surface-container p-lg sm:p-xl">
+              
+              {/* Form Header */}
+              <div className="mb-md pb-sm border-b border-surface-container">
+                <div className="flex items-center justify-between gap-xs mb-1">
+                  <span className="font-headline-sm text-lg font-bold text-on-surface">
+                    Station Terminal Sign In
+                  </span>
+                  <span className="px-xs py-0.5 rounded bg-surface-container-high text-primary font-data-mono text-[10px] font-bold uppercase">
+                    NER-SOP-09
+                  </span>
+                </div>
+                <p className="font-body-sm text-secondary text-xs">
+                  Authorize your PHC screening session to access patient triage, gait camera feeds, and diagnostic reports.
+                </p>
+              </div>
+
+              {/* 1. Accessible Role Segmented Selector */}
+              <div className="mb-md">
+                <label className="block font-label-sm text-[11px] text-on-surface-variant font-bold uppercase tracking-wider mb-1.5">
+                  Select Screener Operational Role
+                </label>
+                <div
+                  role="radiogroup"
+                  aria-label="Select Station Role"
+                  className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-surface-container-low border border-surface-container"
+                >
+                  {Object.values(ROLES).map((role) => {
+                    const isSelected = selectedRole === role.id;
+                    return (
+                      <button
+                        key={role.id}
+                        role="radio"
+                        aria-checked={isSelected}
+                        onClick={() => handleRoleSelect(role.id)}
+                        className={`flex flex-col items-center justify-center p-2 rounded-lg text-center transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-primary text-on-primary shadow-sm font-semibold'
+                            : 'text-secondary hover:text-on-surface hover:bg-white/60'
+                        }`}
+                        type="button"
+                      >
+                        <span className="material-symbols-outlined text-[18px] mb-0.5">{role.icon}</span>
+                        <span className="font-label-sm text-[11px] leading-tight block">
+                          {role.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="font-body-sm text-[11px] text-secondary mt-1.5 flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[14px] text-primary">info</span>
+                  <span>{currentRoleConfig.description}</span>
+                </p>
+              </div>
+
+              {/* Error Notification Alert */}
+              {errorMessage && (
+                <div
+                  role="alert"
+                  className="mb-md p-sm rounded-xl bg-error-container/30 border border-error/50 text-on-surface flex items-start gap-xs animate-fade-in"
+                >
+                  <span className="material-symbols-outlined text-error text-[20px] shrink-0 mt-0.5">
+                    error
+                  </span>
+                  <div className="flex-1">
+                    <span className="font-label-md text-xs font-bold text-error block">
+                      Authentication Alert
+                    </span>
+                    <p className="font-body-sm text-xs text-on-surface mt-0.5">
+                      {errorMessage}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* 2. Authentication Form */}
+              <form onSubmit={handleFormSubmit} noValidate className="space-y-md">
+                {/* Staff ID or Email Input */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label
+                      htmlFor="identifier-input"
+                      className="font-label-sm text-xs font-bold text-on-surface uppercase tracking-wide"
+                    >
+                      Staff ID or PHC Email *
+                    </label>
+                    <span className="text-[10px] text-secondary font-data-mono">
+                      e.g., {currentRoleConfig.defaultEmail}
+                    </span>
+                  </div>
+                  <div className="relative flex items-center">
+                    <span className="material-symbols-outlined absolute left-3 text-secondary text-[18px] pointer-events-none">
+                      badge
+                    </span>
+                    <input
+                      id="identifier-input"
+                      type="text"
+                      required
+                      autoComplete="username"
+                      value={identifier}
+                      onChange={(e) => {
+                        setIdentifier(e.target.value);
+                        if (errorMessage) setErrorMessage('');
+                      }}
+                      placeholder="e.g., screener@phc.assam.gov.in"
+                      className="w-full bg-surface-container-low text-on-surface placeholder:text-outline text-xs rounded-xl pl-10 pr-3 py-2.5 border border-surface-container focus:outline-none focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition"
+                    />
+                  </div>
+                </div>
+
+                {/* Password Input with Show/Hide Toggle */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label
+                      htmlFor="password-input"
+                      className="font-label-sm text-xs font-bold text-on-surface uppercase tracking-wide"
+                    >
+                      Station Access Password *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowForgotModal(true)}
+                      className="font-label-sm text-[11px] text-primary hover:underline"
+                    >
+                      Forgot access?
+                    </button>
+                  </div>
+                  <div className="relative flex items-center">
+                    <span className="material-symbols-outlined absolute left-3 text-secondary text-[18px] pointer-events-none">
+                      lock
+                    </span>
+                    <input
+                      id="password-input"
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      autoComplete="current-password"
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        if (errorMessage) setErrorMessage('');
+                      }}
+                      placeholder="Enter station password"
+                      className="w-full bg-surface-container-low text-on-surface placeholder:text-outline text-xs rounded-xl pl-10 pr-10 py-2.5 border border-surface-container focus:outline-none focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      className="absolute right-3 text-secondary hover:text-on-surface transition p-1"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">
+                        {showPassword ? 'visibility_off' : 'visibility'}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Remember Device Checkbox & Quickfill helper */}
+                <div className="flex items-center justify-between pt-1">
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={rememberDevice}
+                      onChange={(e) => setRememberDevice(e.target.checked)}
+                      className="w-4 h-4 accent-primary rounded cursor-pointer"
+                    />
+                    <span className="font-label-sm text-xs text-secondary">
+                      Remember this station terminal
+                    </span>
+                  </label>
+
+                  <button
+                    type="button"
+                    onClick={handleQuickFill}
+                    className="font-label-sm text-[11px] text-tertiary hover:text-tertiary-container font-semibold underline flex items-center gap-0.5"
+                    title="Populate recommended demo credentials for selected role"
+                  >
+                    <span className="material-symbols-outlined text-[13px]">magic_button</span>
+                    Fill Demo Key
+                  </button>
+                </div>
+
+                {/* Submit Action Button */}
+                <div className="pt-xs space-y-xs">
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className={`w-full py-2.5 px-md rounded-xl font-label-md text-sm font-bold text-on-primary bg-primary hover:bg-primary-container shadow-md transition-all flex items-center justify-center gap-2 ${
+                      isSubmitting ? 'opacity-70 cursor-not-allowed' : 'active:scale-95'
+                    }`}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin"></span>
+                        <span>Verifying Station Credentials...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="material-symbols-outlined text-[18px]">login</span>
+                        <span>Sign In to Screening Station</span>
+                      </>
+                    )}
+                  </button>
+
+                  {/* Google Authentication Flow */}
+                  <div className="pt-1">
+                    <button
+                      type="button"
+                      onClick={handleGoogleLogin}
+                      className="w-full py-2.5 px-md rounded-xl font-label-md text-xs font-semibold text-on-surface bg-surface-container-lowest hover:bg-surface-container border border-outline-variant/60 shadow-xs transition-all flex items-center justify-center gap-2.5 active:scale-95"
+                    >
+                      <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                        <path
+                          fill="#4285F4"
+                          d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                        />
+                        <path
+                          fill="#34A853"
+                          d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                        />
+                        <path
+                          fill="#FBBC05"
+                          d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                        />
+                        <path
+                          fill="#EA4335"
+                          d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                        />
+                      </svg>
+                      <span>Continue with Google</span>
+                    </button>
+
+                    {googleNotice && (
+                      <div className="mt-2 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 text-[11px] flex items-start gap-1.5">
+                        <span className="material-symbols-outlined text-[15px] text-amber-600 shrink-0 mt-0.5">info</span>
+                        <span>{googleNotice}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 1-Click Local Demo Mode Action */}
+                  <div className="pt-2">
+                    <div className="relative flex items-center justify-center my-2">
+                      <div className="border-t border-surface-container w-full"></div>
+                      <span className="bg-surface-container-lowest px-2 font-label-sm text-[10px] uppercase text-secondary font-bold tracking-wider absolute">
+                        Quick Frontline Evaluation
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleDemoBypass}
+                      className="w-full py-2 px-md rounded-xl font-label-md text-xs font-semibold text-on-surface bg-surface-container-low hover:bg-surface-container border border-outline-variant/40 shadow-xs transition-all flex items-center justify-center gap-2 active:scale-95"
+                    >
+                      <span className="material-symbols-outlined text-[16px] text-tertiary">bolt</span>
+                      <span>Continue in Demo Mode</span>
+                      <span className="px-1.5 py-0.5 rounded bg-tertiary-container/30 text-tertiary font-data-mono text-[9px] font-bold">
+                        Offline Simulation
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </form>
+
+              {/* Demo Credentials Cheat-Sheet Card */}
+              <div className="mt-md p-xs px-sm rounded-xl bg-surface-container-low/60 border border-surface-container text-[11px] text-secondary">
+                <span className="font-semibold text-on-surface block mb-0.5">
+                  Frontline Trial Credentials:
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 font-data-mono text-[10px]">
+                  <div>
+                    <span className="text-primary font-bold">Screener:</span> demo123
+                  </div>
+                  <div>
+                    <span className="text-tertiary font-bold">MO:</span> demo123
+                  </div>
+                  <div>
+                    <span className="text-on-surface font-bold">Admin:</span> admin123
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+        </div>
+      </main>
+
+      {/* Institutional Clinical Footer */}
+      <footer className="w-full bg-surface-container-lowest shadow-[0_-1px_4px_rgba(0,0,0,0.03)] border-t border-surface-container py-sm mt-auto">
+        <div className="max-w-[1400px] mx-auto px-lg flex flex-wrap items-center justify-between gap-sm text-secondary font-body-sm text-[11px]">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-on-surface">OA-Screen NER Diagnostic Platform</span>
+            <span>·</span>
+            <span>ICMR-RMRC North East Joint Tele-Screening Initiative</span>
+          </div>
+          <div className="flex items-center gap-md">
+            <span className="italic text-secondary font-normal">
+              Research prototype — not for standalone diagnosis
+            </span>
+            <span className="text-outline-variant">|</span>
+            <span className="font-data-mono font-medium text-on-surface">v3.4.2-clinical-lts</span>
+          </div>
+        </div>
+      </footer>
+
+      {/* Forgot Password / Station Help Modal */}
+      {showForgotModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center p-md bg-black/60 backdrop-blur-sm animate-fade-in"
+        >
+          <div className="w-full max-w-md bg-surface-container-lowest rounded-2xl shadow-2xl border border-outline-variant/30 overflow-hidden">
+            <div className="px-lg py-md bg-inverse-surface text-surface flex items-center justify-between">
+              <div className="flex items-center gap-xs">
+                <span className="material-symbols-outlined text-[20px] text-primary-fixed">help</span>
+                <h3 className="font-headline-sm text-sm font-bold text-surface">
+                  Station Access Recovery SOP
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowForgotModal(false)}
+                className="p-1 rounded-lg text-surface-dim hover:text-white hover:bg-white/10 transition"
+                type="button"
+                aria-label="Close recovery dialog"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            </div>
+
+            <div className="p-lg space-y-sm text-xs text-secondary">
+              <p className="text-on-surface font-medium">
+                Under the <strong>ICMR-NER-SOP-09</strong> clinical protocol, station passwords cannot be reset over public unencrypted SMS or email.
+              </p>
+              <div className="p-sm rounded-lg bg-surface-container border border-surface-container-high space-y-1">
+                <div className="font-semibold text-on-surface">Station IT Desk (Karbi Anglong Hub):</div>
+                <div className="font-data-mono text-[11px]">Phone / Intercom: Ext. 204 (03671-272210)</div>
+                <div className="font-data-mono text-[11px]">Station Admin: admin.diphu@icmr.gov.in</div>
+                <div className="text-[10px] text-secondary">Hours: 08:00 - 18:00 IST (Mon-Sat)</div>
+              </div>
+              <p className="text-[11px]">
+                For instant trial and testing on this device, you can use the default credential <strong>demo123</strong> or click <strong>Continue in Local Demo Mode</strong>.
+              </p>
+            </div>
+
+            <div className="px-lg py-sm bg-surface-container-low border-t border-surface-container flex justify-end">
+              <button
+                onClick={() => setShowForgotModal(false)}
+                className="px-md py-1.5 rounded-lg bg-primary text-on-primary font-label-md text-xs font-bold shadow-xs hover:bg-primary-container transition"
+                type="button"
+              >
+                Understood
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

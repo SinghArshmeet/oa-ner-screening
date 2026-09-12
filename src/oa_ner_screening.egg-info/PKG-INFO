@@ -1,0 +1,13 @@
+Metadata-Version: 2.4
+Name: oa-ner-screening
+Version: 0.1.0
+Summary: Research-only local OA gait screening baseline
+Requires-Python: <3.13,>=3.10
+Requires-Dist: mediapipe==0.10.14
+Requires-Dist: opencv-python>=4.9.0
+Requires-Dist: numpy>=1.26.0
+Requires-Dist: pandas>=2.2.0
+Requires-Dist: scikit-learn>=1.4.0
+Requires-Dist: joblib>=1.3.0
+Provides-Extra: app
+Requires-Dist: streamlit>=1.35.0; extra == "app"

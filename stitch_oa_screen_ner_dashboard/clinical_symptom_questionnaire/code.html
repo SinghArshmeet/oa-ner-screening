@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "outline-variant": "#bfc7d2",
+          "on-tertiary-fixed": "#001f26",
+          "error": "#ba1a1a",
+          "tertiary-fixed-dim": "#4cd7f6",
+          "primary-fixed-dim": "#93ccff",
+          "on-background": "#0b1c30",
+          "secondary": "#5a5e6a",
+          "on-secondary": "#ffffff",
+          "on-primary-fixed": "#001d31",
+          "surface-container-highest": "#d3e4fe",
+          "surface-container": "#e5eeff",
+          "on-primary": "#ffffff",
+          "on-surface": "#0b1c30",
+          "on-tertiary-fixed-variant": "#004e5c",
+          "on-secondary-fixed": "#171c25",
+          "primary-container": "#007bb9",
+          "surface-variant": "#d3e4fe",
+          "on-secondary-fixed-variant": "#424752",
+          "tertiary": "#006577",
+          "on-tertiary-container": "#f9fdff",
+          "surface-container-high": "#dce9ff",
+          "error-container": "#ffdad6",
+          "outline": "#707881",
+          "surface-container-low": "#eff4ff",
+          "secondary-fixed": "#dee2f0",
+          "surface-tint": "#006398",
+          "surface-dim": "#cbdbf5",
+          "on-surface-variant": "#3f4850",
+          "surface-container-lowest": "#ffffff",
+          "primary": "#006194",
+          "on-error-container": "#93000a",
+          "on-secondary-container": "#606470",
+          "background": "#f8f9ff",
+          "on-primary-container": "#fdfcff",
+          "inverse-primary": "#93ccff",
+          "primary-fixed": "#cce5ff",
+          "secondary-fixed-dim": "#c2c6d3",
+          "tertiary-container": "#008096",
+          "on-tertiary": "#ffffff",
+          "on-primary-fixed-variant": "#004b73",
+          "surface-bright": "#f8f9ff",
+          "inverse-on-surface": "#eaf1ff",
+          "inverse-surface": "#213145",
+          "on-error": "#ffffff",
+          "surface": "#f8f9ff",
+          "secondary-container": "#dee2f0",
+          "tertiary-fixed": "#acedff"
+        },
+        "borderRadius": {
+          "DEFAULT": "0.25rem",
+          "lg": "0.5rem",
+          "xl": "0.75rem",
+          "full": "9999px"
+        },
+        "spacing": {
+          "sidebar-expanded": "18rem",
+          "2xs": "0.25rem",
+          "card-padding": "1.25rem",
+          "gutter-desktop": "1.5rem",
+          "lg": "1.5rem",
+          "xl": "2rem",
+          "none": "0px",
+          "2xl": "2.5rem",
+          "md": "1rem",
+          "3xl": "3rem",
+          "header-height": "4.25rem",
+          "gutter-mobile": "1rem",
+          "xs": "0.5rem",
+          "sm": "0.75rem",
+          "sidebar-collapsed": "4.5rem"
+        },
+        "fontFamily": {
+          "body-sm": [
+            "Inter"
+          ],
+          "display-lg": [
+            "Plus Jakarta Sans"
+          ],
+          "body-lg": [
+            "Inter"
+          ],
+          "display-lg-mobile": [
+            "Plus Jakarta Sans"
+          ],
+          "headline-sm": [
+            "Plus Jakarta Sans"
+          ],
+          "data-metric": [
+            "Plus Jakarta Sans"
+          ],
+          "label-md": [
+            "Inter"
+          ],
+          "headline-md": [
+            "Plus Jakarta Sans"
+          ],
+          "headline-lg-mobile": [
+            "Plus Jakarta Sans"
+          ],
+          "body-md": [
+            "Inter"
+          ],
+          "data-mono": [
+            "Inter"
+          ],
+          "headline-lg": [
+            "Plus Jakarta Sans"
+          ],
+          "label-sm": [
+            "Inter"
+          ],
+          "label-lg": [
+            "Inter"
+          ]
+        },
+        "fontSize": {
+          "body-sm": [
+            "12px",
+            {
+              "lineHeight": "16px",
+              "letterSpacing": "0.01em",
+              "fontWeight": "400"
+            }
+          ],
+          "display-lg": [
+            "40px",
+            {
+              "lineHeight": "48px",
+              "letterSpacing": "-0.02em",
+              "fontWeight": "700"
+            }
+          ],
+          "body-lg": [
+            "16px",
+            {
+              "lineHeight": "24px",
+              "letterSpacing": "0em",
+              "fontWeight": "400"
+            }
+          ],
+          "display-lg-mobile": [
+            "30px",
+            {
+              "lineHeight": "36px",
+              "letterSpacing": "-0.02em",
+              "fontWeight": "700"
+            }
+          ],
+          "headline-sm": [
+            "16px",
+            {
+              "lineHeight": "24px",
+              "letterSpacing": "-0.005em",
+              "fontWeight": "600"
+            }
+          ],
+          "data-metric": [
+            "24px",
+            {
+              "lineHeight": "30px",
+              "letterSpacing": "-0.02em",
+              "fontWeight": "700"
+            }
+          ],
+          "label-md": [
+            "12px",
+            {
+              "lineHeight": "16px",
+              "letterSpacing": "0.02em",
+              "fontWeight": "600"
+            }
+          ],
+          "headline-md": [
+            "20px",
+            {
+              "lineHeight": "28px",
+              "letterSpacing": "-0.01em",
+              "fontWeight": "600"
+            }
+          ],
+          "headline-lg-mobile": [
+            "22px",
+            {
+              "lineHeight": "28px",
+              "letterSpacing": "-0.01em",
+              "fontWeight": "600"
+            }
+          ],
+          "body-md": [
+            "14px",
+            {
+              "lineHeight": "20px",
+              "letterSpacing": "0em",
+              "fontWeight": "400"
+            }
+          ],
+          "data-mono": [
+            "12px",
+            {
+              "lineHeight": "16px",
+              "letterSpacing": "0.05em",
+              "fontWeight": "500"
+            }
+          ],
+          "headline-lg": [
+            "28px",
+            {
+              "lineHeight": "36px",
+              "letterSpacing": "-0.015em",
+              "fontWeight": "600"
+            }
+          ],
+          "label-sm": [
+            "11px",
+            {
+              "lineHeight": "14px",
+              "letterSpacing": "0.04em",
+              "fontWeight": "600"
+            }
+          ],
+          "label-lg": [
+            "14px",
+            {
+              "lineHeight": "20px",
+              "letterSpacing": "0.01em",
+              "fontWeight": "600"
+            }
+          ]
+        }
+      },
+    },
+  }</script></head><body class="bg-background font-body-md text-on-surface"><header class="fixed top-0 left-0 w-full z-50 bg-inverse-surface shadow-[0_1px_8px_rgba(0,0,0,0.12)]"><div class="h-header-height w-full px-lg flex items-center justify-between gap-md"><div class="flex items-center gap-sm shrink-0"><img alt="OA-Screen NER Biometric Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1UESerUn7UZeRIEqFN5glEro0IZIlWS4OXEmO5GHHO-SPqqg6ShA-s0BjYNV-9pP4meQ2WERnJQQQMPia-eOAHXSaChgeoOLe9m9zjSy0rdfTDYdrAc2k86ZuZpuPmwvhio56W8s5-2jJPuOw6Sug9wMxvw2s-akj_ltHs5Kq-Om0m1IiOyR1vJKf2nMatdPGzOeRWkX9gLX39iGvTvETgDca_iJpDn-ugSXbgnwWH_M0_LQ6mU48q0ITc"/><div class="flex flex-col"><div class="flex items-center gap-xs"><span class="font-headline-sm text-headline-sm text-surface-container-lowest font-bold tracking-tight">OA-Screen NER</span><span class="px-2xs py-none rounded bg-primary-container text-on-primary font-data-mono text-[10px] uppercase font-semibold">ICMR/NER Protocol</span></div><span class="font-label-sm text-label-sm text-surface-dim font-normal">Multimodal AI Screening Support · North Eastern Region</span></div></div><nav class="hidden xl:flex items-center gap-xs px-xs py-2xs rounded-xl bg-surface-container-highest/10" data-active-classes="bg-primary-container text-on-primary-container font-semibold rounded-lg shadow-sm"><a class="px-sm py-xs text-surface-dim hover:text-surface-container-lowest transition-colors font-label-md text-label-md rounded-lg" data-path="overview-and-screen" href="#">Overview &amp; Screen</a><a class="px-sm py-xs text-surface-dim hover:text-surface-container-lowest transition-colors font-label-md text-label-md rounded-lg" data-path="gait-biomechanics-hud" href="#">Gait Biomechanics HUD</a><a aria-current="page" class="px-sm py-xs transition-colors bg-primary-container text-on-primary-container font-semibold rounded-lg shadow-sm" data-path="clinical-questionnaire" href="#">Clinical Questionnaire</a><a class="px-sm py-xs text-surface-dim hover:text-surface-container-lowest transition-colors font-label-md text-label-md rounded-lg" data-path="multimodal-diagnostic-report" href="#">Multimodal Diagnostic Report</a><a class="px-sm py-xs text-surface-dim hover:text-surface-container-lowest transition-colors font-label-md text-label-md rounded-lg" data-path="cohort-and-patients" href="#">Cohort &amp; Patients</a><a class="px-sm py-xs text-surface-dim hover:text-surface-container-lowest transition-colors font-label-md text-label-md rounded-lg" data-path="esp32-hardware-fleet" href="#">ESP32 Hardware Fleet</a></nav><div class="flex items-center gap-sm shrink-0"><div class="hidden 2xl:flex items-center gap-xs px-sm py-2xs rounded-full bg-surface-container-highest/10"><span class="w-2 h-2 rounded-full bg-tertiary-fixed-dim animate-pulse"></span><span class="font-data-mono text-data-mono text-tertiary-fixed">Edge AI Active · MediaPipe Gait v2.4</span></div><div class="hidden md:flex items-center gap-2xs px-sm py-2xs rounded-full bg-surface-container-highest/10"><span class="material-symbols-outlined text-surface-dim text-[16px]">location_on</span><span class="font-label-sm text-label-sm text-surface-dim">Diphu PHC, Karbi Anglong, Assam</span></div><div class="flex items-center gap-xs pl-xs"><div class="text-right hidden sm:block"><p class="font-label-md text-label-md text-surface-container-lowest font-semibold leading-tight">Dr. R. Sharma, MO</p><p class="font-label-sm text-label-sm text-surface-dim">Clinical Screener</p></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></div><div class="w-full bg-surface-container-lowest shadow-[0_1px_4px_rgba(0,0,0,0.05)] px-lg py-xs"><div class="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-sm"><div class="flex items-center gap-md"><div class="flex items-center gap-xs"><span class="font-label-sm text-label-sm text-on-surface-variant uppercase font-semibold">Active Patient</span><span class="font-headline-sm text-headline-sm text-on-surface font-bold">Boron Boruah</span><span class="font-data-mono text-data-mono px-xs py-2xs bg-surface-container rounded text-on-surface-variant font-medium">ID: NER-OA-2024-0892</span></div><div class="hidden lg:flex items-center gap-xs text-on-surface-variant font-body-sm text-body-sm"><span class="w-1 h-1 rounded-full bg-outline-variant"></span><span>52y, Male</span><span class="w-1 h-1 rounded-full bg-outline-variant"></span><span>Tea Garden Agronomist</span><span class="w-1 h-1 rounded-full bg-outline-variant"></span><span class="text-on-surface">Karbi Anglong, Assam</span></div><div class="flex items-center gap-xs"><button class="flex items-center gap-2xs px-sm py-2xs rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-label-sm text-label-sm transition-colors" type="button"><span class="material-symbols-outlined text-[16px] text-secondary">swap_horiz</span>Switch Patient</button><button class="flex items-center gap-2xs px-sm py-2xs rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-sm text-label-sm transition-colors font-semibold" type="button"><span class="material-symbols-outlined text-[16px] text-on-primary">person_add</span>+ Enroll Patient</button></div></div><div class="flex items-center gap-xs"><div class="flex items-center gap-xs px-sm py-2xs rounded-full bg-surface-container"><span class="w-2 h-2 rounded-full bg-primary"></span><span class="font-label-sm text-label-sm text-on-surface">Survey: Complete (7/10)</span></div><div class="flex items-center gap-xs px-sm py-2xs rounded-full bg-tertiary-fixed"><span class="w-2 h-2 rounded-full bg-tertiary"></span><span class="font-label-sm text-label-sm text-on-tertiary-fixed">Gait: Ready for 8s Test</span></div></div></div></div></header><main class="w-full pt-header-height bg-background"><div class="pt-12 min-h-screen"><div class="max-w-[1600px] mx-auto px-lg py-lg"><div class="flex flex-col w-full gap-xl">
+<!-- Dynamic Patient Survey Header with Regional Protocol Metadata -->
+<div class="flex flex-col xl:flex-row xl:items-center justify-between gap-lg bg-surface-container-lowest p-card-padding rounded-xl shadow-sm">
+<div class="flex flex-col gap-xs max-w-4xl">
+<div class="flex flex-wrap items-center gap-xs">
+<span class="px-xs py-2xs rounded bg-tertiary text-on-tertiary font-data-mono text-data-mono uppercase">Validated Tool</span>
+<span class="px-xs py-2xs rounded bg-surface-container-high text-on-surface-variant font-data-mono text-data-mono">KOOS-NER Form v2.1</span>
+<span class="text-secondary font-label-sm text-label-sm">· Revised for Rural Assam Hill &amp; Valley Cohorts</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">
+        Knee Osteoarthritis Symptom &amp; Occupational Exposure Survey
+      </h1>
+<p class="font-body-md text-body-md text-secondary">
+        WOMAC &amp; KOOS clinical derivative adapted for tribal, plantation, and agrarian micro-ecologies across the North Eastern Region.
+      </p>
+</div>
+<!-- Patient Context & Linguistic Adaptive Switcher -->
+<div class="flex flex-col sm:flex-row items-start sm:items-center gap-md self-start xl:self-center shrink-0">
+<div class="flex flex-col gap-2xs">
+<span class="font-label-sm text-label-sm text-secondary uppercase font-semibold">Survey Interview Language</span>
+<div class="inline-flex rounded-lg p-2xs bg-surface-container gap-2xs" id="lang-picker">
+<button class="px-sm py-xs rounded bg-surface-container-lowest text-primary font-label-md text-label-md shadow-sm transition-all" data-lang="en" type="button">English</button>
+<button class="px-sm py-xs rounded text-secondary hover:text-on-surface font-label-md text-label-md transition-all" data-lang="as" type="button">অসমীয়া</button>
+<button class="px-sm py-xs rounded text-secondary hover:text-on-surface font-label-md text-label-md transition-all" data-lang="bn" type="button">বাংলা</button>
+<button class="px-sm py-xs rounded text-secondary hover:text-on-surface font-label-md text-label-md transition-all" data-lang="hi" type="button">हिन्दी</button>
+</div>
+</div>
+<div class="hidden sm:flex flex-col text-right pl-md border-l border-surface-container">
+<span class="font-label-sm text-label-sm text-secondary">Target Articulation</span>
+<span class="font-headline-sm text-headline-sm text-primary font-bold">Left Knee Medial</span>
+<span class="font-data-mono text-data-mono text-secondary">Primary Complaint</span>
+</div>
+</div>
+</div>
+<!-- Primary Survey Two-Column Interactive Canvas -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-gutter-desktop items-start">
+<!-- Left Column: Clinical Questionnaire Input Engine (8 Cols) -->
+<div class="xl:col-span-8 flex flex-col gap-lg">
+<!-- Section A: Pain & Stiffness Visual Analog Scales (Interactive Sliders) -->
+<div class="bg-surface-container-lowest p-card-padding rounded-xl shadow-sm flex flex-col gap-md">
+<div class="flex items-center justify-between pb-xs border-b border-surface-container">
+<div class="flex items-center gap-xs">
+<span class="w-7 h-7 rounded-full bg-primary-fixed text-primary flex items-center justify-center font-bold text-label-md">A</span>
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Pain &amp; Stiffness Visual Analog Scale (VAS)</h2>
+<p class="font-body-sm text-body-sm text-secondary">Assessing symptom trajectory, diurnal variability, and inflammatory onset</p>
+</div>
+</div>
+<span class="font-data-mono text-data-mono text-secondary">Weight: 40% composite</span>
+</div>
+<!-- Metric 1: Pain Severity Slider -->
+<div class="flex flex-col gap-sm bg-surface-container-low p-card-padding rounded-lg">
+<div class="flex flex-wrap items-center justify-between gap-xs">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold" for="pain-slider">
+              Knee Pain Severity (Past 7 Days Average)
+            </label>
+<div class="inline-flex items-center gap-2xs px-sm py-2xs rounded-full bg-error-container text-on-error-container font-label-md text-label-md" id="pain-status-chip">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<span class="font-bold" id="pain-chip-text">7/10 - Frequent sharp aching, worse on weight bearing</span>
+</div>
+</div>
+<div class="flex flex-col gap-2xs pt-xs">
+<input class="w-full h-2 bg-outline-variant rounded-lg appearance-none cursor-pointer accent-primary focus:outline-none" id="pain-slider" max="10" min="0" step="1" type="range" value="7"/>
+<div class="flex justify-between text-secondary font-data-mono text-data-mono px-2xs">
+<span>0 (Asymptomatic)</span>
+<span>2 (Mild)</span>
+<span>5 (Moderate)</span>
+<span class="text-error font-bold">7 (Current)</span>
+<span>10 (Bedridden / Debilitating)</span>
+</div>
+</div>
+<!-- Diurnal / Activity Worst Exacerbation -->
+<div class="flex flex-col gap-xs pt-xs">
+<span class="font-label-sm text-label-sm text-secondary uppercase font-semibold">Pain Peak Intensity Occurs During:</span>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-xs" id="pain-peak-options">
+<button class="px-sm py-xs rounded bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-md text-label-md text-center transition-colors" data-peak="rest" type="button">
+                At Rest / Sedentary
+              </button>
+<button class="px-sm py-xs rounded bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-md text-label-md text-center transition-colors" data-peak="walking" type="button">
+                Level Walking
+              </button>
+<button class="px-sm py-xs rounded bg-primary text-on-primary font-label-md text-label-md text-center shadow-sm font-semibold transition-colors" data-peak="squatting" type="button">
+                Squatting / Floor Work
+              </button>
+<button class="px-sm py-xs rounded bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-md text-label-md text-center transition-colors" data-peak="night" type="button">
+                Nocturnal / Sleep Break
+              </button>
+</div>
+</div>
+</div>
+<!-- Metric 2: Morning Stiffness Slider -->
+<div class="flex flex-col gap-sm bg-surface-container-low p-card-padding rounded-lg">
+<div class="flex flex-wrap items-center justify-between gap-xs">
+<label class="font-label-lg text-label-lg text-on-surface font-semibold" for="stiffness-slider">
+              Morning Joint Stiffness Duration
+            </label>
+<div class="inline-flex items-center gap-2xs px-sm py-2xs rounded-full bg-error-container text-on-error-container font-label-md text-label-md" id="stiffness-chip">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<span class="font-bold" id="stiffness-chip-text">35 mins (&gt;30m classic OA indication)</span>
+</div>
+</div>
+<div class="flex flex-col gap-2xs pt-xs">
+<input class="w-full h-2 bg-outline-variant rounded-lg appearance-none cursor-pointer accent-primary focus:outline-none" id="stiffness-slider" max="60" min="0" step="5" type="range" value="35"/>
+<div class="flex justify-between text-secondary font-data-mono text-data-mono px-2xs">
+<span>&lt;5 mins (Nil)</span>
+<span>15 mins</span>
+<span class="text-error font-bold">35 mins (Marked)</span>
+<span>45 mins</span>
+<span>60+ mins (Severe)</span>
+</div>
+</div>
+<!-- Inflammatory Signs: Joint Warmth or Swelling -->
+<div class="flex flex-wrap items-center justify-between gap-sm pt-xs border-t border-surface-container-high/60">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Joint Warmth, Crepitus, or Visible Effusion</span>
+<span class="font-body-sm text-body-sm text-secondary">Observed or reported swelling in knee joint capsule over past 30 days</span>
+</div>
+<div class="inline-flex rounded-lg p-2xs bg-surface-container gap-2xs">
+<button class="px-md py-xs rounded bg-primary text-on-primary font-label-md text-label-md font-semibold transition-all shadow-sm" id="effusion-yes" type="button">
+                Yes (Present)
+              </button>
+<button class="px-md py-xs rounded text-secondary hover:text-on-surface font-label-md text-label-md transition-all" id="effusion-no" type="button">
+                No
+              </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Section B: Functional Limitation & Daily Living in Rural NER -->
+<div class="bg-surface-container-lowest p-card-padding rounded-xl shadow-sm flex flex-col gap-md">
+<div class="flex items-center justify-between pb-xs border-b border-surface-container">
+<div class="flex items-center gap-xs">
+<span class="w-7 h-7 rounded-full bg-primary-fixed text-primary flex items-center justify-center font-bold text-label-md">B</span>
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Functional Limitation &amp; Terrain Locomotion</h2>
+<p class="font-body-sm text-body-sm text-secondary">Evaluating physical disability within agrarian &amp; hill-slope environments</p>
+</div>
+</div>
+<span class="font-data-mono text-data-mono text-secondary">Weight: 35% composite</span>
+</div>
+<!-- Task 1: Level Flat Surface Walking -->
+<div class="flex flex-col gap-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface font-semibold">1. Walking on Flat Ground / Plantation Tracks (&gt;100 meters)</span>
+<span class="font-label-sm text-label-sm text-secondary" id="val-flat">Moderate Difficulty</span>
+</div>
+<div class="grid grid-cols-5 gap-xs" data-task="flat">
+<button class="p-xs text-center rounded bg-surface-container-low hover:bg-surface-container text-on-surface font-label-sm text-label-sm transition-colors" data-val="0" type="button">None</button>
+<button class="p-xs text-center rounded bg-surface-container-low hover:bg-surface-container text-on-surface font-label-sm text-label-sm transition-colors" data-val="1" type="button">Mild</button>
+<button class="p-xs text-center rounded bg-primary text-on-primary font-label-sm text-label-sm font-semibold shadow-sm transition-colors" data-val="2" type="button">Moderate</button>
+<button class="p-xs text-center rounded bg-surface-container-low hover:bg-surface-container text-on-surface font-label-sm text-label-sm transition-colors" data-val="3" type="button">Severe</button>
+<button class="p-xs text-center rounded bg-surface-container-low hover:bg-surface-container text-on-surface font-label-sm text-label-sm transition-colors" data-val="4" type="button">Unable</button>
+</div>
+</div>
+<!-- Task 2: Stairs & Hilly Slope Elevation -->
+<div class="flex flex-col gap-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface font-semibold">2. Negotiating Hill Slopes / Rough Mud Steps / Incline Terrain</span>
+<span class="font-label-sm text-label-sm text-error font-semibold" id="val-incline">Severe Difficulty</span>
+</div>
+<div class="grid grid-cols-5 gap-xs" data-task="incline">
+<button class="p-xs text-center rounded bg-surface-container-low hover:bg-surface-container text-on-surface font-label-sm text-label-sm transition-colors" data-val="0" type="button">None</button>
+<button class="p-xs text-center rounded bg-surface-container-low hover:bg-surface-container text-on-surface font-label-sm text-label-sm transition-colors" data-val="1" type="button">Mild</button>
+<button class="p-xs text-center rounded bg-surface-container-low hover:bg-surface-container text-on-surface font-label-sm text-label-sm transition-colors" data-val="2" type="button">Moderate</button>
+<button class="p-xs text-center rounded bg-primary text-on-primary font-label-sm text-label-sm font-semibold shadow-sm transition-colors" data-val="3" type="button">Severe</button>
+<button class="p-xs text-center rounded bg-surface-container-low hover:bg-surface-container text-on-surface font-label-sm text-label-sm transition-colors" data-val="4" type="button">Unable</button>
+</div>
+</div>
+<!-- Task 3: Squatting & Cross-legged Floor Sitting -->
+<div class="flex flex-col gap-xs">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-xs">
+<span class="font-label-md text-label-md text-on-surface font-semibold">3. Deep Squatting (Khurpi weed work / Toilet) &amp; Floor Sitting</span>
+<span class="px-2xs py-none rounded bg-tertiary-fixed text-on-tertiary-fixed font-data-mono text-[10px]">Cultural Norm</span>
+</div>
+<span class="font-label-sm text-label-sm text-error font-semibold" id="val-squat">Severe Painful Lock</span>
+</div>
+<div class="grid grid-cols-5 gap-xs" data-task="squat">
+<button class="p-xs text-center rounded bg-surface-container-low hover:bg-surface-container text-on-surface font-label-sm text-label-sm transition-colors" data-val="0" type="button">None</button>
+<button class="p-xs text-center rounded bg-surface-container-low hover:bg-surface-container text-on-surface font-label-sm text-label-sm transition-colors" data-val="1" type="button">Mild</button>
+<button class="p-xs text-center rounded bg-surface-container-low hover:bg-surface-container text-on-surface font-label-sm text-label-sm transition-colors" data-val="2" type="button">Moderate</button>
+<button class="p-xs text-center rounded bg-primary text-on-primary font-label-sm text-label-sm font-semibold shadow-sm transition-colors" data-val="3" type="button">Severe / Painful</button>
+<button class="p-xs text-center rounded bg-surface-container-low hover:bg-surface-container text-on-surface font-label-sm text-label-sm transition-colors" data-val="4" type="button">Unable / Refuses</button>
+</div>
+</div>
+<!-- Task 4: Rising from Bed / Low Wooden Murha Stool -->
+<div class="flex flex-col gap-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface font-semibold">4. Rising Unassisted from Floor Mat or Low Cane Stool (Murha)</span>
+<span class="font-label-sm text-label-sm text-secondary" id="val-stool">Moderate Difficulty</span>
+</div>
+<div class="grid grid-cols-5 gap-xs" data-task="stool">
+<button class="p-xs text-center rounded bg-surface-container-low hover:bg-surface-container text-on-surface font-label-sm text-label-sm transition-colors" data-val="0" type="button">None</button>
+<button class="p-xs text-center rounded bg-surface-container-low hover:bg-surface-container text-on-surface font-label-sm text-label-sm transition-colors" data-val="1" type="button">Mild</button>
+<button class="p-xs text-center rounded bg-primary text-on-primary font-label-sm text-label-sm font-semibold shadow-sm transition-colors" data-val="2" type="button">Moderate</button>
+<button class="p-xs text-center rounded bg-surface-container-low hover:bg-surface-container text-on-surface font-label-sm text-label-sm transition-colors" data-val="3" type="button">Severe</button>
+<button class="p-xs text-center rounded bg-surface-container-low hover:bg-surface-container text-on-surface font-label-sm text-label-sm transition-colors" data-val="4" type="button">Unable</button>
+</div>
+</div>
+</div>
+<!-- Section C: High-Risk Occupational & Environmental Exposures (NER Specific) -->
+<div class="bg-surface-container-lowest p-card-padding rounded-xl shadow-sm flex flex-col gap-md">
+<div class="flex items-center justify-between pb-xs border-b border-surface-container">
+<div class="flex items-center gap-xs">
+<span class="w-7 h-7 rounded-full bg-primary-fixed text-primary flex items-center justify-center font-bold text-label-md">C</span>
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Occupational Strain &amp; Biomechanical History</h2>
+<p class="font-body-sm text-body-sm text-secondary">NER tea estate manual labor, highland paddy farming, and injury trajectory</p>
+</div>
+</div>
+<span class="font-data-mono text-data-mono text-secondary">Weight: 25% composite</span>
+</div>
+<!-- Metric 1: Primary Occupational Field -->
+<div class="flex flex-col gap-xs">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Primary Daily Occupation / Livelihood</span>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-xs" id="occ-selector">
+<button class="flex items-start gap-xs p-sm rounded-lg bg-primary text-on-primary text-left shadow-sm transition-colors" data-occ="tea" type="button">
+<span class="material-symbols-outlined text-[20px] shrink-0 mt-2xs">agriculture</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold">Tea Estate Labor</span>
+<span class="font-body-sm text-body-sm opacity-90">Leaf Plucking / Bush Pruner</span>
+</div>
+</button>
+<button class="flex items-start gap-xs p-sm rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface text-left transition-colors" data-occ="paddy" type="button">
+<span class="material-symbols-outlined text-[20px] shrink-0 mt-2xs text-secondary">grass</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold">Wet Paddy Cultivation</span>
+<span class="font-body-sm text-body-sm text-secondary">Flooded Field Agronomy</span>
+</div>
+</button>
+<button class="flex items-start gap-xs p-sm rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface text-left transition-colors" data-occ="porter" type="button">
+<span class="material-symbols-outlined text-[20px] shrink-0 mt-2xs text-secondary">hiking</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold">Head/Back Load Porter</span>
+<span class="font-body-sm text-body-sm text-secondary">Hillside Fuel &amp; Crop Porterage</span>
+</div>
+</button>
+<button class="flex items-start gap-xs p-sm rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface text-left transition-colors" data-occ="loom" type="button">
+<span class="material-symbols-outlined text-[20px] shrink-0 mt-2xs text-secondary">texture</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold">Handloom Weaving</span>
+<span class="font-body-sm text-body-sm text-secondary">Prolonged Seated Loom Rig</span>
+</div>
+</button>
+<button class="flex items-start gap-xs p-sm rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface text-left transition-colors" data-occ="shop" type="button">
+<span class="material-symbols-outlined text-[20px] shrink-0 mt-2xs text-secondary">storefront</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold">Retail / Desk / Sedentary</span>
+<span class="font-body-sm text-body-sm text-secondary">Local Village Commercial</span>
+</div>
+</button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md pt-xs">
+<!-- Squatting Hours Metric -->
+<div class="flex flex-col gap-xs bg-surface-container-low p-card-padding rounded-lg">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Hours Spent Squatting or Kneeling per Workday</span>
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-tertiary">timer</span>
+<select class="w-full bg-surface-container-lowest text-on-surface font-label-md text-label-md px-sm py-xs rounded-lg shadow-sm focus:outline-none" id="squat-hours">
+<option value="1">&lt;2 Hours daily (Low Impact)</option>
+<option value="2">2 - 4 Hours daily (Moderate)</option>
+<option selected="" value="3">4 - 6 Hours daily (High Biomechanical Strain)</option>
+<option value="4">&gt;6 Hours daily (Extreme Articular Wear)</option>
+</select>
+</div>
+<p class="font-body-sm text-body-sm text-secondary">Plucking tea saplings requires continuous knee hyperflexion along sloping bunds.</p>
+</div>
+<!-- Heavy Load Hauling -->
+<div class="flex flex-col gap-xs bg-surface-container-low p-card-padding rounded-lg">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Head-Strap / Bamboo Basket Carrying (&gt;15 kg)</span>
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-tertiary">inventory_2</span>
+<select class="w-full bg-surface-container-lowest text-on-surface font-label-md text-label-md px-sm py-xs rounded-lg shadow-sm focus:outline-none" id="load-carrying">
+<option value="0">Rarely or never (&lt;5 kg)</option>
+<option value="1">Intermittent domestic chores (5-10 kg)</option>
+<option selected="" value="2">Frequent daily estate load (&gt;15 kg uphill)</option>
+<option value="3">Continuous heavy haulage (&gt;25 kg steep slopes)</option>
+</select>
+</div>
+<p class="font-body-sm text-body-sm text-secondary">Multiplies joint contact force to 4.2x body weight during downhill deceleration.</p>
+</div>
+</div>
+<!-- Previous Trauma Narrative & Historical Fracture -->
+<div class="flex flex-col gap-xs bg-surface-container-high/40 p-card-padding rounded-lg">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-secondary">history_edu</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">Prior Knee Trauma / Ligament Injury Record</span>
+</div>
+<div class="inline-flex rounded-lg p-2xs bg-surface-container-lowest gap-2xs">
+<button class="px-sm py-2xs rounded bg-error-container text-on-error-container font-label-sm text-label-sm font-semibold shadow-sm" type="button">
+                Positive Trauma History
+              </button>
+</div>
+</div>
+<div class="flex items-start gap-sm mt-xs">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-error">personal_injury</span>
+</div>
+<div class="flex flex-col gap-2xs">
+<p class="font-body-sm text-body-sm text-on-surface">
+<strong>Patient Logged Incident:</strong> Left knee lateral impact during plantation motorcycle slip (Nov 2019). No formal radiograph or MRI completed at Bokajan Sub-Divisional Hospital; managed with traditional herbal wrap and oral NSAID analgesics.
+              </p>
+<span class="font-data-mono text-data-mono text-secondary">Post-traumatic osteoarthritis (PTOA) vulnerability factor confirmed</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Live Composite Risk Engine & Decision Deck (4 Cols) -->
+<div class="xl:col-span-4 flex flex-col gap-lg sticky top-24">
+<!-- Real-Time Dynamic Composite Score Tile -->
+<div class="bg-surface-container-lowest p-card-padding rounded-xl shadow-md flex flex-col gap-md">
+<div class="flex items-center justify-between pb-xs border-b border-surface-container">
+<span class="font-label-sm text-label-sm text-secondary uppercase font-bold tracking-wider">Clinical Inference Engine</span>
+<span class="flex items-center gap-2xs font-data-mono text-data-mono text-primary">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+            Real-Time Scoring
+          </span>
+</div>
+<div class="flex flex-col items-center justify-center text-center p-md bg-surface-container-low rounded-xl relative overflow-hidden">
+<!-- Subtle circular glow backdrop -->
+<div class="absolute -top-12 -right-12 w-32 h-32 rounded-full bg-error/10 blur-xl pointer-events-none"></div>
+<!-- Circular SVG Radial Gauge -->
+<div class="relative w-36 h-36 flex items-center justify-center">
+<svg class="w-full h-full transform -rotate-90" viewbox="0 0 100 100">
+<!-- Background Circle -->
+<circle class="text-surface-container-highest fill-none" cx="50" cy="50" r="40" stroke="currentColor" stroke-width="8"></circle>
+<!-- Progress Arc (70% = 251.32 * 0.70 = 175.92) -->
+<circle class="text-error fill-none transition-all duration-500" cx="50" cy="50" id="score-ring" r="40" stroke="currentColor" stroke-dasharray="251.32" stroke-dashoffset="75.4" stroke-linecap="round" stroke-width="8"></circle>
+</svg>
+<div class="absolute flex flex-col items-center">
+<span class="font-display-lg text-display-lg text-on-surface font-extrabold leading-none" id="score-val">28</span>
+<span class="font-data-mono text-data-mono text-secondary">/ 40 MAX</span>
+</div>
+</div>
+<div class="flex flex-col items-center gap-2xs mt-sm">
+<span class="px-sm py-2xs rounded-full bg-error-container text-on-error-container font-label-md text-label-md font-bold uppercase tracking-wide" id="risk-badge">
+              High Clinical Suspicion (70%)
+            </span>
+<p class="font-body-sm text-body-sm text-secondary max-w-xs mt-xs">
+              Exceeds Kellgren-Lawrence Grade II symptomatic referral threshold for peripheral primary healthcare centres.
+            </p>
+</div>
+</div>
+<!-- Biomechanical Risk Contributors Breakdown -->
+<div class="flex flex-col gap-xs">
+<span class="font-label-sm text-label-sm text-secondary uppercase font-semibold">Key Contributing Determinants</span>
+<div class="flex items-start gap-xs p-xs rounded bg-surface-container-low">
+<span class="material-symbols-outlined text-error text-[18px] shrink-0 mt-2xs">alarm_on</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">Morning Gel Phenomenon (&gt;30m)</span>
+<span class="font-body-sm text-body-sm text-secondary">Strong predictor of subchondral structural alteration</span>
+</div>
+</div>
+<div class="flex items-start gap-xs p-xs rounded bg-surface-container-low">
+<span class="material-symbols-outlined text-tertiary text-[18px] shrink-0 mt-2xs">terrain</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">High Mechanical Plucking Cadence</span>
+<span class="font-body-sm text-body-sm text-secondary">&gt;5h daily deep flexion on sloped tea garden soils</span>
+</div>
+</div>
+<div class="flex items-start gap-xs p-xs rounded bg-surface-container-low">
+<span class="material-symbols-outlined text-secondary text-[18px] shrink-0 mt-2xs">warning</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">Unresolved Prior Trauma (2019)</span>
+<span class="font-body-sm text-body-sm text-secondary">Accelerated unilateral degenerative osteophyte pathway</span>
+</div>
+</div>
+</div>
+<!-- Tele-Screening Cohort Correlation Chart SVG -->
+<div class="flex flex-col gap-xs p-sm rounded-lg bg-surface-container-low">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-secondary uppercase font-semibold">Regional PHC Cohort Comparison</span>
+<span class="font-data-mono text-data-mono text-primary font-bold">88th Percentile</span>
+</div>
+<!-- Inline Sparkline / Distribution Bell -->
+<div class="w-full h-12 flex items-end">
+<svg class="w-full h-10 overflow-visible" viewbox="0 0 200 40">
+<!-- Distribution curve -->
+<path class="text-outline-variant" d="M0 38 Q 40 37, 70 24 T 100 8 T 130 20 T 170 35 L 200 38" fill="none" stroke="currentColor" stroke-width="2"></path>
+<!-- Patient Marker Line at 88% (x=165) -->
+<line class="text-error" stroke="currentColor" stroke-dasharray="2 2" stroke-width="2" x1="165" x2="165" y1="2" y2="38"></line>
+<circle class="text-error fill-current" cx="165" cy="30" r="4"></circle>
+</svg>
+</div>
+<div class="flex justify-between text-secondary font-data-mono text-[10px]">
+<span>Low Risk (0-12)</span>
+<span>Median PHC (18)</span>
+<span class="text-error font-semibold">Boron B. (28)</span>
+</div>
+</div>
+<!-- Clinical Navigation Actions -->
+<div class="flex flex-col gap-xs pt-xs">
+<button class="w-full py-sm px-md rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-lg text-label-lg font-bold flex items-center justify-center gap-xs shadow transition-all hover:scale-[1.01]" id="advance-btn" type="button">
+<span class="material-symbols-outlined text-[20px]">save</span>
+<span>Save &amp; Advance to Gait Test</span>
+<span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</button>
+<div class="grid grid-cols-2 gap-xs">
+<button class="py-xs px-sm rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-label-md text-label-md flex items-center justify-center gap-2xs transition-colors" id="reset-btn" type="button">
+<span class="material-symbols-outlined text-[16px]">restart_alt</span>
+              Reset Form
+            </button>
+<button class="py-xs px-sm rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-label-md text-label-md flex items-center justify-center gap-2xs transition-colors" id="load-prev-btn" type="button">
+<span class="material-symbols-outlined text-[16px]">history</span>
+              Load (6 Mo Ago)
+            </button>
+</div>
+</div>
+</div>
+<!-- Rural Telemedicine Context Card with Tea Garden Field Staff Protocol -->
+<div class="bg-surface-container-lowest p-card-padding rounded-xl shadow-sm flex items-center gap-sm">
+<div class="w-10 h-10 rounded-full bg-tertiary-fixed flex items-center justify-center text-tertiary shrink-0">
+<span class="material-symbols-outlined text-[20px]">badge</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">ASHA Field Screener Assigned</span>
+<span class="font-body-sm text-body-sm text-secondary">Hemoprova Saikia · Diphu Block Health Unit</span>
+<span class="font-data-mono text-data-mono text-tertiary font-medium mt-2xs">Device ID: ESP-CAM-DIPHU-04</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Regional Epidemiological Field Context Banner -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-md bg-surface-container-low p-card-padding rounded-xl">
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded-lg bg-primary-fixed flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined">shield_with_heart</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">ICMR Guidelines Conformant</span>
+<span class="font-body-sm text-body-sm text-secondary">Cross-cultural validation for non-invasive joint screening</span>
+</div>
+</div>
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center text-on-surface-variant shrink-0">
+<span class="material-symbols-outlined">wifi_off</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Offline Edge Architecture</span>
+<span class="font-body-sm text-body-sm text-secondary">Encrypted local storage with periodic satellite mesh sync</span>
+</div>
+</div>
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded-lg bg-tertiary-fixed flex items-center justify-center text-tertiary shrink-0">
+<span class="material-symbols-outlined">directions_walk</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Next Stage: 8-Meter Gait</span>
+<span class="font-body-sm text-body-sm text-secondary">MediaPipe keypoint cadence and stance-phase symmetry</span>
+</div>
+</div>
+</div>
+</div>
+<script>
+  (function() {
+    // Dynamic Questionnaire Interactive State Logic
+    const painSlider = document.getElementById('pain-slider');
+    const stiffnessSlider = document.getElementById('stiffness-slider');
+    const painChipText = document.getElementById('pain-chip-text');
+    const stiffnessChipText = document.getElementById('stiffness-chip-text');
+    const scoreVal = document.getElementById('score-val');
+    const scoreRing = document.getElementById('score-ring');
+    const riskBadge = document.getElementById('risk-badge');
+
+    // Section Functional Selectors
+    let functionalScores = {
+      flat: 2,
+      incline: 3,
+      squat: 3,
+      stool: 2
+    };
+
+    let occupationalWeight = 3; // 4-6 hours default
+    let loadWeight = 2; // >15kg default
+
+    function recalculateIndex() {
+      const painScore = parseInt(painSlider.value, 10);
+      const stiffnessMins = parseInt(stiffnessSlider.value, 10);
+      
+      // Stiffness mapped to 0-10 scale
+      const stiffnessScore = Math.min(10, Math.round((stiffnessMins / 60) * 10));
+      
+      // Functional tasks sum: max 16, scaled to 12
+      const funcSum = (functionalScores.flat + functionalScores.incline + functionalScores.squat + functionalScores.stool);
+      
+      // Exposure weight sum: max 8
+      const exposureSum = occupationalWeight + loadWeight + 2; // +2 for prior injury
+      
+      // Composite out of 40:
+      const composite = Math.min(40, Math.round((painScore * 1.2) + (stiffnessScore * 1.0) + funcSum + exposureSum));
+      
+      scoreVal.textContent = composite;
+
+      // Update Radial SVG (circumference 251.32)
+      const fraction = composite / 40;
+      const offset = 251.32 - (251.32 * fraction);
+      scoreRing.style.strokeDashoffset = offset;
+
+      // Risk Tiers
+      if (composite >= 24) {
+        scoreRing.className.baseVal = "text-error fill-none transition-all duration-500";
+        riskBadge.className = "px-sm py-2xs rounded-full bg-error-container text-on-error-container font-label-md text-label-md font-bold uppercase tracking-wide";
+        riskBadge.textContent = `High Clinical Suspicion (${Math.round(fraction * 100)}%)`;
+      } else if (composite >= 14) {
+        scoreRing.className.baseVal = "text-tertiary-container fill-none transition-all duration-500";
+        riskBadge.className = "px-sm py-2xs rounded-full bg-surface-container-high text-primary font-label-md text-label-md font-bold uppercase tracking-wide";
+        riskBadge.textContent = `Moderate Risk (${Math.round(fraction * 100)}%)`;
+      } else {
+        scoreRing.className.baseVal = "text-tertiary fill-none transition-all duration-500";
+        riskBadge.className = "px-sm py-2xs rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-md text-label-md font-bold uppercase tracking-wide";
+        riskBadge.textContent = `Mild / Borderline (${Math.round(fraction * 100)}%)`;
+      }
+    }
+
+    // Pain Slider Listener
+    painSlider.addEventListener('input', function(e) {
+      const v = parseInt(e.target.value, 10);
+      let desc = "";
+      if (v === 0) desc = "0/10 - No noticeable pain";
+      else if (v <= 3) desc = `${v}/10 - Mild aching after long shift`;
+      else if (v <= 6) desc = `${v}/10 - Moderate joint soreness with bearing`;
+      else if (v <= 8) desc = `${v}/10 - Frequent sharp aching, worse on weight bearing`;
+      else desc = `${v}/10 - Constant excruciating pain, rest limitation`;
+      painChipText.textContent = desc;
+      recalculateIndex();
+    });
+
+    // Stiffness Slider Listener
+    stiffnessSlider.addEventListener('input', function(e) {
+      const mins = parseInt(e.target.value, 10);
+      let desc = `${mins} mins`;
+      if (mins === 0) desc = "None (<5 mins)";
+      else if (mins < 30) desc = `${mins} mins (Mild transient gel)`;
+      else if (mins <= 45) desc = `${mins} mins (>30m classic OA indication)`;
+      else desc = `${mins} mins (Severe persistent gel)`;
+      stiffnessChipText.textContent = desc;
+      recalculateIndex();
+    });
+
+    // Functional Button Grid Selection
+    ['flat', 'incline', 'squat', 'stool'].forEach(task => {
+      const container = document.querySelector(`[data-task="${task}"]`);
+      if (!container) return;
+      const btns = container.querySelectorAll('button');
+      btns.forEach(b => {
+        b.addEventListener('click', () => {
+          btns.forEach(x => {
+            x.className = "p-xs text-center rounded bg-surface-container-low hover:bg-surface-container text-on-surface font-label-sm text-label-sm transition-colors";
+          });
+          b.className = "p-xs text-center rounded bg-primary text-on-primary font-label-sm text-label-sm font-semibold shadow-sm transition-colors";
+          functionalScores[task] = parseInt(b.dataset.val, 10);
+          
+          // Update readout badge
+          const readout = document.getElementById(`val-${task}`);
+          if (readout) readout.textContent = b.textContent + " Difficulty";
+          recalculateIndex();
+        });
+      });
+    });
+
+    // Language Selector Toggle
+    const langPicker = document.getElementById('lang-picker');
+    if (langPicker) {
+      langPicker.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          langPicker.querySelectorAll('button').forEach(b => {
+            b.className = "px-sm py-xs rounded text-secondary hover:text-on-surface font-label-md text-label-md transition-all";
+          });
+          btn.className = "px-sm py-xs rounded bg-surface-container-lowest text-primary font-label-md text-label-md shadow-sm transition-all";
+        });
+      });
+    }
+
+    // Effusion Toggle
+    const effYes = document.getElementById('effusion-yes');
+    const effNo = document.getElementById('effusion-no');
+    if (effYes && effNo) {
+      effYes.addEventListener('click', () => {
+        effYes.className = "px-md py-xs rounded bg-primary text-on-primary font-label-md text-label-md font-semibold transition-all shadow-sm";
+        effNo.className = "px-md py-xs rounded text-secondary hover:text-on-surface font-label-md text-label-md transition-all";
+      });
+      effNo.addEventListener('click', () => {
+        effNo.className = "px-md py-xs rounded bg-primary text-on-primary font-label-md text-label-md font-semibold transition-all shadow-sm";
+        effYes.className = "px-md py-xs rounded text-secondary hover:text-on-surface font-label-md text-label-md transition-all";
+      });
+    }
+
+    // Advance to Next Screen
+    const advanceBtn = document.getElementById('advance-btn');
+    if (advanceBtn) {
+      advanceBtn.addEventListener('click', () => {
+        advanceBtn.innerHTML = `<span class="material-symbols-outlined text-[20px] animate-spin">progress_activity</span><span>Saving to EHR...</span>`;
+        setTimeout(() => {
+          const targetNav = document.querySelector('a[data-path="gait-biomechanics-hud"]');
+          if (targetNav) targetNav.click();
+          else alert("Questionnaire record encrypted & saved for Boron Boruah (ID: NER-OA-2024-0892). Proceeding to Gait Telemetry.");
+        }, 600);
+      });
+    }
+
+    // Reset Form Action
+    const resetBtn = document.getElementById('reset-btn');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        painSlider.value = 5;
+        painSlider.dispatchEvent(new Event('input'));
+        stiffnessSlider.value = 20;
+        stiffnessSlider.dispatchEvent(new Event('input'));
+      });
+    }
+
+    // Load Previous Baseline Form Action
+    const loadPrevBtn = document.getElementById('load-prev-btn');
+    if (loadPrevBtn) {
+      loadPrevBtn.addEventListener('click', () => {
+        painSlider.value = 4;
+        painSlider.dispatchEvent(new Event('input'));
+        stiffnessSlider.value = 15;
+        stiffnessSlider.dispatchEvent(new Event('input'));
+        alert("Retrieved Boron Boruah's 6-Month Baseline (June 2024): Total was 19/40 (Moderate). Note current symptom escalation to 28/40.");
+      });
+    }
+
+  })();
+</script></div></div></main><footer class="w-full bg-surface-container-lowest shadow-[0_-1px_4px_rgba(0,0,0,0.03)] py-md"><div class="max-w-[1600px] mx-auto px-lg flex flex-wrap items-center justify-between gap-sm text-on-surface-variant font-body-sm text-body-sm"><div><span>OA-Screen NER Diagnostic Platform</span><span class="mx-xs">·</span><span>ICMR-RMRC North East Joint Tele-Screening Initiative</span></div><div class="flex items-center gap-md"><span class="font-data-mono text-data-mono text-secondary">Sync Node: Diphu-PHC-04</span><span class="text-on-surface-variant">v3.4.2-clinical-lts</span></div></div></footer></body></html>

@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "outline-variant": "#bfc7d2",
+          "on-tertiary-fixed": "#001f26",
+          "error": "#ba1a1a",
+          "tertiary-fixed-dim": "#4cd7f6",
+          "primary-fixed-dim": "#93ccff",
+          "on-background": "#0b1c30",
+          "secondary": "#5a5e6a",
+          "on-secondary": "#ffffff",
+          "on-primary-fixed": "#001d31",
+          "surface-container-highest": "#d3e4fe",
+          "surface-container": "#e5eeff",
+          "on-primary": "#ffffff",
+          "on-surface": "#0b1c30",
+          "on-tertiary-fixed-variant": "#004e5c",
+          "on-secondary-fixed": "#171c25",
+          "primary-container": "#007bb9",
+          "surface-variant": "#d3e4fe",
+          "on-secondary-fixed-variant": "#424752",
+          "tertiary": "#006577",
+          "on-tertiary-container": "#f9fdff",
+          "surface-container-high": "#dce9ff",
+          "error-container": "#ffdad6",
+          "outline": "#707881",
+          "surface-container-low": "#eff4ff",
+          "secondary-fixed": "#dee2f0",
+          "surface-tint": "#006398",
+          "surface-dim": "#cbdbf5",
+          "on-surface-variant": "#3f4850",
+          "surface-container-lowest": "#ffffff",
+          "primary": "#006194",
+          "on-error-container": "#93000a",
+          "on-secondary-container": "#606470",
+          "background": "#f8f9ff",
+          "on-primary-container": "#fdfcff",
+          "inverse-primary": "#93ccff",
+          "primary-fixed": "#cce5ff",
+          "secondary-fixed-dim": "#c2c6d3",
+          "tertiary-container": "#008096",
+          "on-tertiary": "#ffffff",
+          "on-primary-fixed-variant": "#004b73",
+          "surface-bright": "#f8f9ff",
+          "inverse-on-surface": "#eaf1ff",
+          "inverse-surface": "#213145",
+          "on-error": "#ffffff",
+          "surface": "#f8f9ff",
+          "secondary-container": "#dee2f0",
+          "tertiary-fixed": "#acedff"
+        },
+        "borderRadius": {
+          "DEFAULT": "0.25rem",
+          "lg": "0.5rem",
+          "xl": "0.75rem",
+          "full": "9999px"
+        },
+        "spacing": {
+          "sidebar-expanded": "18rem",
+          "2xs": "0.25rem",
+          "card-padding": "1.25rem",
+          "gutter-desktop": "1.5rem",
+          "lg": "1.5rem",
+          "xl": "2rem",
+          "none": "0px",
+          "2xl": "2.5rem",
+          "md": "1rem",
+          "3xl": "3rem",
+          "header-height": "4.25rem",
+          "gutter-mobile": "1rem",
+          "xs": "0.5rem",
+          "sm": "0.75rem",
+          "sidebar-collapsed": "4.5rem"
+        },
+        "fontFamily": {
+          "body-sm": [
+            "Inter"
+          ],
+          "display-lg": [
+            "Plus Jakarta Sans"
+          ],
+          "body-lg": [
+            "Inter"
+          ],
+          "display-lg-mobile": [
+            "Plus Jakarta Sans"
+          ],
+          "headline-sm": [
+            "Plus Jakarta Sans"
+          ],
+          "data-metric": [
+            "Plus Jakarta Sans"
+          ],
+          "label-md": [
+            "Inter"
+          ],
+          "headline-md": [
+            "Plus Jakarta Sans"
+          ],
+          "headline-lg-mobile": [
+            "Plus Jakarta Sans"
+          ],
+          "body-md": [
+            "Inter"
+          ],
+          "data-mono": [
+            "Inter"
+          ],
+          "headline-lg": [
+            "Plus Jakarta Sans"
+          ],
+          "label-sm": [
+            "Inter"
+          ],
+          "label-lg": [
+            "Inter"
+          ]
+        },
+        "fontSize": {
+          "body-sm": [
+            "12px",
+            {
+              "lineHeight": "16px",
+              "letterSpacing": "0.01em",
+              "fontWeight": "400"
+            }
+          ],
+          "display-lg": [
+            "40px",
+            {
+              "lineHeight": "48px",
+              "letterSpacing": "-0.02em",
+              "fontWeight": "700"
+            }
+          ],
+          "body-lg": [
+            "16px",
+            {
+              "lineHeight": "24px",
+              "letterSpacing": "0em",
+              "fontWeight": "400"
+            }
+          ],
+          "display-lg-mobile": [
+            "30px",
+            {
+              "lineHeight": "36px",
+              "letterSpacing": "-0.02em",
+              "fontWeight": "700"
+            }
+          ],
+          "headline-sm": [
+            "16px",
+            {
+              "lineHeight": "24px",
+              "letterSpacing": "-0.005em",
+              "fontWeight": "600"
+            }
+          ],
+          "data-metric": [
+            "24px",
+            {
+              "lineHeight": "30px",
+              "letterSpacing": "-0.02em",
+              "fontWeight": "700"
+            }
+          ],
+          "label-md": [
+            "12px",
+            {
+              "lineHeight": "16px",
+              "letterSpacing": "0.02em",
+              "fontWeight": "600"
+            }
+          ],
+          "headline-md": [
+            "20px",
+            {
+              "lineHeight": "28px",
+              "letterSpacing": "-0.01em",
+              "fontWeight": "600"
+            }
+          ],
+          "headline-lg-mobile": [
+            "22px",
+            {
+              "lineHeight": "28px",
+              "letterSpacing": "-0.01em",
+              "fontWeight": "600"
+            }
+          ],
+          "body-md": [
+            "14px",
+            {
+              "lineHeight": "20px",
+              "letterSpacing": "0em",
+              "fontWeight": "400"
+            }
+          ],
+          "data-mono": [
+            "12px",
+            {
+              "lineHeight": "16px",
+              "letterSpacing": "0.05em",
+              "fontWeight": "500"
+            }
+          ],
+          "headline-lg": [
+            "28px",
+            {
+              "lineHeight": "36px",
+              "letterSpacing": "-0.015em",
+              "fontWeight": "600"
+            }
+          ],
+          "label-sm": [
+            "11px",
+            {
+              "lineHeight": "14px",
+              "letterSpacing": "0.04em",
+              "fontWeight": "600"
+            }
+          ],
+          "label-lg": [
+            "14px",
+            {
+              "lineHeight": "20px",
+              "letterSpacing": "0.01em",
+              "fontWeight": "600"
+            }
+          ]
+        }
+      },
+    },
+  }</script></head><body class="bg-background font-body-md text-on-surface"><header class="fixed top-0 left-0 w-full z-50 bg-inverse-surface shadow-[0_1px_8px_rgba(0,0,0,0.12)]"><div class="h-header-height w-full px-lg flex items-center justify-between gap-md"><div class="flex items-center gap-sm shrink-0"><img alt="OA-Screen NER Biometric Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1UESerUn7UZeRIEqFN5glEro0IZIlWS4OXEmO5GHHO-SPqqg6ShA-s0BjYNV-9pP4meQ2WERnJQQQMPia-eOAHXSaChgeoOLe9m9zjSy0rdfTDYdrAc2k86ZuZpuPmwvhio56W8s5-2jJPuOw6Sug9wMxvw2s-akj_ltHs5Kq-Om0m1IiOyR1vJKf2nMatdPGzOeRWkX9gLX39iGvTvETgDca_iJpDn-ugSXbgnwWH_M0_LQ6mU48q0ITc"/><div class="flex flex-col"><div class="flex items-center gap-xs"><span class="font-headline-sm text-headline-sm text-surface-container-lowest font-bold tracking-tight">OA-Screen NER</span><span class="px-2xs py-none rounded bg-primary-container text-on-primary font-data-mono text-[10px] uppercase font-semibold">ICMR/NER Protocol</span></div><span class="font-label-sm text-label-sm text-surface-dim font-normal">Multimodal AI Screening Support · North Eastern Region</span></div></div><nav class="hidden xl:flex items-center gap-xs px-xs py-2xs rounded-xl bg-surface-container-highest/10" data-active-classes="bg-primary-container text-on-primary-container font-semibold rounded-lg shadow-sm"><a class="px-sm py-xs text-surface-dim hover:text-surface-container-lowest transition-colors font-label-md text-label-md rounded-lg" data-path="overview-and-screen" href="#">Overview &amp; Screen</a><a class="px-sm py-xs text-surface-dim hover:text-surface-container-lowest transition-colors font-label-md text-label-md rounded-lg" data-path="gait-biomechanics-hud" href="#">Gait Biomechanics HUD</a><a class="px-sm py-xs text-surface-dim hover:text-surface-container-lowest transition-colors font-label-md text-label-md rounded-lg" data-path="clinical-questionnaire" href="#">Clinical Questionnaire</a><a class="px-sm py-xs text-surface-dim hover:text-surface-container-lowest transition-colors font-label-md text-label-md rounded-lg" data-path="multimodal-diagnostic-report" href="#">Multimodal Diagnostic Report</a><a class="px-sm py-xs text-surface-dim hover:text-surface-container-lowest transition-colors font-label-md text-label-md rounded-lg" data-path="cohort-and-patients" href="#">Cohort &amp; Patients</a><a aria-current="page" class="px-sm py-xs transition-colors bg-primary-container text-on-primary-container font-semibold rounded-lg shadow-sm" data-path="esp32-hardware-fleet" href="#">ESP32 Hardware Fleet</a></nav><div class="flex items-center gap-sm shrink-0"><div class="hidden 2xl:flex items-center gap-xs px-sm py-2xs rounded-full bg-surface-container-highest/10"><span class="w-2 h-2 rounded-full bg-tertiary-fixed-dim animate-pulse"></span><span class="font-data-mono text-data-mono text-tertiary-fixed">Edge AI Active · MediaPipe Gait v2.4</span></div><div class="hidden md:flex items-center gap-2xs px-sm py-2xs rounded-full bg-surface-container-highest/10"><span class="material-symbols-outlined text-surface-dim text-[16px]">location_on</span><span class="font-label-sm text-label-sm text-surface-dim">Diphu PHC, Karbi Anglong, Assam</span></div><div class="flex items-center gap-xs pl-xs"><div class="text-right hidden sm:block"><p class="font-label-md text-label-md text-surface-container-lowest font-semibold leading-tight">Dr. R. Sharma, MO</p><p class="font-label-sm text-label-sm text-surface-dim">Clinical Screener</p></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></div><div class="w-full bg-surface-container-lowest shadow-[0_1px_4px_rgba(0,0,0,0.05)] px-lg py-xs"><div class="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-sm"><div class="flex items-center gap-md"><div class="flex items-center gap-xs"><span class="font-label-sm text-label-sm text-on-surface-variant uppercase font-semibold">Active Patient</span><span class="font-headline-sm text-headline-sm text-on-surface font-bold">Boron Boruah</span><span class="font-data-mono text-data-mono px-xs py-2xs bg-surface-container rounded text-on-surface-variant font-medium">ID: NER-OA-2024-0892</span></div><div class="hidden lg:flex items-center gap-xs text-on-surface-variant font-body-sm text-body-sm"><span class="w-1 h-1 rounded-full bg-outline-variant"></span><span>52y, Male</span><span class="w-1 h-1 rounded-full bg-outline-variant"></span><span>Tea Garden Agronomist</span><span class="w-1 h-1 rounded-full bg-outline-variant"></span><span class="text-on-surface">Karbi Anglong, Assam</span></div><div class="flex items-center gap-xs"><button class="flex items-center gap-2xs px-sm py-2xs rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-label-sm text-label-sm transition-colors" type="button"><span class="material-symbols-outlined text-[16px] text-secondary">swap_horiz</span>Switch Patient</button><button class="flex items-center gap-2xs px-sm py-2xs rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-sm text-label-sm transition-colors font-semibold" type="button"><span class="material-symbols-outlined text-[16px] text-on-primary">person_add</span>+ Enroll Patient</button></div></div><div class="flex items-center gap-xs"><div class="flex items-center gap-xs px-sm py-2xs rounded-full bg-surface-container"><span class="w-2 h-2 rounded-full bg-primary"></span><span class="font-label-sm text-label-sm text-on-surface">Survey: Complete (7/10)</span></div><div class="flex items-center gap-xs px-sm py-2xs rounded-full bg-tertiary-fixed"><span class="w-2 h-2 rounded-full bg-tertiary"></span><span class="font-label-sm text-label-sm text-on-tertiary-fixed">Gait: Ready for 8s Test</span></div></div></div></div></header><main class="w-full pt-header-height bg-background"><div class="pt-12 min-h-screen"><div class="max-w-[1600px] mx-auto px-lg py-lg"><div class="flex flex-col w-full">
+<!-- Top Ambient Depth Accent -->
+<div class="relative w-full overflow-hidden mb-xl">
+<div class="absolute -top-16 right-0 w-96 h-96 rounded-full bg-surface-container-high/40 blur-3xl pointer-events-none"></div>
+<div class="absolute top-4 left-1/3 w-72 h-72 rounded-full bg-primary-fixed/20 blur-2xl pointer-events-none"></div>
+<!-- Section 1: Overview Header & Strategic KPIs -->
+<div class="relative z-10 flex flex-col xl:flex-row xl:items-end justify-between gap-lg pb-md">
+<div class="max-w-3xl">
+<div class="flex items-center gap-xs mb-xs">
+<span class="inline-flex items-center px-xs py-2xs rounded bg-surface-container-high font-data-mono text-data-mono text-primary font-semibold uppercase tracking-wider">
+            FLEET-TELEMETRY // NER-PHC-EDGE
+          </span>
+<span class="inline-flex items-center gap-2xs px-xs py-2xs rounded bg-tertiary-fixed font-data-mono text-data-mono text-on-tertiary-fixed">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse"></span>
+            ESP-MESH PROTOCOL v4.1
+          </span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface font-bold tracking-tight">
+          Rural Clinic Edge Hardware &amp; Camera Fleet Management
+        </h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2xs leading-relaxed">
+          Monitor, configure, and calibrate distributed ESP32-CAM wireless video capture nodes across primary health centers (PHCs) and sub-centers. Automated synchronization for low-connectivity North-Eastern hill tracts.
+        </p>
+</div>
+<!-- Quick Action Group -->
+<div class="flex items-center gap-xs shrink-0">
+<button class="flex items-center gap-2xs px-md py-xs rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high transition-all shadow-sm font-label-md text-label-md font-medium active:scale-95" id="refreshNodesBtn" type="button">
+<span class="material-symbols-outlined text-[18px] text-secondary" id="refreshSpinIcon">sync</span>
+          Scan Mesh Bus
+        </button>
+<button class="flex items-center gap-2xs px-md py-xs rounded-lg bg-error-container text-on-error-container hover:bg-error/20 transition-all font-label-md text-label-md font-semibold" id="emergencyKillBtn" type="button">
+<span class="material-symbols-outlined text-[18px]">power_settings_new</span>
+          Master Standby
+        </button>
+</div>
+</div>
+<!-- KPI Metric Cluster Ribbon -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-md mt-sm">
+<div class="bg-surface-container-lowest p-card-padding rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Topology Nodes</span>
+<span class="material-symbols-outlined text-[20px] text-primary">router</span>
+</div>
+<div class="mt-xs flex items-baseline gap-2xs">
+<span class="font-data-metric text-data-metric text-on-surface font-bold">3</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Allocated / 2 Active</span>
+</div>
+<div class="mt-xs flex items-center gap-2xs">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Karbi Anglong Subnet AP</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-card-padding rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Live Video Feeds</span>
+<span class="material-symbols-outlined text-[20px] text-tertiary">videocam</span>
+</div>
+<div class="mt-xs flex items-baseline gap-2xs">
+<span class="font-data-metric text-data-metric text-tertiary font-bold">1 Active</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">MJPEG 30 FPS</span>
+</div>
+<div class="mt-xs flex items-center gap-2xs">
+<span class="w-2 h-2 rounded-full bg-tertiary-fixed-dim"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Zero dropped frames (10m runway)</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-card-padding rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Subnet Roundtrip</span>
+<span class="material-symbols-outlined text-[20px] text-primary-container">speed</span>
+</div>
+<div class="mt-xs flex items-baseline gap-2xs">
+<span class="font-data-metric text-data-metric text-on-surface font-bold">28<span class="font-headline-sm text-headline-sm">ms</span></span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">±4ms jitter</span>
+</div>
+<div class="mt-xs flex items-center gap-2xs">
+<span class="material-symbols-outlined text-[14px] text-primary">wifi_channel</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Channel 6 · 2.4GHz IEEE 802.11b/g/n</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-card-padding rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Mesh Resiliency</span>
+<span class="material-symbols-outlined text-[20px] text-secondary">hub</span>
+</div>
+<div class="mt-xs flex items-baseline gap-2xs">
+<span class="font-data-metric text-data-metric text-on-surface font-bold">Peer Mesh</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Online</span>
+</div>
+<div class="mt-xs flex items-center gap-2xs">
+<span class="w-2 h-2 rounded-full bg-primary-fixed-dim"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Diphu PHC Gateway Capable</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Section 2: Connected Hardware Nodes Grid (Bento Architectural Canvas) -->
+<div class="flex flex-col gap-md mb-xl">
+<div class="flex items-center justify-between px-2xs">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface font-bold">Distributed Runway Camera Array</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Hardware endpoints delivering synchronized dual-orthogonal perspectives for MediaPipe joint coordinate extraction.</p>
+</div>
+<div class="hidden sm:flex items-center gap-xs font-data-mono text-data-mono text-on-surface-variant">
+<span>RUNWAY CONFIG: 8.0 METERS</span>
+<span>•</span>
+<span class="text-primary font-semibold">CALIBRATION PROTOCOL V2</span>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
+<!-- NODE 01: Active Streaming Unit (Primary Sagittal) -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-card-padding flex flex-col justify-between relative overflow-hidden transition-all hover:shadow-md">
+<!-- Running Accent Banner -->
+<div class="absolute top-0 left-0 right-0 h-1.5 bg-tertiary"></div>
+<div>
+<!-- Header Bar -->
+<div class="flex items-start justify-between gap-xs pt-xs">
+<div class="flex items-center gap-xs">
+<div class="w-9 h-9 rounded-lg bg-surface-container-high flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[22px]">videocam</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold leading-tight">ESP32-CAM Unit #01</h3>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Sagittal Primary Runway</span>
+</div>
+</div>
+<span class="inline-flex items-center gap-2xs px-xs py-2xs rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-data-mono text-data-mono font-semibold">
+<span class="w-2 h-2 rounded-full bg-tertiary animate-ping"></span>
+              Streaming
+            </span>
+</div>
+<!-- Live Feed Optical HUD Viewport -->
+<div class="mt-md relative rounded-lg overflow-hidden bg-inverse-surface h-48 group">
+<img class="w-full h-full object-cover opacity-80" data-alt="High quality biomechanical gait runway view through an OV2640 camera mounted on clinical tripod in an Assam primary health clinic with floor coordinate grid markings, cinematic diagnostic lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAH-GqsJZDpjpntM5rrNL6XUK489TjqElFsDb21SvODZLBPP9NPZgYdnYIoqaSUfXcYus0cDdIZX4qkE9CsdjkHpK4qUuNNOaPxQ_RXAY6fSgRYT4cAC8RZWpGzXoyq28Xf-Ay57E7HotuFhOONhyfOy0Mye2dUDeyZANXAmUk7gIJbBjL7F3fuEznY8N4AzPI640vdaqpHCkBg-RpiEIFossbi_Q3pXG46u_MFVi7k4YLK1LPeDyEz"/>
+<!-- Vision Reticle HUD Overlays -->
+<div class="absolute inset-0 p-xs flex flex-col justify-between pointer-events-none">
+<div class="flex items-center justify-between">
+<span class="px-2xs py-none rounded bg-inverse-surface/80 text-tertiary-fixed-dim font-data-mono text-[10px] tracking-wider">
+                  CAM_01: MJPEG / 1280x720 @ 30.2 FPS
+                </span>
+<span class="px-2xs py-none rounded bg-tertiary/90 text-on-tertiary font-data-mono text-[10px]">
+                  LIVE SYNCHRONIZED
+                </span>
+</div>
+<!-- Crosshair & Axis Marker -->
+<div class="flex items-center justify-center">
+<div class="relative w-16 h-16 flex items-center justify-center">
+<div class="absolute w-full h-[1px] bg-tertiary-fixed-dim/60"></div>
+<div class="absolute h-full w-[1px] bg-tertiary-fixed-dim/60"></div>
+<div class="w-6 h-6 rounded-full bg-transparent"></div>
+<span class="absolute bottom-1 right-1 font-data-mono text-[9px] text-tertiary-fixed-dim">GND-0.00</span>
+</div>
+</div>
+<div class="flex items-center justify-between font-data-mono text-[10px] text-inverse-on-surface/90">
+<span>BUFFER: 98.4%</span>
+<span class="text-tertiary-fixed">KNEE_TRAJ_LOCK: DETECTED</span>
+</div>
+</div>
+</div>
+<!-- Editable Connection Config Bar -->
+<div class="mt-md bg-surface-container-low p-xs rounded-lg flex flex-col gap-2xs">
+<div class="flex items-center justify-between">
+<label class="font-label-sm text-label-sm text-on-surface-variant font-medium" for="ipNode1">Stream RTSP / IP Target</label>
+<span class="font-data-mono text-[11px] text-primary font-semibold">Port: 81 /stream</span>
+</div>
+<div class="flex items-center gap-xs">
+<div class="relative flex-1">
+<input class="w-full h-8 px-xs rounded bg-surface-container-lowest text-on-surface font-data-mono text-data-mono shadow-sm focus:outline-none focus:bg-surface-bright" id="ipNode1" type="text" value="192.168.4.105"/>
+</div>
+<button class="px-xs h-8 rounded bg-surface-container text-on-surface hover:bg-surface-container-high font-label-sm text-label-sm font-medium transition-colors" title="Save IP" type="button">
+                Save
+              </button>
+</div>
+</div>
+<!-- Micro Telemetry Grid -->
+<div class="grid grid-cols-3 gap-xs mt-sm text-center">
+<div class="bg-surface-container p-2xs rounded">
+<span class="font-label-sm text-label-sm text-on-surface-variant block">Latency</span>
+<span class="font-data-mono text-data-mono text-tertiary font-bold" id="latencyNode1">24 ms</span>
+</div>
+<div class="bg-surface-container p-2xs rounded">
+<span class="font-label-sm text-label-sm text-on-surface-variant block">RSSI</span>
+<span class="font-data-mono text-data-mono text-on-surface font-bold">-58 dBm</span>
+</div>
+<div class="bg-surface-container p-2xs rounded">
+<span class="font-label-sm text-label-sm text-on-surface-variant block">Power Bus</span>
+<span class="font-data-mono text-data-mono text-on-surface font-bold">5.12V Main</span>
+</div>
+</div>
+</div>
+<!-- Action Control Cluster -->
+<div class="mt-lg pt-sm flex flex-wrap gap-xs">
+<button class="flex-1 min-w-[100px] flex items-center justify-center gap-2xs px-xs py-2xs rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md font-semibold transition-colors" onclick="pingNode('node1', '192.168.4.105')" type="button">
+<span class="material-symbols-outlined text-[16px] text-primary">network_ping</span>
+            Ping
+          </button>
+<button class="flex-1 min-w-[120px] flex items-center justify-center gap-2xs px-xs py-2xs rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md font-semibold transition-colors" onclick="calibrateNode('node1')" type="button">
+<span class="material-symbols-outlined text-[16px] text-tertiary">straighten</span>
+            Calibrate 0
+          </button>
+<button class="px-xs py-2xs rounded-lg bg-surface-container hover:bg-error-container text-on-surface hover:text-on-error-container font-label-md text-label-md transition-colors" onclick="rebootNode('Unit #01')" title="Hard Reboot Node" type="button">
+<span class="material-symbols-outlined text-[16px]">restart_alt</span>
+</button>
+</div>
+</div>
+<!-- NODE 02: Auxiliary Coronal Unit (Standby / Synced) -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-card-padding flex flex-col justify-between relative overflow-hidden transition-all hover:shadow-md">
+<!-- Standby Accent Banner -->
+<div class="absolute top-0 left-0 right-0 h-1.5 bg-secondary"></div>
+<div>
+<!-- Header Bar -->
+<div class="flex items-start justify-between gap-xs pt-xs">
+<div class="flex items-center gap-xs">
+<div class="w-9 h-9 rounded-lg bg-surface-container-high flex items-center justify-center text-secondary shrink-0">
+<span class="material-symbols-outlined text-[22px]">switch_video</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold leading-tight">ESP32-CAM Unit #02</h3>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Coronal Frontal Runway (Aux)</span>
+</div>
+</div>
+<span class="inline-flex items-center gap-2xs px-xs py-2xs rounded-full bg-secondary-container text-on-secondary-container font-data-mono text-data-mono font-semibold">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+              Standby
+            </span>
+</div>
+<!-- Standby Viewport Preview -->
+<div class="mt-md relative rounded-lg overflow-hidden bg-surface-container-high h-48 flex flex-col items-center justify-center p-md text-center">
+<span class="material-symbols-outlined text-[42px] text-secondary">motion_photos_paused</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold mt-xs">Coronal Angle Armed</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-2xs max-w-xs">
+              Synchronized trigger ready. Auto-engages stream when Patient initiates 8-meter stride.
+            </p>
+<div class="mt-xs inline-flex items-center gap-xs font-data-mono text-[11px] text-secondary">
+<span>OV2640 WIDE-LENS</span>
+<span>•</span>
+<span>STANDBY CURR: 78mA</span>
+</div>
+</div>
+<!-- IP Config Bar -->
+<div class="mt-md bg-surface-container-low p-xs rounded-lg flex flex-col gap-2xs">
+<div class="flex items-center justify-between">
+<label class="font-label-sm text-label-sm text-on-surface-variant font-medium" for="ipNode2">Stream RTSP / IP Target</label>
+<span class="font-data-mono text-[11px] text-secondary font-semibold">Port: 81 /stream</span>
+</div>
+<div class="flex items-center gap-xs">
+<div class="relative flex-1">
+<input class="w-full h-8 px-xs rounded bg-surface-container-lowest text-on-surface font-data-mono text-data-mono shadow-sm focus:outline-none focus:bg-surface-bright" id="ipNode2" type="text" value="192.168.4.106"/>
+</div>
+<button class="px-xs h-8 rounded bg-surface-container text-on-surface hover:bg-surface-container-high font-label-sm text-label-sm font-medium transition-colors" title="Save IP" type="button">
+                Save
+              </button>
+</div>
+</div>
+<!-- Micro Telemetry Grid -->
+<div class="grid grid-cols-3 gap-xs mt-sm text-center">
+<div class="bg-surface-container p-2xs rounded">
+<span class="font-label-sm text-label-sm text-on-surface-variant block">Latency</span>
+<span class="font-data-mono text-data-mono text-on-surface font-bold" id="latencyNode2">31 ms</span>
+</div>
+<div class="bg-surface-container p-2xs rounded">
+<span class="font-label-sm text-label-sm text-on-surface-variant block">RSSI</span>
+<span class="font-data-mono text-data-mono text-on-surface font-bold">-64 dBm</span>
+</div>
+<div class="bg-surface-container p-2xs rounded">
+<span class="font-label-sm text-label-sm text-on-surface-variant block">Firmware</span>
+<span class="font-data-mono text-data-mono text-on-surface font-bold">v3.4.1-LTS</span>
+</div>
+</div>
+</div>
+<!-- Action Control Cluster -->
+<div class="mt-lg pt-sm flex flex-wrap gap-xs">
+<button class="flex-1 min-w-[90px] flex items-center justify-center gap-2xs px-xs py-2xs rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md font-semibold transition-colors" onclick="pingNode('node2', '192.168.4.106')" type="button">
+<span class="material-symbols-outlined text-[16px] text-primary">network_ping</span>
+            Ping
+          </button>
+<button class="flex-1 min-w-[130px] flex items-center justify-center gap-2xs px-xs py-2xs rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md font-semibold transition-colors shadow-sm" onclick="startStreamNode2()" type="button">
+<span class="material-symbols-outlined text-[16px]">play_circle</span>
+            Start Stream
+          </button>
+<button class="px-xs py-2xs rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md transition-colors" onclick="firmwareOTA('Unit #02')" title="Check OTA Update" type="button">
+<span class="material-symbols-outlined text-[16px] text-primary">system_update_alt</span>
+</button>
+</div>
+</div>
+<!-- NODE 03: Mobile Kit Node (Van Battery Pack Unit) -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-card-padding flex flex-col justify-between relative overflow-hidden transition-all hover:shadow-md">
+<!-- Offline Accent Banner -->
+<div class="absolute top-0 left-0 right-0 h-1.5 bg-outline-variant"></div>
+<div>
+<!-- Header Bar -->
+<div class="flex items-start justify-between gap-xs pt-xs">
+<div class="flex items-center gap-xs">
+<div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-outline shrink-0">
+<span class="material-symbols-outlined text-[22px]">videocam_off</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold leading-tight">ESP32-CAM Unit #03</h3>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Mobile Screening Van Kit</span>
+</div>
+</div>
+<span class="inline-flex items-center gap-2xs px-xs py-2xs rounded-full bg-surface-container text-on-surface-variant font-data-mono text-data-mono">
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+              Offline
+            </span>
+</div>
+<!-- Offline Diagnostics Visualizer -->
+<div class="mt-md relative rounded-lg overflow-hidden bg-surface-container-low h-48 flex flex-col items-center justify-center p-md text-center">
+<span class="material-symbols-outlined text-[36px] text-outline">portable_wifi_off</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold mt-xs">Disengaged from AP</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-2xs">
+              Last seen 2 hours ago at <span class="font-semibold text-on-surface">Bokajan Sub-center</span> battery pack transit.
+            </p>
+<div class="mt-xs inline-flex items-center gap-xs px-xs py-2xs rounded bg-surface-container font-data-mono text-[10px] text-on-surface-variant">
+<span>MAC: 3C:61:05:8B:11:82</span>
+<span>•</span>
+<span>18650 Li-ion 3.7V</span>
+</div>
+</div>
+<!-- IP Config Bar -->
+<div class="mt-md bg-surface-container-low p-xs rounded-lg flex flex-col gap-2xs">
+<div class="flex items-center justify-between">
+<label class="font-label-sm text-label-sm text-on-surface-variant font-medium" for="ipNode3">Last Known IP</label>
+<span class="font-data-mono text-[11px] text-outline font-semibold">Subnet Static</span>
+</div>
+<div class="flex items-center gap-xs">
+<div class="relative flex-1">
+<input class="w-full h-8 px-xs rounded bg-surface-container text-outline font-data-mono text-data-mono cursor-not-allowed" disabled="" id="ipNode3" type="text" value="192.168.4.110"/>
+</div>
+<button class="px-xs h-8 rounded bg-surface-container text-outline font-label-sm text-label-sm cursor-not-allowed" disabled="" type="button">
+                Lock
+              </button>
+</div>
+</div>
+<!-- Micro Telemetry Grid -->
+<div class="grid grid-cols-3 gap-xs mt-sm text-center">
+<div class="bg-surface-container p-2xs rounded">
+<span class="font-label-sm text-label-sm text-on-surface-variant block">Last Ping</span>
+<span class="font-data-mono text-data-mono text-on-surface font-bold">128 min</span>
+</div>
+<div class="bg-surface-container p-2xs rounded">
+<span class="font-label-sm text-label-sm text-on-surface-variant block">Batt Capacity</span>
+<span class="font-data-mono text-data-mono text-on-surface font-bold">~64%</span>
+</div>
+<div class="bg-surface-container p-2xs rounded">
+<span class="font-label-sm text-label-sm text-on-surface-variant block">Log File</span>
+<span class="font-data-mono text-data-mono text-on-surface font-bold">1.4 MB</span>
+</div>
+</div>
+</div>
+<!-- Action Control Cluster -->
+<div class="mt-lg pt-sm flex flex-wrap gap-xs">
+<button class="flex-1 min-w-[140px] flex items-center justify-center gap-2xs px-xs py-2xs rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md font-semibold transition-colors" onclick="wakeOnLan()" type="button">
+<span class="material-symbols-outlined text-[16px] text-primary">sensors</span>
+            Wake on Mesh
+          </button>
+<button class="flex-1 min-w-[120px] flex items-center justify-center gap-2xs px-xs py-2xs rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md font-medium transition-colors" onclick="downloadDiagnosticLogs()" type="button">
+<span class="material-symbols-outlined text-[16px] text-secondary">article</span>
+            Audit Log
+          </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Workspace: Configuration Panel (Col 7) & Environmental Field Sync Telemetry (Col 5) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-lg items-start">
+<!-- Section 3: Manual Device Provisioning & Calibrated Stream Config (7 cols) -->
+<div class="lg:col-span-7 bg-surface-container-lowest p-card-padding rounded-xl shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-sm">
+<div>
+<span class="font-label-sm text-label-sm text-primary uppercase font-bold tracking-wider">HARDWARE PROVISIONING</span>
+<h2 class="font-headline-md text-headline-md text-on-surface font-bold mt-2xs">Manual Node Binding &amp; Optical Setup</h2>
+</div>
+<span class="p-xs rounded-lg bg-surface-container text-primary">
+<span class="material-symbols-outlined text-[24px]">tune</span>
+</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-md">
+          Enroll ad-hoc ESP32-CAM or UVC sensors deployed in mobile screening camps across Karbi Anglong, Dima Hasao, and Barpeta PHCs.
+        </p>
+<!-- Form Elements Container -->
+<form class="flex flex-col gap-md" id="nodeRegistrationForm" onsubmit="event.preventDefault(); registerNewNode();">
+<!-- Input URL / IP -->
+<div class="flex flex-col gap-2xs">
+<label class="font-label-md text-label-md text-on-surface font-semibold flex items-center justify-between" for="streamUrl">
+<span>Add New ESP32-CAM Stream IP / RTSP Target</span>
+<span class="font-data-mono text-[11px] text-on-surface-variant font-normal">HTTP / WS / RTSP</span>
+</label>
+<div class="relative flex items-center">
+<span class="absolute left-sm material-symbols-outlined text-[18px] text-outline">link</span>
+<input class="w-full h-10 pl-9 pr-xs rounded-lg bg-surface-container-lowest text-on-surface font-data-mono text-data-mono shadow-sm focus:outline-none focus:bg-surface-bright" id="streamUrl" placeholder="http://192.168.4.112:81/stream" type="text" value="http://192.168.4.112:81/stream"/>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Default port for AI-Thinker ESP32-CAM video server firmware is 81.</p>
+</div>
+<!-- Two-Col Select Group: Lens & Resolution -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
+<!-- Lens Selection -->
+<div class="flex flex-col gap-2xs">
+<label class="font-label-md text-label-md text-on-surface font-semibold" for="lensSelect">Lens Optical Profile</label>
+<div class="relative">
+<select class="w-full h-10 px-sm rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none appearance-none cursor-pointer" id="lensSelect">
+<option selected="" value="ov2640">OV2640 Standard 68° FOV (Default)</option>
+<option value="ov5640">OV5640 Fisheye 120° Wide Angle</option>
+<option value="uvc">External USB UVC Web Camera (60 FPS)</option>
+<option value="m12">M12 Low-Distortion Orthogonal Lens</option>
+</select>
+<span class="absolute right-sm top-2.5 material-symbols-outlined text-[18px] text-on-surface-variant pointer-events-none">expand_more</span>
+</div>
+</div>
+<!-- Resolution Settings -->
+<div class="flex flex-col gap-2xs">
+<label class="font-label-md text-label-md text-on-surface font-semibold" for="resolutionSelect">Framing Resolution</label>
+<div class="relative">
+<select class="w-full h-10 px-sm rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none appearance-none cursor-pointer" id="resolutionSelect">
+<option value="svga">SVGA 800x600 · 30 FPS</option>
+<option selected="" value="hd">HD 1280x720 · 30 FPS (Recommended)</option>
+<option value="uxga">UXGA 1600x1200 · 15 FPS (High Detail)</option>
+<option value="vga">VGA 640x480 · 40 FPS (Ultra Low Latency)</option>
+</select>
+<span class="absolute right-sm top-2.5 material-symbols-outlined text-[18px] text-on-surface-variant pointer-events-none">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Runway Position Assignment Radio Cards -->
+<div class="flex flex-col gap-2xs">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Physical Runway Mount Anchor</span>
+<div class="grid grid-cols-3 gap-xs">
+<label class="flex flex-col items-center p-xs rounded-lg bg-surface-container-low hover:bg-surface-container cursor-pointer transition-colors text-center">
+<input checked="" class="sr-only" name="runway_pos" type="radio" value="sagittal"/>
+<span class="material-symbols-outlined text-[20px] text-primary">view_sidebar</span>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold mt-2xs">Sagittal Lateral</span>
+<span class="font-body-sm text-[10px] text-on-surface-variant">Side Stride 90°</span>
+</label>
+<label class="flex flex-col items-center p-xs rounded-lg bg-surface-container-low hover:bg-surface-container cursor-pointer transition-colors text-center">
+<input class="sr-only" name="runway_pos" type="radio" value="coronal"/>
+<span class="material-symbols-outlined text-[20px] text-secondary">view_column</span>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold mt-2xs">Coronal Front</span>
+<span class="font-body-sm text-[10px] text-on-surface-variant">Valgus Angle 0°</span>
+</label>
+<label class="flex flex-col items-center p-xs rounded-lg bg-surface-container-low hover:bg-surface-container cursor-pointer transition-colors text-center">
+<input class="sr-only" name="runway_pos" type="radio" value="roving"/>
+<span class="material-symbols-outlined text-[20px] text-tertiary">videocam</span>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold mt-2xs">Roving / Sit-Stand</span>
+<span class="font-body-sm text-[10px] text-on-surface-variant">TUG Test Node</span>
+</label>
+</div>
+</div>
+<!-- Dynamic Verification Feedback Alert Box -->
+<div class="p-xs rounded-lg bg-surface-container hidden items-center justify-between" id="testResultBox">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-[20px] text-tertiary">check_circle</span>
+<div>
+<span class="font-label-sm text-label-sm text-on-surface font-bold">Node Responded: HTTP 200 OK</span>
+<p class="font-data-mono text-[11px] text-on-surface-variant">Frame Rate: 29.8 FPS | OV2640 Sensor ID: 0x96</p>
+</div>
+</div>
+<span class="font-data-mono text-data-mono text-tertiary font-bold">OK</span>
+</div>
+<!-- Action Buttons Dual Pair -->
+<div class="flex flex-col sm:flex-row items-center gap-sm pt-xs">
+<button class="w-full sm:w-auto flex-1 flex items-center justify-center gap-xs px-md py-xs rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md font-semibold transition-all shadow-sm active:scale-98" id="pingTestBtn" onclick="runFramerateTest()" type="button">
+<span class="material-symbols-outlined text-[18px] text-primary">bolt</span>
+              Ping Test &amp; Verify Frame Rate
+            </button>
+<button class="w-full sm:w-auto flex-1 flex items-center justify-center gap-xs px-md py-xs rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md font-semibold transition-all shadow-sm active:scale-98" id="registerBtn" type="submit">
+<span class="material-symbols-outlined text-[18px]">save</span>
+              Register Hardware Node
+            </button>
+</div>
+</form>
+</div>
+<!-- Footer Help String -->
+<div class="mt-md pt-sm flex items-center justify-between text-on-surface-variant font-body-sm text-body-sm">
+<span class="flex items-center gap-2xs">
+<span class="material-symbols-outlined text-[16px] text-primary">verified_user</span>
+          ICMR-NER Edge Firmware Hash: <span class="font-data-mono text-data-mono">SHA256:7b90cf</span>
+</span>
+<a class="text-primary hover:underline font-label-sm text-label-sm" href="#">Download ESP Flasher Tool</a>
+</div>
+</div>
+<!-- Section 4: Offline Edge AI Sync & Field Telemetry Status (5 cols) -->
+<div class="lg:col-span-5 flex flex-col gap-md">
+<!-- Local Video Cache & Cloud Sync Diagnostics -->
+<div class="bg-surface-container-lowest p-card-padding rounded-xl shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-xs">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-[22px] text-tertiary">cloud_sync</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">Edge Video Store &amp; Sync</h3>
+</div>
+<span class="px-xs py-2xs rounded bg-surface-container text-on-surface-variant font-data-mono text-data-mono">
+              OFFLINE FIRST
+            </span>
+</div>
+<!-- Video Buffer Progress Bar & Metrics -->
+<div class="mt-sm bg-surface-container-low p-sm rounded-lg">
+<div class="flex items-center justify-between mb-2xs">
+<span class="font-label-sm text-label-sm text-on-surface-variant">SQLite / IndexedDB Local Video Buffer</span>
+<span class="font-data-mono text-data-mono text-on-surface font-bold">48 / 100 Sessions</span>
+</div>
+<!-- Interactive Stylized Progress Meter (Inline SVG) -->
+<div class="w-full bg-surface-container rounded-full h-3 overflow-hidden">
+<div class="bg-primary h-full rounded-full transition-all duration-500" style="width: 48%;"></div>
+</div>
+<div class="flex items-center justify-between mt-2xs font-data-mono text-[11px] text-on-surface-variant">
+<span>Used: 3.2 GB</span>
+<span>Available Flash: 12.8 GB</span>
+</div>
+</div>
+<!-- Cloud Registry Sync State -->
+<div class="mt-md flex flex-col gap-xs">
+<div class="flex items-start gap-sm p-xs rounded-lg bg-surface-container">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-primary shrink-0 mt-2xs">
+<span class="material-symbols-outlined text-[18px]">dns</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface font-bold truncate">ICMR-NER Central Data Registry</span>
+<span class="inline-flex items-center gap-2xs font-data-mono text-[11px] text-primary">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                    Standby
+                  </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-2xs">
+                  Auto-sync triggers upon detection of BSNL 4G or fiber uplink. Telemetry queued with SHA-256 integrity seal.
+                </p>
+<div class="mt-xs flex items-center justify-between font-label-sm text-label-sm">
+<span class="text-on-surface-variant">Last Synced: Today 08:34 AM (14 Records)</span>
+<button class="text-primary hover:underline font-semibold" onclick="triggerManualSync()" type="button">Force Check</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Sync Progress Micro-widget -->
+<div class="mt-md p-xs rounded bg-surface-container-low hidden items-center justify-between font-label-sm text-label-sm text-primary" id="syncStatusNotice">
+<span class="flex items-center gap-2xs">
+<span class="material-symbols-outlined text-[16px] animate-spin">refresh</span>
+            Checking ICMR Node Diphu-PHC-04 handshake...
+          </span>
+<span class="font-data-mono">Pinging</span>
+</div>
+</div>
+<!-- Field Environmental Conditions (DHT22 Sensor on Unit #01) -->
+<div class="bg-surface-container-lowest p-card-padding rounded-xl shadow-sm">
+<div class="flex items-center justify-between pb-xs">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-[22px] text-tertiary">thermostat</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">Field Runway Climate Sensors</h3>
+</div>
+<span class="px-xs py-2xs rounded bg-tertiary-fixed text-on-tertiary-fixed font-data-mono text-[11px] font-semibold">
+            DHT22 ONLINE
+          </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-md">
+          Monsoon heat and high humidity alter joint stiffness and camera lens condensation. Dynamic compensator calibrates computer vision skin edge thresholds.
+        </p>
+<!-- Ambient Dual Meters -->
+<div class="grid grid-cols-2 gap-md">
+<!-- Temperature Gauge Card -->
+<div class="bg-surface-container-low p-sm rounded-lg flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Ambient Temp</span>
+<span class="material-symbols-outlined text-[18px] text-error">device_thermostat</span>
+</div>
+<div class="mt-xs">
+<span class="font-data-metric text-data-metric text-on-surface font-bold">27.4°C</span>
+</div>
+<!-- Sparkline Inline SVG -->
+<div class="mt-xs pt-xs">
+<svg class="w-full h-8 text-primary" fill="none" viewbox="0 0 100 24">
+<path d="M0,18 L15,16 L30,19 L45,14 L60,15 L75,10 L90,12 L100,8" stroke="currentColor" stroke-linecap="round" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+</svg>
+<span class="font-data-mono text-[10px] text-on-surface-variant block mt-2xs">6-hr Range: 24.1 - 28.2°C</span>
+</div>
+</div>
+<!-- Humidity Gauge Card -->
+<div class="bg-surface-container-low p-sm rounded-lg flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Relative Humidity</span>
+<span class="material-symbols-outlined text-[18px] text-tertiary">water_drop</span>
+</div>
+<div class="mt-xs">
+<span class="font-data-metric text-data-metric text-tertiary font-bold">78%</span>
+</div>
+<!-- Sparkline Inline SVG -->
+<div class="mt-xs pt-xs">
+<svg class="w-full h-8 text-tertiary" fill="none" viewbox="0 0 100 24">
+<path d="M0,8 L20,12 L35,9 L55,14 L70,11 L85,15 L100,14" stroke="currentColor" stroke-linecap="round" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+</svg>
+<span class="font-data-mono text-[10px] text-on-surface-variant block mt-2xs">Dewpoint: 23.1°C (High)</span>
+</div>
+</div>
+</div>
+<!-- Compensation Pill Banner -->
+<div class="mt-md p-xs rounded-lg bg-surface-container flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px] text-tertiary shrink-0">dew_point</span>
+<span class="font-body-sm text-body-sm text-on-surface leading-tight">
+<strong>Monsoon Climate Compensation Active:</strong> Optical anti-fog gain +14% applied to OV2640 sensor profile.
+          </span>
+</div>
+</div>
+</div>
+</div>
+<!-- Micro-Interaction Toast Floating Notification Container -->
+<div class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 pointer-events-none transition-all duration-300 bg-inverse-surface text-inverse-on-surface px-md py-sm rounded-xl shadow-xl flex items-center gap-sm" id="toastNotification">
+<span class="material-symbols-outlined text-[20px] text-tertiary-fixed" id="toastIcon">info</span>
+<span class="font-body-md text-body-md" id="toastMessage">Hardware notification message</span>
+</div>
+</div>
+<script>
+  // Toast Notification Helper
+  function showToast(message, icon = 'info', isError = false) {
+    const toast = document.getElementById('toastNotification');
+    const toastMsg = document.getElementById('toastMessage');
+    const toastIcon = document.getElementById('toastIcon');
+
+    toastMsg.textContent = message;
+    toastIcon.textContent = icon;
+    toastIcon.className = isError ? 'material-symbols-outlined text-[20px] text-error' : 'material-symbols-outlined text-[20px] text-tertiary-fixed';
+
+    toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+    toast.classList.add('translate-y-0', 'opacity-100');
+
+    setTimeout(() => {
+      toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+      toast.classList.remove('translate-y-0', 'opacity-100');
+    }, 3800);
+  }
+
+  // Ping Individual Node Simulation
+  function pingNode(nodeId, ip) {
+    showToast(`Sending ICMP echo request to ${ip}...`, 'network_ping');
+    const latSpan = document.getElementById(`latency${nodeId.charAt(0).toUpperCase() + nodeId.slice(1)}`);
+    if (latSpan) {
+      latSpan.textContent = '...';
+      setTimeout(() => {
+        const randLatency = Math.floor(Math.random() * 8) + 21;
+        latSpan.textContent = `${randLatency} ms`;
+        showToast(`Node ${ip} reachable: latency ${randLatency}ms (0% packet drop)`, 'check_circle');
+      }, 700);
+    }
+  }
+
+  // Ground Zero Calibration
+  function calibrateNode(nodeId) {
+    showToast('Calibrating Sagittal ground-plane grid with floor markers...', 'straighten');
+    setTimeout(() => {
+      showToast('Ground Zero calibrated: Reference 0.00m at Y:540px. Ready for strides.', 'task_alt');
+    }, 1200);
+  }
+
+  // Reboot Action
+  function rebootNode(nodeName) {
+    if (confirm(`Are you sure you want to reboot ${nodeName}? Live stream will pause for 8 seconds.`)) {
+      showToast(`Reboot signal sent to ${nodeName}. Soft reset in progress...`, 'restart_alt');
+    }
+  }
+
+  // Standby Node Stream Start
+  function startStreamNode2() {
+    showToast('Waking Unit #02: Initializing OV2640 sensor clock & pipeline...', 'videocam');
+    setTimeout(() => {
+      showToast('Unit #02 Coronal Feed LIVE at 192.168.4.106:81/stream', 'check_circle');
+    }, 1400);
+  }
+
+  // Firmware Check
+  function firmwareOTA(nodeName) {
+    showToast(`Checking OTA manifest for ${nodeName} on local gateway...`, 'system_update_alt');
+    setTimeout(() => {
+      showToast(`${nodeName} running latest verified firmware: v3.4.1-LTS (Up to date)`, 'verified');
+    }, 1000);
+  }
+
+  // Wake on LAN
+  function wakeOnLan() {
+    showToast('Broadcasting Wake-on-Mesh magic packet to MAC 3C:61:05:8B:11:82...', 'sensors');
+    setTimeout(() => {
+      showToast('No ACK from Unit #03: Node likely powered down in battery transit to Bokajan.', 'warning', true);
+    }, 2000);
+  }
+
+  // Download Logs
+  function downloadDiagnosticLogs() {
+    showToast('Exporting crash dump and RSSI logs for Unit #03 (1.4MB)...', 'download');
+    setTimeout(() => {
+      showToast('Audit log bundle exported: esp32_cam3_diagnostic.log', 'file_download_done');
+    }, 1200);
+  }
+
+  // Test Stream Framerate Button in Form
+  function runFramerateTest() {
+    const url = document.getElementById('streamUrl').value;
+    const testBox = document.getElementById('testResultBox');
+    showToast(`Negotiating RTSP/MJPEG handshake on ${url}...`, 'bolt');
+    
+    setTimeout(() => {
+      testBox.classList.remove('hidden');
+      testBox.classList.add('flex');
+      showToast('Handshake complete! 29.8 FPS verified at 1280x720.', 'check_circle');
+    }, 1200);
+  }
+
+  // Register New Node Submit
+  function registerNewNode() {
+    const url = document.getElementById('streamUrl').value;
+    const lens = document.getElementById('lensSelect').options[document.getElementById('lensSelect').selectedIndex].text;
+    showToast(`Registering node ${url} with lens profile: ${lens}...`, 'save');
+    setTimeout(() => {
+      showToast('Hardware node registered in local PHC mesh database!', 'task_alt');
+    }, 1000);
+  }
+
+  // Force Cloud Sync Check
+  function triggerManualSync() {
+    const notice = document.getElementById('syncStatusNotice');
+    notice.classList.remove('hidden');
+    notice.classList.add('flex');
+
+    setTimeout(() => {
+      notice.classList.add('hidden');
+      notice.classList.remove('flex');
+      showToast('ICMR-NER Cloud Node reachable. 48 local sessions queued for next midnight batch.', 'cloud_done');
+    }, 2200);
+  }
+
+  // Mesh Bus Refresh
+  document.getElementById('refreshNodesBtn').addEventListener('click', () => {
+    const icon = document.getElementById('refreshSpinIcon');
+    icon.classList.add('animate-spin');
+    showToast('Scanning 2.4GHz Wi-Fi AP mesh topology for active ESP32 broadcast beacons...', 'sync');
+    setTimeout(() => {
+      icon.classList.remove('animate-spin');
+      showToast('Scan complete: 2 active nodes, 1 sleeping mobile node detected.', 'check');
+    }, 1500);
+  });
+
+  // Emergency Standby
+  document.getElementById('emergencyKillBtn').addEventListener('click', () => {
+    if (confirm('Engage Master Standby? All video feeds will pause to preserve battery backup in PHC.')) {
+      showToast('All camera sensors switched to ultra-low-power deep sleep (15mA).', 'power_settings_new');
+    }
+  });
+</script></div></div></main><footer class="w-full bg-surface-container-lowest shadow-[0_-1px_4px_rgba(0,0,0,0.03)] py-md"><div class="max-w-[1600px] mx-auto px-lg flex flex-wrap items-center justify-between gap-sm text-on-surface-variant font-body-sm text-body-sm"><div><span>OA-Screen NER Diagnostic Platform</span><span class="mx-xs">·</span><span>ICMR-RMRC North East Joint Tele-Screening Initiative</span></div><div class="flex items-center gap-md"><span class="font-data-mono text-data-mono text-secondary">Sync Node: Diphu-PHC-04</span><span class="text-on-surface-variant">v3.4.2-clinical-lts</span></div></div></footer></body></html>
