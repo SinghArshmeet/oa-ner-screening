@@ -1,5 +1,4 @@
 .venv/
-artifacts/
 Dataset/
 node_modules/
 frontend/dist/
@@ -11,10 +10,19 @@ backend/screening.db-*
 .env
 __pycache__/
 *.py[cod]
+openh264.dll.bz2
+test_codec.mp4
+
+# Video recordings: ignore general video files, but keep the packaged clinical sample walk video
 *.mp4
 *.mov
 *.avi
 *.mkv
 *.webm
-*.dll
-*.bz2
+!frontend/public/sample_gait_walk.mp4
+
+# Artifacts: ignore raw CSVs/intermediates, but keep the trained model weights and evaluation report
+artifacts/*
+!artifacts/movement_baseline.joblib
+!artifacts/movement_baseline.report.json
+

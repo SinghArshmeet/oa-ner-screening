@@ -1,61 +1,165 @@
-# OA NER Screening
+# OA-NER Screening (Osteoarthritis Risk Screening System)
 
-This repository contains the local, CPU-first movement-analysis baseline for an
-AI-assisted osteoarthritis (OA) screening project. It is a research prototype:
-it classifies the labels in the supplied gait dataset and must not be used for
-diagnosis or clinical decision-making.
+Clinical frontline osteoarthritis (OA) screening platform developed for rural primary health centres (PHCs) in the North Eastern Region (NER). Combines sagittal computer vision gait analysis, a standardized clinical questionnaire (KOOS-NER), and a multimodal diagnostic triage dashboard.
 
-## Step 1: movement baseline
+---
 
-The pipeline:
+## Architecture Overview
 
-1. reads each `.MOV` gait recording;
-2. uses MediaPipe Pose to locate hips, knees and ankles;
-3. derives knee range of motion, variability, left/right asymmetry, cadence
-   proxy, motion consistency and pose-quality features;
-4. trains a Random Forest against dataset labels, splitting by subject ID to
-   prevent the two recordings of one participant being in both train and test.
+- **Frontend**: React 18 + Vite + Tailwind CSS (`frontend/`)
+  - Optical webcam live feed with sagittal HUD reticle
+  - File upload workflow (.mp4, .mov, .avi, .mkv, .webm)
+  - Preloaded clinical sample walking video
+  - KOOS-NER clinical survey with regional workload matrix
+  - Multimodal diagnostic summary report & referral dossier
+  - Multi-account clinician profile switcher
+- **Backend**: FastAPI + SQLite (`backend/`)
+  - Movement baseline inference using MediaPipe Pose + scikit-learn
+  - Pre-trained Random Forest model (`artifacts/movement_baseline.joblib`)
+  - Unified 40-point questionnaire scoring engine
+  - Persistent SQLite screening database (`screenings`, `patients`, `sessions`)
+  - Google OAuth Authorization Code flow with PKCE
 
-### Labels used
+---
 
-`NM` is the healthy reference class (`low`). `KOA_EL`, `KOA_MD` and `KOA_SV`
-map to `early`, `moderate` and `severe`. Parkinson's (`PD`) recordings are
-deliberately excluded from this OA baseline.
+## Prerequisites (Any Computer)
 
-### Run locally
+1. **Python**: Python 3.10 or 3.11 (with `pip` and `venv`)
+2. **Node.js**: Node.js v18+ or v20+ (with `npm`)
+3. **Git**: To clone the repository
 
-Install Python 3.10 or 3.11, then in this folder run:
+---
+
+## Quick Start: Running on a New Computer
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/SinghArshmeet/oa-ner-screening.git
+cd oa-ner-screening
+```
+
+---
+
+### 2. Backend Setup & Startup
+
+Open a terminal in the project root:
+
+#### Windows (PowerShell):
 
 ```powershell
-py -m venv .venv
+# 1. Create and activate a Python virtual environment
+py -3.11 -m venv .venv
 .\.venv\Scripts\Activate.ps1
-py -m pip install -e .
-py -m oa_screening.extract_dataset --input Dataset\gait\KOA-PD-NM --output artifacts\gait_features.csv
-py -m oa_screening.train_baseline --features artifacts\gait_features.csv --model artifacts\movement_baseline.joblib
+
+# 2. Install backend dependencies
+pip install -r backend/requirements.txt
+pip install -e .
+
+# 3. Launch backend API server (runs at http://127.0.0.1:8000)
+.\start_backend.ps1
 ```
 
-The first extraction can take time because every video is processed locally.
-Use `--max-videos 12` for a quick pipeline check. The report and confusion
-matrix are saved next to the model.
+*Or launch directly with uvicorn:*
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
+```
 
-The uploaded Kaggle notebook describes a separate five-grade X-ray model. It
-belongs to the later X-ray module and is not mixed with movement-model labels.
+#### macOS / Linux (Bash):
 
-The Movement tab accepts a gait video and runs the saved baseline locally. The
-Results tab keeps the movement and questionnaire indications visible separately,
-then applies an explainable late-fusion rule when both are available.
+```bash
+# 1. Create and activate a Python virtual environment
+python3.11 -m venv .venv
+source .venv/bin/activate
 
-## Step 2: questionnaire prototype
+# 2. Install backend dependencies
+pip install -r backend/requirements.txt
+pip install -e .
 
-The questionnaire is deliberately a transparent rule-based prototype. There is
-no labelled questionnaire dataset in this project, so training a Random Forest
-or logistic-regression questionnaire model now would produce artificial
-results. Once clinician-labelled records are available, this module can be
-replaced with a validated model.
+# 3. Launch backend API server
+uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
+```
 
-To run the local interface:
+- **Health check**: Visit `http://127.0.0.1:8000/health` (should return `{"status": "ok", "model_loaded": true}`)
+- **Swagger Docs**: Visit `http://127.0.0.1:8000/docs`
+
+---
+
+### 3. Frontend Setup & Startup
+
+Open a **second terminal** in the project root:
+
+```bash
+# 1. Navigate into the frontend folder
+cd frontend
+
+# 2. Install npm dependencies
+npm install
+
+# 3. Start development server
+npm run dev
+```
+
+- **App URL**: Open your browser at **`http://localhost:5173`**
+
+---
+
+## How to Test the Application
+
+1. **Login**:
+   - The app starts on the clinical login portal.
+   - Click **"Offline Clinical Screener (Simulation Mode)"** or select any of the pre-configured role accounts (Screener, Medical Officer, Admin).
+2. **Gait Analysis**:
+   - Navigate to the **Gait** tab.
+   - Click **"Sample Walk Clip"** to test with the bundled clinical reference video, or connect your webcam, or upload any `.mp4`/`.mov` walking video.
+   - Click **"Start 8s Standardized Walking Test"** (or **"Analyze Uploaded Video"**).
+   - Biomechanical features are extracted and classified by the Random Forest model.
+3. **Questionnaire**:
+   - Navigate to the **Questionnaire** tab.
+   - Fill out the VAS pain, morning stiffness, and regional workload exposures.
+   - Click **"Calculate Score & Sync"**.
+4. **Diagnostic Report**:
+   - Navigate to the **Report** tab.
+   - View multimodal risk fusion combining gait kinematics and clinical symptom index.
+   - Click **"Print Clinical Dossier"** or **"Dispatch Referral"**.
+
+---
+
+## Optional: Google OAuth Configuration
+
+To enable real Google Sign-In, provide these environment variables before starting the backend:
 
 ```powershell
-uv pip install --python .\.venv\Scripts\python.exe -e ".[app]"
-.\.venv\Scripts\python.exe -m streamlit run app.py
+$env:GOOGLE_CLIENT_ID = "your-client-id.apps.googleusercontent.com"
+$env:GOOGLE_CLIENT_SECRET = "your-client-secret"
+$env:GOOGLE_REDIRECT_URI = "http://localhost:8000/auth/google/callback"
+$env:FRONTEND_ORIGIN = "http://localhost:5173"
+$env:SESSION_SECRET = "your-custom-session-secret"
 ```
+
+If not configured, the login screen gracefully indicates *"Google authentication is not configured"* and allows seamless login via clinical role accounts.
+
+---
+
+## Repository Contents
+
+```
+oa-ner-screening/
+├── backend/                  # FastAPI service
+│   ├── main.py               # API endpoints, auth, and routing
+│   ├── db.py                 # SQLite database & migrations
+│   ├── schemas.py            # Pydantic data models
+│   └── requirements.txt      # Python dependencies for backend
+├── frontend/                 # React 18 + Vite frontend
+│   ├── src/                  # Components, views, and utilities
+│   ├── public/               # Static assets & sample_gait_walk.mp4
+│   ├── package.json          # Node dependencies
+│   └── package-lock.json     # Deterministic dependency lock
+├── artifacts/                # Pre-trained models & reports
+│   ├── movement_baseline.joblib        # Pre-trained Random Forest model
+│   └── movement_baseline.report.json   # Model evaluation report
+├── src/oa_screening/         # Core computer vision & feature extraction
+├── start_backend.ps1         # Automated backend launcher script
+└── README.md                 # Setup and run guide
+```
+
