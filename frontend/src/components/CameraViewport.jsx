@@ -87,7 +87,7 @@ export default function CameraViewport({
       {/* 2. Sample Clinical Walk Reference Video */}
       <video
         ref={sampleVideoRef}
-        src="/sample_gait_walk.mp4"
+        src={`${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/sample_gait_walk.mp4`}
         autoPlay
         loop
         playsInline

@@ -202,25 +202,28 @@ export async function getPatients() {
     try {
       const supaPatients = await fetchPatientsFromSupabase();
       if (Array.isArray(supaPatients) && supaPatients.length > 0) {
-        return supaPatients.map((p) => ({
-          id: p.patient_id_code || `IND-OA-2025-${String(p.id).padStart(4, '0')}`,
-          dbId: p.id,
-          name: p.name,
-          age: p.age,
-          gender: p.gender || 'Other',
-          occupation: p.occupation || 'Urban Resident',
-          state: p.state || 'Delhi NCR',
-          region: p.locality || p.district || p.state || 'Delhi NCR',
-          abhaId: p.abha_id || '91-4821-9034-1182',
-          sopStatus: 'Enrolled (Supabase)',
-          surveyCompleted: false,
-          surveyScore: 'Pending',
-          gaitTested: false,
-          gaitRisk: 'Pending',
-          combinedRisk: 'moderate',
-          consent: Boolean(p.consent),
-          enrolledDate: p.created_at ? p.created_at.split('T')[0] : '2025-02-18'
-        }));
+        return supaPatients.map((p) => {
+          const match = mockPatients.find(m => m.name === p.name || m.id === p.patient_id_code);
+          return {
+            id: p.patient_id_code || `IND-OA-2025-${String(p.id).padStart(4, '0')}`,
+            dbId: p.id,
+            name: p.name,
+            age: p.age,
+            gender: p.gender || match?.gender || 'Other',
+            occupation: p.occupation || match?.occupation || 'Urban Resident',
+            state: p.state || match?.state || 'Delhi NCR',
+            region: p.locality || p.district || p.state || match?.region || 'Delhi NCR',
+            abhaId: p.abha_id || match?.abhaId || '91-4821-9034-1182',
+            sopStatus: match?.sopStatus || 'Enrolled (Supabase)',
+            surveyCompleted: match ? match.surveyCompleted : false,
+            surveyScore: match ? match.surveyScore : 'Pending',
+            gaitTested: match ? match.gaitTested : false,
+            gaitRisk: match ? match.gaitRisk : 'Pending',
+            combinedRisk: match ? match.combinedRisk : 'moderate',
+            consent: p.consent != null ? Boolean(p.consent) : true,
+            enrolledDate: p.created_at ? p.created_at.split('T')[0] : (match?.enrolledDate || '2025-02-18')
+          };
+        });
       }
     } catch (e) {
       console.warn('Supabase fetchPatients error, falling back:', e);

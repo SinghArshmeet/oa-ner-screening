@@ -7,7 +7,7 @@ export function useCamera(isAuthenticated = false) {
   const [availableDevices, setAvailableDevices] = useState([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState('');
   const [sourceMode, setSourceMode] = useState('webcam'); // 'webcam' | 'sample' | 'upload'
-  const [sampleVideoUrl, setSampleVideoUrl] = useState('/sample_gait_walk.mp4');
+  const [sampleVideoUrl, setSampleVideoUrl] = useState(() => `${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/sample_gait_walk.mp4`);
   const [uploadedVideoUrl, setUploadedVideoUrl] = useState(null);
   const [uploadedFile, setUploadedFile] = useState(null);
   const [showOverlay, setShowOverlay] = useState(false); // Default to clean feed without overlay

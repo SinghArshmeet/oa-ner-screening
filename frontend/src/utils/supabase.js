@@ -11,8 +11,12 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const SUPABASE_URL =
+  import.meta.env.VITE_SUPABASE_URL ||
+  'https://bpyophwxcxuowlzqbsto.supabase.co';
+const SUPABASE_ANON_KEY =
+  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweW9waHd4Y3h1b3dsenFic3RvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2NjE1ODcsImV4cCI6MjEwNTIzNzU4N30.9kjtUFVVP5hs1a28QDgV0rKhpnNLoyf9aVjK9l9bcLw';
 
 export const isSupabaseConfigured = Boolean(
   SUPABASE_URL &&
@@ -61,10 +65,10 @@ export async function insertPatientToSupabase(patient) {
       age: parseInt(patient.age, 10) || null,
       gender: patient.gender,
       occupation: patient.occupation,
-      state: patient.state || patient.region,
-      district: patient.district,
-      locality: patient.locality || null,
-      abha_id: patient.abhaId || null,
+      state: patient.state || patient.region || 'Delhi NCR',
+      district: patient.district || null,
+      locality: patient.locality || patient.region || null,
+      abha_id: patient.abhaId || patient.abha_id || null,
       consent: patient.consent ?? true,
     };
 
@@ -89,26 +93,26 @@ export async function saveScreeningToSupabase(screening) {
   if (!isSupabaseConfigured) return null;
   try {
     const payload = {
-      patient_id: screening.patientDbId || null,
+      patient_id: screening.patient_id || screening.patientDbId || null,
       status: screening.status || 'completed',
-      questionnaire_score: screening.questionnaire_score,
-      questionnaire_category: screening.questionnaire_category,
-      movement_category: screening.movement_category,
-      movement_confidence: screening.movement_confidence,
-      sagittal_deficit_deg: screening.sagittalDeficit,
-      walking_velocity: screening.walkingVelocity,
-      cadence: screening.cadence,
-      gait_metrics: screening.gait_metrics,
-      video_url: screening.videoUrl || null,
-      xray_grade: screening.xray_grade,
-      xray_confidence: screening.xray_confidence,
-      xray_image_url: screening.xrayImageUrl || null,
-      gradcam_image_url: screening.gradcamImageUrl || null,
-      radiological_findings: screening.radiologicalFindings || null,
-      combined_result: screening.combined_result,
-      composite_risk_score: screening.compositeRiskScore || null,
-      recommendation: screening.recommendation,
-      data_source: 'supabase_cloud',
+      questionnaire_score: screening.questionnaire_score ?? screening.survey_score ?? null,
+      questionnaire_category: screening.questionnaire_category || null,
+      movement_category: screening.movement_category || null,
+      movement_confidence: screening.movement_confidence != null ? Number(screening.movement_confidence) : null,
+      sagittal_deficit_deg: screening.sagittalDeficit || screening.sagittal_deficit_deg || null,
+      walking_velocity: screening.walkingVelocity || screening.walking_velocity || null,
+      cadence: screening.cadence != null ? Number(screening.cadence) : null,
+      gait_metrics: screening.gait_metrics || (screening.gait_metrics_json ? JSON.parse(screening.gait_metrics_json) : null),
+      video_url: screening.videoUrl || screening.video_url || null,
+      xray_grade: screening.xray_grade || null,
+      xray_confidence: screening.xray_confidence != null ? Number(screening.xray_confidence) : null,
+      xray_image_url: screening.xrayImageUrl || screening.xray_image_url || null,
+      gradcam_image_url: screening.gradcamImageUrl || screening.gradcam_image_url || null,
+      radiological_findings: screening.radiologicalFindings || screening.radiological_findings || null,
+      combined_result: screening.combined_result || screening.combined_risk || null,
+      composite_risk_score: screening.compositeRiskScore || screening.composite_risk_score || null,
+      recommendation: screening.recommendation || 'Standard clinical review protocol',
+      data_source: screening.data_source || 'supabase_cloud',
     };
 
     const { data, error } = await supabase
@@ -132,15 +136,15 @@ export async function saveQuestionnaireToSupabase(questionnaire) {
   if (!isSupabaseConfigured) return null;
   try {
     const payload = {
-      patient_id: questionnaire.patient_id || null,
-      pain_vas: questionnaire.pain ?? 0,
-      stiffness_minutes: questionnaire.stiffness ?? 0,
-      walking_difficulty: questionnaire.walking_difficulty ?? 0,
-      stairs_difficulty: questionnaire.stairs_difficulty ?? 0,
-      squat_difficulty: questionnaire.squat_difficulty ?? 0,
-      raw_score: questionnaire.raw_score ?? 0,
-      category: questionnaire.category || 'moderate',
-      contributing_factors: questionnaire.contributing_factors || [],
+      patient_id: questionnaire.patient_id || questionnaire.patientDbId || null,
+      pain_vas: Math.min(10, Math.max(0, parseInt(questionnaire.pain ?? questionnaire.pain_vas ?? 0, 10))),
+      stiffness_minutes: Math.min(180, Math.max(0, parseInt(questionnaire.stiffness ?? questionnaire.stiffness_minutes ?? 0, 10))),
+      walking_difficulty: Math.min(3, Math.max(0, parseInt(questionnaire.walking_difficulty ?? 0, 10))),
+      stairs_difficulty: Math.min(3, Math.max(0, parseInt(questionnaire.stairs_difficulty ?? 0, 10))),
+      squat_difficulty: Math.min(3, Math.max(0, parseInt(questionnaire.squat_difficulty ?? 0, 10))),
+      raw_score: Math.min(40, Math.max(0, parseInt(questionnaire.raw_score ?? questionnaire.compositeScore ?? 0, 10))),
+      category: ['low', 'moderate', 'high'].includes(questionnaire.category) ? questionnaire.category : 'moderate',
+      contributing_factors: Array.isArray(questionnaire.contributing_factors) ? questionnaire.contributing_factors : [],
       payload_json: questionnaire,
     };
 
