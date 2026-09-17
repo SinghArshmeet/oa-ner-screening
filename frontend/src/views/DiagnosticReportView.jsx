@@ -1,8 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { analyzeXrayImage } from '../utils/api';
 
 export default function DiagnosticReportView({ activePatient, surveyResult, gaitResult, onOpenTeleconsult }) {
   const [signedOff, setSignedOff] = useState(false);
   const [showPrintModal, setShowPrintModal] = useState(false);
+  const [xrayData, setXrayData] = useState(null);
+  const [xrayLoading, setXrayLoading] = useState(false);
+  const [xrayError, setXrayError] = useState('');
+  const xrayInputRef = useRef(null);
+
+  const handleXrayUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setXrayLoading(true);
+    setXrayError('');
+    try {
+      const res = await analyzeXrayImage(file);
+      if (res.status === 'success' || res.kl_grade !== undefined) {
+        setXrayData(res);
+      }
+    } catch (err) {
+      setXrayError(err.message || 'Radiograph analysis could not be processed.');
+    } finally {
+      setXrayLoading(false);
+      e.target.value = '';
+    }
+  };
 
   // Dynamic gait metrics
   const gaitCadence = gaitResult?.cadence || 94;
@@ -89,17 +112,33 @@ export default function DiagnosticReportView({ activePatient, surveyResult, gait
           {/* Risk Status Left */}
           <div className="flex flex-col justify-between max-w-xl">
             <div className="flex flex-col gap-sm">
-              <div className={`inline-flex items-center gap-xs px-sm py-1 rounded-full w-fit border ${
-                isHighRisk
-                  ? 'bg-error-container/20 text-error-container border-error/30'
-                  : isModerateRisk
-                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
-                  : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-              }`}>
-                <span className={`w-2.5 h-2.5 rounded-full ${isHighRisk ? 'bg-error animate-ping' : isModerateRisk ? 'bg-amber-400' : 'bg-emerald-400'}`}></span>
-                <span className="font-label-sm text-xs uppercase font-bold tracking-wider">
-                  {isHighRisk ? 'Urgent Tier-2 Stratification' : isModerateRisk ? 'Tier-1 Clinical Follow-Up' : 'Routine Preventive Monitoring'}
-                </span>
+              <div className="flex flex-wrap items-center gap-xs">
+                <div className={`inline-flex items-center gap-xs px-sm py-1 rounded-full w-fit border ${
+                  isHighRisk
+                    ? 'bg-error-container/20 text-error-container border-error/30'
+                    : isModerateRisk
+                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                    : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                }`}>
+                  <span className={`w-2.5 h-2.5 rounded-full ${isHighRisk ? 'bg-error animate-ping' : isModerateRisk ? 'bg-amber-400' : 'bg-emerald-400'}`}></span>
+                  <span className="font-label-sm text-xs uppercase font-bold tracking-wider">
+                    {isHighRisk ? 'Urgent Tier-2 Stratification' : isModerateRisk ? 'Tier-1 Clinical Follow-Up' : 'Routine Preventive Monitoring'}
+                  </span>
+                </div>
+                <div className={`inline-flex items-center gap-xs px-2.5 py-0.5 rounded-full text-xs font-bold uppercase border ${
+                  (gaitResult?.binaryScreening === 'screen_positive' || isHighRisk || isModerateRisk)
+                    ? 'bg-red-500/30 text-red-200 border-red-500/50'
+                    : 'bg-emerald-500/30 text-emerald-200 border-emerald-500/50'
+                }`}>
+                  <span className="material-symbols-outlined text-[14px]">
+                    {(gaitResult?.binaryScreening === 'screen_positive' || isHighRisk || isModerateRisk) ? 'notification_important' : 'check_circle'}
+                  </span>
+                  <span>
+                    {(gaitResult?.binaryScreening === 'screen_positive' || isHighRisk || isModerateRisk)
+                      ? 'Screen Positive (Suspected OA)'
+                      : 'Screen Negative (Low Risk)'}
+                  </span>
+                </div>
               </div>
               <h1 className="font-headline-lg text-headline-lg text-surface-container-lowest font-bold leading-tight">
                 {isHighRisk ? 'High Risk for Clinical Osteoarthritis' : isModerateRisk ? 'Moderate Risk for Early Osteoarthritis' : 'Low Risk (Normal Biomechanics)'}
@@ -279,31 +318,71 @@ export default function DiagnosticReportView({ activePatient, surveyResult, gait
               <span className="font-label-sm text-[11px] uppercase font-semibold text-secondary">
                 Module 03 · Radiographic Staging
               </span>
-              <span className="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface font-data-mono text-[10px] font-bold">
-                {isXrayAssessed ? activePatient?.xrayResult : 'NOT ASSESSED'}
+              <span className={`px-2 py-0.5 rounded-full font-data-mono text-[10px] font-bold ${
+                xrayData ? (xrayData.kl_grade >= 3 ? 'bg-error-container text-on-error-container' : xrayData.kl_grade >= 2 ? 'bg-amber-100 text-amber-900' : 'bg-emerald-100 text-emerald-900') : 'bg-surface-container-high text-on-surface'
+              }`}>
+                {xrayData ? `KL GRADE ${xrayData.kl_grade}` : (isXrayAssessed ? activePatient?.xrayResult : 'NOT ASSESSED')}
               </span>
             </div>
             <h3 className="font-headline-sm text-on-surface font-bold mb-1">
-              X-ray: Not assessed
+              {xrayData ? xrayData.label : (isXrayAssessed ? activePatient?.xrayResult : 'X-ray: Not assessed')}
             </h3>
             <p className="font-body-sm text-secondary text-xs mb-sm">
-              {isXrayAssessed
+              {xrayData
+                ? xrayData.findings
+                : isXrayAssessed
                 ? `Radiological report: ${activePatient?.xrayResult}`
-                : 'Frontline optical and survey triage complete. Formal weight-bearing radiograph deferred to specialist referral.'}
+                : 'Frontline optical and survey triage complete. Weight-bearing radiograph can be uploaded for instant KL-grade & Grad-CAM analysis.'}
             </p>
-            <div className="space-y-xs text-xs">
+
+            {xrayData && xrayData.gradcam_base64 && (
+              <div className="mb-sm p-2 rounded-lg bg-surface-container-high/40 border border-surface-container flex flex-col gap-1.5">
+                <div className="flex items-center justify-between text-[11px] font-bold text-on-surface">
+                  <span>Grad-CAM Attention Map</span>
+                  <span className="font-data-mono text-[10px] text-tertiary">Confidence: {xrayData.confidence}%</span>
+                </div>
+                <img
+                  src={`data:image/jpeg;base64,${xrayData.gradcam_base64}`}
+                  alt="Grad-CAM Articular Joint Space ROI"
+                  className="w-full h-36 object-contain rounded bg-black/80"
+                />
+              </div>
+            )}
+
+            <div className="space-y-xs text-xs mb-sm">
               <div className="flex justify-between py-1 border-b border-surface-container">
                 <span className="text-secondary">Joint Space Width</span>
-                <span className="font-data-mono font-bold text-on-surface">{isXrayAssessed ? 'Assessed' : 'Pending Referral'}</span>
+                <span className="font-data-mono font-bold text-on-surface">
+                  {xrayData ? (xrayData.kl_grade >= 3 ? 'Marked Narrowing' : xrayData.kl_grade >= 2 ? 'Mild Reduction' : 'Preserved') : (isXrayAssessed ? 'Assessed' : 'Pending Referral')}
+                </span>
               </div>
               <div className="flex justify-between py-1 border-b border-surface-container">
                 <span className="text-secondary">Osteophyte Likelihood</span>
-                <span className="font-data-mono font-bold text-secondary">{isXrayAssessed ? 'Recorded' : 'Pending Referral'}</span>
+                <span className="font-data-mono font-bold text-secondary">
+                  {xrayData ? (xrayData.kl_grade >= 3 ? 'Definite / Moderate' : xrayData.kl_grade >= 2 ? 'Definite / Minimal' : 'Absent / Doubtful') : (isXrayAssessed ? 'Recorded' : 'Pending Referral')}
+                </span>
               </div>
-              <div className="flex justify-between py-1">
-                <span className="text-secondary">Formal X-ray Status</span>
-                <span className="font-data-mono font-bold text-primary">Order at Referral</span>
-              </div>
+            </div>
+
+            <div className="pt-xs">
+              <input
+                type="file"
+                ref={xrayInputRef}
+                onChange={handleXrayUpload}
+                accept="image/png,image/jpeg,image/jpg"
+                className="hidden"
+              />
+              <button
+                onClick={() => xrayInputRef.current?.click()}
+                disabled={xrayLoading}
+                className="w-full py-1.5 px-sm rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-xs font-semibold border border-outline-variant/30 flex items-center justify-center gap-1.5 transition"
+                type="button"
+              >
+                <span className={`material-symbols-outlined text-[16px] ${xrayLoading ? 'animate-spin' : 'text-primary'}`}>
+                  {xrayLoading ? 'refresh' : 'upload_file'}
+                </span>
+                <span>{xrayLoading ? 'Analyzing Radiograph...' : xrayData ? 'Re-upload Radiograph' : 'Upload Knee X-Ray (Grad-CAM)'}</span>
+              </button>
             </div>
           </div>
         </div>

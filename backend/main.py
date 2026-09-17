@@ -27,6 +27,7 @@ if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 from oa_screening.movement_prediction import predict_video
 from oa_screening.risk_engine import combine_screening, recommendation_for
+from oa_screening.xray_model import XRayModelSpec
 
 MODEL_PATH = PROJECT_ROOT / "artifacts" / "movement_baseline.joblib"
 XRAY_MODEL_PATH = PROJECT_ROOT / "artifacts" / "xray_checkpoint.pth"
@@ -373,6 +374,9 @@ async def analyze_movement_video(file: UploadFile = File(...), _: dict[str, obje
         "filename": raw_filename or "gait_session.mp4",
         "dataset_label": result["dataset_label"],
         "category": result["category"],
+        "binary_screening": result.get("binary_screening", "screen_negative"),
+        "screening_tier": result.get("screening_tier", "Screen Negative (Low Risk)"),
+        "screening_positive_prob": result.get("screening_positive_prob", 0.0),
         "confidence": result["confidence"],
         "probabilities": result["probabilities"],
         "features": result["features"],
@@ -404,13 +408,30 @@ async def analyze_xray_image(file: UploadFile = File(...), _: dict[str, object] 
     content = await file.read(MAX_IMAGE_BYTES + 1)
     if not content or len(content) > MAX_IMAGE_BYTES:
         raise HTTPException(status_code=413, detail="Image must be between 1 byte and 20 MB.")
-    if not XRAY_MODEL_PATH.exists():
-        raise HTTPException(
-            status_code=501,
-            detail="X-ray diagnostic model checkpoint is not trained or unavailable. X-ray: Not assessed."
-        )
-    # If checkpoint existed, run real model inference here
-    raise HTTPException(status_code=501, detail="X-ray inference model checkpoint not implemented.")
+    with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as temp:
+        temp.write(content)
+        temp_path = Path(temp.name)
+    try:
+        spec = XRayModelSpec(checkpoint_path=XRAY_MODEL_PATH)
+        pred = spec.predict(temp_path)
+    except Exception as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+    finally:
+        temp_path.unlink(missing_ok=True)
+    return {
+        "status": "success",
+        "filename": raw_filename or "knee_xray.png",
+        "kl_grade": pred.kl_grade,
+        "label": pred.label,
+        "risk_level": pred.risk_level,
+        "confidence": round(pred.confidence * 100, 1),
+        "probabilities": pred.probabilities,
+        "findings": pred.findings,
+        "gradcam_base64": pred.gradcam_base64,
+        "recommendation": pred.recommendation,
+        "is_simulated": False,
+        "data_source": "xray_spec_gradcam"
+    }
 
 
 @app.post("/api/upload")

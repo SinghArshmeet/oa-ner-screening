@@ -209,6 +209,9 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
 
       const formattedOutcome = {
         risk: result.category === 'high' ? 'High Risk (Antalgic Asymmetry)' : result.category === 'moderate' ? 'Moderate Risk (Early OA Markers)' : 'Low Risk (Symmetric)',
+        binaryScreening: result.binary_screening || (result.category === 'low' ? 'screen_negative' : 'screen_positive'),
+        screeningTier: result.screening_tier || (result.category === 'low' ? 'Screen Negative (Low Risk)' : 'Screen Positive (Suspected OA)'),
+        screeningPositiveProb: result.screening_positive_prob !== undefined ? result.screening_positive_prob : (result.category === 'low' ? 0.05 : 0.85),
         confidence: Math.round((result.confidence ?? 0.85) * 100),
         cadence: Math.round(result.features?.left_knee_frequency_cpm || kinematics.cadence),
         velocity: kinematics.velocity,
@@ -252,6 +255,9 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
       const res = await analyzeVideoFile(file, file.name);
       const formatted = {
         risk: res.category === 'high' ? 'High Risk (Antalgic Asymmetry)' : res.category === 'moderate' ? 'Moderate Risk (Early OA Markers)' : 'Low Risk (Symmetric)',
+        binaryScreening: res.binary_screening || (res.category === 'low' ? 'screen_negative' : 'screen_positive'),
+        screeningTier: res.screening_tier || (res.category === 'low' ? 'Screen Negative (Low Risk)' : 'Screen Positive (Suspected OA)'),
+        screeningPositiveProb: res.screening_positive_prob !== undefined ? res.screening_positive_prob : (res.category === 'low' ? 0.05 : 0.85),
         confidence: Math.round((res.confidence || 0.85) * 100),
         cadence: Math.round(res.features?.left_knee_frequency_cpm || kinematics.cadence || 92),
         velocity: kinematics.velocity || 0.88,
@@ -833,9 +839,16 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
       {gaitAnalysis && (
         <div className="bg-surface-container-lowest p-card-padding rounded-xl shadow-md border-l-4 border-error flex flex-col lg:flex-row items-start lg:items-center justify-between gap-md animate-fade-in border border-surface-container">
           <div>
-            <div className="flex items-center gap-xs mb-1">
-              <span className="px-xs py-1 rounded bg-error-container text-on-error-container font-label-sm text-[11px] font-bold uppercase">
-                {gaitAnalysis.risk}
+            <div className="flex flex-wrap items-center gap-xs mb-1.5">
+              <span className={`px-2 py-0.5 rounded-full font-label-sm text-[11px] font-bold uppercase ${
+                gaitAnalysis.binaryScreening === 'screen_positive'
+                  ? 'bg-error-container text-on-error-container border border-error/30'
+                  : 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+              }`}>
+                {gaitAnalysis.screeningTier || (gaitAnalysis.risk?.includes('Low') ? 'Screen Negative (Low Risk)' : 'Screen Positive (Suspected OA)')}
+              </span>
+              <span className="px-2 py-0.5 rounded bg-surface-container-high text-on-surface font-label-sm text-[11px] font-semibold">
+                Severity: {gaitAnalysis.risk}
               </span>
               <span className="font-data-mono text-[12px] text-on-surface-variant">
                 Model Confidence: {gaitAnalysis.confidence}%
