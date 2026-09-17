@@ -32,3 +32,5 @@ artifacts/*
 !artifacts/movement_baseline.report.json
 !artifacts/knee_bone_density_model.joblib
 
+PROJECT_LINKS_AND_INFO.txt
+
