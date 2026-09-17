@@ -121,12 +121,12 @@ export default function Header({
           </div>
 
           <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-black/40 border border-white/20 p-1 flex items-center justify-center shadow-md overflow-hidden shrink-0">
-            <img src="/logo.png" alt="OA-Screen NER Logo" className="w-full h-full object-contain" />
+            <img src="/logo.png" alt="OrthoNex Logo" className="w-full h-full object-contain" />
           </div>
           <div className="flex flex-col">
             <div className="flex items-center gap-1.5">
-              <span className="font-headline-sm text-surface-container-lowest font-bold tracking-tight text-sm sm:text-base">
-                OA-Screen NER
+              <span className="font-headline-sm text-surface-container-lowest font-extrabold tracking-tight text-sm sm:text-base">
+                OrthoNex
               </span>
               <span
                 className="px-1.5 py-0.5 rounded bg-primary-container/80 text-on-primary font-data-mono text-[9px] uppercase font-semibold tracking-wide"
@@ -136,7 +136,7 @@ export default function Header({
               </span>
             </div>
             <span className="font-label-sm text-surface-dim/80 text-[11px] font-normal hidden xs:inline">
-              Clinical Screening Platform
+              Multimodal AI Orthopedic Triage
             </span>
           </div>
         </div>

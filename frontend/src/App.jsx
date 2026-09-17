@@ -324,7 +324,7 @@ export default function App() {
       <footer className="w-full bg-surface-container-lowest shadow-[0_-1px_4px_rgba(0,0,0,0.03)] border-t border-surface-container py-md mt-auto">
         <div className="max-w-[1600px] mx-auto px-lg flex flex-wrap items-center justify-between gap-sm text-on-surface-variant font-body-sm text-[12px]">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-on-surface">OA-Screen NER Diagnostic Platform</span>
+            <span className="font-semibold text-on-surface">OrthoNex AI Musculoskeletal Triage Platform</span>
             <span>·</span>
             <span>ICMR-RMRC North East Joint Tele-Screening Initiative</span>
           </div>
