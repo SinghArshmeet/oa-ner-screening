@@ -126,6 +126,39 @@ export async function saveScreeningToSupabase(screening) {
 }
 
 /**
+ * Save a KOOS-India clinical survey response to Supabase
+ */
+export async function saveQuestionnaireToSupabase(questionnaire) {
+  if (!isSupabaseConfigured) return null;
+  try {
+    const payload = {
+      patient_id: questionnaire.patient_id || null,
+      pain_vas: questionnaire.pain ?? 0,
+      stiffness_minutes: questionnaire.stiffness ?? 0,
+      walking_difficulty: questionnaire.walking_difficulty ?? 0,
+      stairs_difficulty: questionnaire.stairs_difficulty ?? 0,
+      squat_difficulty: questionnaire.squat_difficulty ?? 0,
+      raw_score: questionnaire.raw_score ?? 0,
+      category: questionnaire.category || 'moderate',
+      contributing_factors: questionnaire.contributing_factors || [],
+      payload_json: questionnaire,
+    };
+
+    const { data, error } = await supabase
+      .from('questionnaires')
+      .insert([payload])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (err) {
+    console.error('Supabase saveQuestionnaire error:', err);
+    return null;
+  }
+}
+
+/**
  * Upload a media asset (X-ray, Gait Video, or Clinical Dossier PDF) to a Supabase bucket
  */
 export async function uploadMediaToSupabase(bucketName, file, filePath) {
