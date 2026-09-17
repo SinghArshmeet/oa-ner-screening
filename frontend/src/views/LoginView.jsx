@@ -66,10 +66,12 @@ export default function LoginView({ onLogin }) {
   const [googleAuthConfigured, setGoogleAuthConfigured] = useState(false);
   const [googleNotice, setGoogleNotice] = useState('');
 
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
   // Check if backend has Google credentials configured
   React.useEffect(() => {
     let active = true;
-    fetch('http://localhost:8000/auth/status', {
+    fetch(`${API_BASE}/auth/status`, {
       headers: { Accept: 'application/json' },
     })
       .then((res) => res.json())
@@ -101,7 +103,7 @@ export default function LoginView({ onLogin }) {
       return;
     }
     // Secure backend-managed OAuth 2.0 PKCE flow (Redirects to backend -> Google -> callback -> frontend)
-    window.location.href = `http://localhost:8000/auth/google/login?role=${encodeURIComponent(selectedRole)}`;
+    window.location.href = `${API_BASE}/auth/google/login?role=${encodeURIComponent(selectedRole)}`;
   };
 
   const currentRoleConfig = ROLES[selectedRole] || ROLES.screener;

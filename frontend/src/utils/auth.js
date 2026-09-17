@@ -285,12 +285,14 @@ export function switchAccount(targetAccount, rememberDevice = false) {
   return user;
 }
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
 /**
  * Fetch current user from server session (HTTP-only cookie)
  */
 export async function fetchServerUserProfile() {
   try {
-    const res = await fetch('http://localhost:8000/auth/me', {
+    const res = await fetch(`${API_BASE}/auth/me`, {
       credentials: 'include',
       headers: { Accept: 'application/json' },
     });
@@ -312,7 +314,7 @@ export async function fetchServerUserProfile() {
 export async function logoutUser() {
   try {
     // 1. Invalidate session on backend
-    await fetch('http://localhost:8000/auth/logout', {
+    await fetch(`${API_BASE}/auth/logout`, {
       method: 'POST',
       credentials: 'include',
     }).catch(() => {});

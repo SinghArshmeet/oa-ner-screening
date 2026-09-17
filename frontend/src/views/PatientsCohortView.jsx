@@ -43,14 +43,48 @@ export default function PatientsCohortView({
           </p>
         </div>
 
-        <button
-          onClick={onOpenEnrollModal}
-          className="px-lg py-2.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md text-sm font-bold shadow-md transition flex items-center gap-1.5 self-start lg:self-center"
-          type="button"
-        >
-          <span className="material-symbols-outlined text-[18px]">person_add</span>
-          + Enroll New Patient
-        </button>
+        <div className="flex flex-wrap items-center gap-xs self-start lg:self-center">
+          <button
+            onClick={() => {
+              if (!patients || patients.length === 0) return;
+              const headers = ['Patient ID', 'Name', 'Age', 'Gender', 'Occupation', 'Region', 'Survey Score', 'Combined Risk', 'Enrolled Date'];
+              const rows = patients.map(p => [
+                p.id || '',
+                `"${p.name || ''}"`,
+                p.age || '',
+                p.gender || '',
+                `"${p.occupation || ''}"`,
+                `"${p.region || ''}"`,
+                `"${p.surveyScore || '24/40'}"`,
+                p.combinedRisk || 'moderate',
+                p.enrolledDate || '2024-10-18'
+              ]);
+              const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+              const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.setAttribute('href', url);
+              link.setAttribute('download', `OA_NER_Patient_Registry_${new Date().toISOString().slice(0,10)}.csv`);
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            }}
+            className="px-md py-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-sm font-semibold transition flex items-center gap-1.5 border border-outline-variant/30"
+            type="button"
+            title="Download CSV report of cohort registry"
+          >
+            <span className="material-symbols-outlined text-[18px]">download</span>
+            Export Registry CSV
+          </button>
+          <button
+            onClick={onOpenEnrollModal}
+            className="px-lg py-2.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md text-sm font-bold shadow-md transition flex items-center gap-1.5"
+            type="button"
+          >
+            <span className="material-symbols-outlined text-[18px]">person_add</span>
+            + Enroll New Patient
+          </button>
+        </div>
       </div>
 
       {/* Filter & Search Bar */}
