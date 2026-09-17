@@ -1,4 +1,10 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const API_BASE =
+  import.meta.env.VITE_API_BASE_URL ||
+  (typeof window !== 'undefined' &&
+  window.location.hostname !== 'localhost' &&
+  window.location.hostname !== '127.0.0.1'
+    ? 'https://oa-ner-screening.onrender.com'
+    : 'http://localhost:8000');
 
 import {
   isSupabaseConfigured,
@@ -513,7 +519,7 @@ export async function analyzeVideoFile(fileOrBlob, filename = 'webcam_gait_sessi
       method: 'POST',
       credentials: 'include',
       body: formData,
-      signal: AbortSignal.timeout(10000)
+      signal: AbortSignal.timeout(30000)
     });
     if (res.ok) return await res.json();
     const detail = await res.json().catch(() => ({}));
@@ -560,7 +566,7 @@ export async function analyzeXrayImage(file) {
       method: 'POST',
       credentials: 'include',
       body: formData,
-      signal: AbortSignal.timeout(10000)
+      signal: AbortSignal.timeout(20000)
     });
     if (res.ok) return await res.json();
   } catch {
