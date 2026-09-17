@@ -10,6 +10,10 @@ backend/screening.db-*
 .env
 __pycache__/
 *.py[cod]
+*.egg-info/
+*.egg
+build/
+dist/
 _local_archive/
 openh264.dll.bz2
 test_codec.mp4

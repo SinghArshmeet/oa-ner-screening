@@ -152,21 +152,26 @@ If not configured, the login screen gracefully indicates *"Google authentication
 
 ```
 oa-ner-screening/
-├── backend/                  # FastAPI service
-│   ├── main.py               # API endpoints, auth, and routing
+├── backend/                  # FastAPI service (Auth, DB, & Inference Routing)
+│   ├── main.py               # API endpoints & session handling
 │   ├── db.py                 # SQLite database & migrations
-│   ├── schemas.py            # Pydantic data models
-│   └── requirements.txt      # Python dependencies for backend
-├── frontend/                 # React 18 + Vite frontend
-│   ├── src/                  # Components, views, and utilities
-│   ├── public/               # Static assets & sample_gait_walk.mp4
+│   ├── schemas.py            # Pydantic clinical models
+│   └── requirements.txt      # Backend Python dependencies
+├── frontend/                 # React 18 + Vite Frontend (Vercel-Deployed)
+│   ├── src/                  # Biomechanics HUD, Questionnaire, & Reports
+│   ├── public/               # Sample clinical walk video & brand assets
 │   ├── package.json          # Node dependencies
-│   └── package-lock.json     # Deterministic dependency lock
-├── artifacts/                # Pre-trained models & reports
+│   └── vite.config.js        # Vite build configuration
+├── docs/                     # Clinical Protocols, Architecture, & Roadmap
+│   ├── Context.md            # Clinical background & problem statement
+│   ├── ENHANCEMENTS.md       # Multi-stage engineering roadmap
+│   ├── HARDWARE_INTEGRATION.md # Field edge camera specs
+│   └── OA_NER_Screening_Project_Overview.md # Detailed system design
+├── artifacts/                # Pre-trained models & evaluation reports
 │   ├── movement_baseline.joblib        # Pre-trained Random Forest model
-│   └── movement_baseline.report.json   # Model evaluation report
-├── src/oa_screening/         # Core computer vision & feature extraction
+│   └── movement_baseline.report.json   # Model evaluation metrics
+├── src/oa_screening/         # Core CV, MediaPipe pose extraction, & X-Ray Grad-CAM
 ├── start_backend.ps1         # Automated backend launcher script
-└── README.md                 # Setup and run guide
+└── README.md                 # Project guide & quick start
 ```
 
