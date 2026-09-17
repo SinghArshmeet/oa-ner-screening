@@ -1,23 +1,30 @@
 # OA-NER Screening (Osteoarthritis Risk Screening System)
 
-Clinical frontline osteoarthritis (OA) screening platform developed for rural primary health centres (PHCs) in the North Eastern Region (NER). Combines sagittal computer vision gait analysis, a standardized clinical questionnaire (KOOS-NER), and a multimodal diagnostic triage dashboard.
+[![Vercel Deployment](https://img.shields.io/badge/Vercel-Live%20Demo-success?style=for-the-badge&logo=vercel)](https://oa-ner-scanning-project.vercel.app)
+[![Python 3.11](https://img.shields.io/badge/Python-3.11-blue?style=for-the-badge&logo=python)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com)
+[![React Vite](https://img.shields.io/badge/Frontend-React%2018%20%2B%20Vite-61DAFB?style=for-the-badge&logo=react)](https://vitejs.dev)
+
+Clinical frontline osteoarthritis (OA) screening platform developed for rural primary health centres (PHCs) in the North Eastern Region (NER). Combines sagittal computer vision gait analysis, standardized clinical questionnaire (KOOS-NER), dual-tier binary triage, and knee radiograph Grad-CAM explainability.
+
+> 🌐 **Live Web Application**: **[https://oa-ner-scanning-project.vercel.app](https://oa-ner-scanning-project.vercel.app)**
 
 ---
 
-## Architecture Overview
+## System Architecture
 
 - **Frontend**: React 18 + Vite + Tailwind CSS (`frontend/`)
-  - Optical webcam live feed with sagittal HUD reticle
-  - File upload workflow (.mp4, .mov, .avi, .mkv, .webm)
-  - Preloaded clinical sample walking video
-  - KOOS-NER clinical survey with regional workload matrix
-  - Multimodal diagnostic summary report & referral dossier
-  - Multi-account clinician profile switcher
+  - Optical webcam live feed with sagittal HUD reticle & 8-second standardized walking test
+  - File upload workflow (`.mp4`, `.mov`, `.avi`, `.mkv`, `.webm`) and bundled clinical sample clips
+  - Dual-tier triage (*Screen Negative / Low Risk* vs *Screen Positive / Suspected OA*) + 4-tier severity matrix
+  - KOOS-NER clinical survey with regional tea plantation loading factors
+  - Module 03: Radiographic Staging with Grad-CAM articular joint space attention heatmaps
+  - Multimodal diagnostic summary report, clinical referral dossier, and role-based screener switcher
 - **Backend**: FastAPI + SQLite (`backend/`)
-  - Movement baseline inference using MediaPipe Pose + scikit-learn
-  - Pre-trained Random Forest model (`artifacts/movement_baseline.joblib`)
+  - Movement baseline inference using MediaPipe BlazePose + scikit-learn Random Forest
+  - Kellgren-Lawrence (KL Grade 0–4) radiograph prediction with Grad-CAM heatmap generation
   - Unified 40-point questionnaire scoring engine
-  - Persistent SQLite screening database (`screenings`, `patients`, `sessions`)
+  - Persistent SQLite screening database (`screenings`, `patients`, `sessions`, `devices`)
   - Google OAuth Authorization Code flow with PKCE
 
 ---
