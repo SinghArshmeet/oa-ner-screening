@@ -49,18 +49,18 @@ export default function OverviewView({
           </div>
         </div>
 
-        {/* 3-Step SOP Flow */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-md pt-md">
+        {/* 4-Step SOP Flow */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-sm pt-md">
           {/* Step 1 */}
           <div className="p-sm rounded-lg bg-surface-container-low flex items-center gap-sm border border-outline-variant/20">
-            <div className="w-8 h-8 rounded-full bg-tertiary text-on-tertiary flex items-center justify-center font-bold font-data-mono text-[13px] shrink-0">
+            <div className="w-7 h-7 rounded-full bg-tertiary text-on-tertiary flex items-center justify-center font-bold font-data-mono text-[12px] shrink-0">
               ✓
             </div>
             <div className="min-w-0">
               <p className="font-label-sm text-[10px] text-on-surface-variant uppercase font-semibold">
-                Step 1 · Frontline Vitals
+                Step 1 · Vitals
               </p>
-              <p className="font-body-sm text-[13px] text-tertiary font-bold truncate">
+              <p className="font-body-sm text-[12px] text-tertiary font-bold truncate">
                 BMI 27.4 · Complete
               </p>
             </div>
@@ -72,18 +72,18 @@ export default function OverviewView({
             className="p-sm rounded-lg bg-surface-container-low hover:bg-surface-container flex items-center gap-sm border border-outline-variant/20 text-left transition cursor-pointer"
             type="button"
           >
-            <div className="w-8 h-8 rounded-full bg-tertiary text-on-tertiary flex items-center justify-center font-bold font-data-mono text-[13px] shrink-0">
+            <div className="w-7 h-7 rounded-full bg-tertiary text-on-tertiary flex items-center justify-center font-bold font-data-mono text-[12px] shrink-0">
               ✓
             </div>
             <div className="min-w-0 grow">
               <p className="font-label-sm text-[10px] text-on-surface-variant uppercase font-semibold">
-                Step 2 · KOOS/WOMAC Survey
+                Step 2 · KOOS Survey
               </p>
-              <p className="font-body-sm text-[13px] text-tertiary font-bold truncate">
+              <p className="font-body-sm text-[12px] text-tertiary font-bold truncate">
                 {surveyResult ? `${surveyResult.raw_score}/40 (${surveyResult.category.toUpperCase()})` : '24/40 (Mod. Risk)'}
               </p>
             </div>
-            <span className="material-symbols-outlined text-[16px] text-on-surface-variant">arrow_forward</span>
+            <span className="material-symbols-outlined text-[15px] text-on-surface-variant">arrow_forward</span>
           </button>
 
           {/* Step 3 */}
@@ -92,20 +92,40 @@ export default function OverviewView({
             className="p-sm rounded-lg bg-primary text-on-primary shadow-sm flex items-center gap-sm text-left transition hover:bg-primary-container cursor-pointer"
             type="button"
           >
-            <div className="w-8 h-8 rounded-full bg-on-primary text-primary flex items-center justify-center font-bold font-data-mono text-[13px] animate-pulse shrink-0">
+            <div className="w-7 h-7 rounded-full bg-on-primary text-primary flex items-center justify-center font-bold font-data-mono text-[12px] animate-pulse shrink-0">
               3
             </div>
             <div className="min-w-0 grow">
               <p className="font-label-sm text-[10px] text-primary-fixed uppercase font-semibold">
-                Step 3 · Active Session
+                Step 3 · Gait HUD
               </p>
-              <p className="font-headline-sm text-[14px] font-bold truncate">
-                Sagittal 8s Walking Test
+              <p className="font-headline-sm text-[12px] font-bold truncate">
+                8s Walk Capture
               </p>
             </div>
-            <span className="px-xs py-1 rounded bg-on-primary/20 text-on-primary font-data-mono text-[10px] font-bold">
-              LAUNCH HUD
+            <span className="px-1.5 py-0.5 rounded bg-on-primary/20 text-on-primary font-data-mono text-[9px] font-bold">
+              LAUNCH
             </span>
+          </button>
+
+          {/* Step 4: X-Ray & Decision Staging */}
+          <button
+            onClick={() => onNavigate('report')}
+            className="p-sm rounded-lg bg-surface-container-low hover:bg-surface-container flex items-center gap-sm border border-tertiary/40 text-left transition cursor-pointer"
+            type="button"
+          >
+            <div className="w-7 h-7 rounded-full bg-tertiary-container text-on-tertiary flex items-center justify-center font-bold font-data-mono text-[12px] shrink-0">
+              4
+            </div>
+            <div className="min-w-0 grow">
+              <p className="font-label-sm text-[10px] text-tertiary uppercase font-semibold">
+                Step 4 · X-Ray & Triage
+              </p>
+              <p className="font-body-sm text-[12px] text-on-surface font-bold truncate">
+                Upload & Grad-CAM
+              </p>
+            </div>
+            <span className="material-symbols-outlined text-[15px] text-tertiary">radiology</span>
           </button>
         </div>
       </section>
