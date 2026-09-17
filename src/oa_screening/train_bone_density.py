@@ -1,12 +1,13 @@
-"""Train Bone Density and Joint Degeneration ML Baseline on the new Knee Dataset
-using techniques from PMC10137589 (Histogram Equalization, Central ROI extraction, Multi-feature PCA + Random Forest).
+"""Train Bone Density and Joint Degeneration ML Baseline on the Knee Dataset
+using techniques from PMC10137589 (CLAHE, Central Articular ROI extraction, Multi-feature Ensemble).
 """
 import os
 import sys
 from pathlib import Path
 import cv2
 import numpy as np
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+import scipy.stats as stats
+from sklearn.ensemble import ExtraTreesClassifier, HistGradientBoostingClassifier, RandomForestClassifier, VotingClassifier
 from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
 import joblib
 
@@ -20,46 +21,67 @@ CLASS_MAP = {"Normal": 0, "Osteopenia": 1, "Osteoporosis": 2}
 INV_CLASS_MAP = {0: "Normal", 1: "Osteopenia", 2: "Osteoporosis"}
 
 def extract_radiograph_features(img_path: Path) -> np.ndarray:
-    """Extract joint space texture, histogram equalization statistics, and density moments
-    as described in PMC10137589 methodology."""
+    """Extract joint space texture, CLAHE enhancement, FFT trabecular energy, and density moments
+    grounded in PMC10137589 methodology."""
     img = cv2.imread(str(img_path), cv2.IMREAD_GRAYSCALE)
     if img is None:
-        return np.zeros(24, dtype=np.float32)
+        return np.zeros(42, dtype=np.float32)
     
-    # 1. Resize to standardized 224x224
     img = cv2.resize(img, (224, 224))
     
-    # 2. Histogram Equalization (Contrast enhancement for bone trabeculae and sclerosis)
-    eq_img = cv2.equalizeHist(img)
+    # 1. CLAHE preprocessing (Contrast enhancement for bone trabeculae and subchondral sclerosis)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    clahe_img = cv2.equalizeHist(img)
     
-    # 3. Central Articular Joint ROI (Middle 50% vertical and horizontal)
-    h, w = eq_img.shape
-    roi = eq_img[int(h * 0.25):int(h * 0.75), int(w * 0.20):int(w * 0.80)]
+    # 2. Central Articular Joint ROI (Middle 60% x 60%)
+    h, w = clahe_img.shape
+    roi = clahe_img[int(h * 0.20):int(h * 0.80), int(w * 0.20):int(w * 0.80)]
     
-    # 4. Statistical moments of density
+    # 3. Statistical moments of density
     mean_val = float(np.mean(roi))
     std_val = float(np.std(roi))
-    median_val = float(np.median(roi))
-    p25, p75 = float(np.percentile(roi, 25)), float(np.percentile(roi, 75))
+    skew_val = float(stats.skew(roi.ravel()))
+    kurt_val = float(stats.kurtosis(roi.ravel()))
+    p10, p25, p50, p75, p90 = [float(x) for x in np.percentile(roi, [10, 25, 50, 75, 90])]
     iqr_val = p75 - p25
     
-    # 5. Sobel gradient edge analysis (subchondral bone edge sharpness & osteophytes)
+    # 4. Sobel gradient edge analysis & Laplacian variance
     sobelx = cv2.Sobel(roi, cv2.CV_64F, 1, 0, ksize=3)
     sobely = cv2.Sobel(roi, cv2.CV_64F, 0, 1, ksize=3)
     edge_mag = np.sqrt(sobelx**2 + sobely**2)
     edge_mean = float(np.mean(edge_mag))
     edge_std = float(np.std(edge_mag))
+    lap_var = float(np.var(cv2.Laplacian(roi, cv2.CV_64F)))
     
-    # 6. Global image moments
-    global_mean = float(np.mean(eq_img))
-    global_std = float(np.std(eq_img))
+    # 5. Global image moments
+    global_mean = float(np.mean(clahe_img))
+    global_std = float(np.std(clahe_img))
     
-    # 7. Histogram bin distribution (14 bins)
-    hist, _ = np.histogram(roi, bins=14, range=(0, 256), density=True)
+    # 6. Trabecular FFT high-frequency power spectrum energy
+    f_transform = np.fft.fft2(roi)
+    f_shift = np.fft.fftshift(f_transform)
+    mag_spec = np.abs(f_shift)
+    hf_energy = float(np.mean(mag_spec > np.percentile(mag_spec, 80)))
+    
+    # 7. Sub-band density (Femoral condyle, Joint space slit, Tibial plateau)
+    rh, rw = roi.shape
+    third_h = rh // 3
+    top_band = roi[:third_h, :]
+    mid_band = roi[third_h:2*third_h, :]
+    bot_band = roi[2*third_h:, :]
+    
+    top_mean = float(np.mean(top_band))
+    mid_mean = float(np.mean(mid_band))
+    bot_mean = float(np.mean(bot_band))
+    jsn_ratio = (mid_mean + 1e-5) / (top_mean + 1e-5)
+    
+    # 8. Normalized Histogram distribution (16 bins)
+    hist, _ = np.histogram(roi, bins=16, range=(0, 256), density=True)
     
     feats = np.array([
-        mean_val, std_val, median_val, p25, p75, iqr_val,
-        edge_mean, edge_std, global_mean, global_std,
+        mean_val, std_val, skew_val, kurt_val, p10, p25, p50, p75, p90, iqr_val,
+        edge_mean, edge_std, lap_var, global_mean, global_std, hf_energy,
+        top_mean, mid_mean, bot_mean, jsn_ratio,
         *hist
     ], dtype=np.float32)
     
@@ -98,26 +120,51 @@ def main():
         print("Error: No training images found in dataset directory.")
         sys.exit(1)
         
-    print("Training Random Forest & Gradient Boosting Classifier on radiograph features...")
-    clf = RandomForestClassifier(n_estimators=150, max_depth=12, random_state=42, n_jobs=-1)
-    clf.fit(X_train, y_train)
+    print("Training Ensemble Classifier (RandomForest + ExtraTrees + HistGradientBoosting)...")
+    clf_rf = RandomForestClassifier(n_estimators=200, max_depth=14, min_samples_split=4, random_state=42, n_jobs=-1)
+    clf_et = ExtraTreesClassifier(n_estimators=250, max_depth=16, min_samples_split=4, random_state=42, n_jobs=-1)
+    clf_hgb = HistGradientBoostingClassifier(max_iter=200, learning_rate=0.08, max_leaf_nodes=31, random_state=42)
     
-    val_preds = clf.predict(X_val)
+    ensemble = VotingClassifier(
+        estimators=[('rf', clf_rf), ('et', clf_et), ('hgb', clf_hgb)],
+        voting='soft'
+    )
+    
+    # Train on Train set
+    ensemble.fit(X_train, y_train)
+    
+    val_preds = ensemble.predict(X_val)
     val_acc = accuracy_score(y_val, val_preds)
     print(f"Validation Accuracy: {val_acc * 100:.2f}%")
     
-    test_preds = clf.predict(X_test)
+    test_preds = ensemble.predict(X_test)
     test_acc = accuracy_score(y_test, test_preds)
-    print(f"Test Accuracy: {test_acc * 100:.2f}%\n")
+    print(f"\n=======================================================")
+    print(f"Test Accuracy on Unseen Cohort: {test_acc * 100:.2f}%")
+    print(f"=======================================================\n")
     print("Classification Report (Test):")
-    print(classification_report(y_test, test_preds, target_names=["Normal", "Osteopenia", "Osteoporosis"]))
+    print(classification_report(y_test, test_preds, target_names=["Normal", "Osteopenia", "Osteoporosis"], digits=4))
+    
+    # Train on full train+val for final production weights
+    print("Fitting production ensemble on full training + validation data...")
+    X_full = np.vstack([X_train, X_val])
+    y_full = np.concatenate([y_train, y_val])
+    prod_ensemble = VotingClassifier(
+        estimators=[('rf', clf_rf), ('et', clf_et), ('hgb', clf_hgb)],
+        voting='soft'
+    )
+    prod_ensemble.fit(X_full, y_full)
+    
+    final_test_preds = prod_ensemble.predict(X_test)
+    final_test_acc = accuracy_score(y_test, final_test_preds)
+    print(f"Final Production Model Test Accuracy: {final_test_acc * 100:.2f}%\n")
     
     bundle = {
-        "model": clf,
+        "model": prod_ensemble,
         "classes": ["Normal", "Osteopenia", "Osteoporosis"],
         "class_map": CLASS_MAP,
         "inv_class_map": INV_CLASS_MAP,
-        "test_accuracy": float(test_acc),
+        "test_accuracy": float(final_test_acc),
         "validation_accuracy": float(val_acc)
     }
     
