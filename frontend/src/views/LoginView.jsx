@@ -1,16 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { ROLES, DEMO_ACCOUNTS, loginUser, loginAsDemo } from '../utils/auth';
+import { ROLES, DEMO_ACCOUNTS, loginUser, loginAsDemo, registerUser } from '../utils/auth';
 
 export default function LoginView({ onLogin }) {
   // Splash introduction animation state
   const [showSplash, setShowSplash] = useState(true);
   const [splashProgress, setSplashProgress] = useState(0);
 
+  // Authentication Mode: 'login' | 'register'
+  const [authMode, setAuthMode] = useState('login');
+
+  // Sign In State
   const [selectedRole, setSelectedRole] = useState('screener');
   const [identifier, setIdentifier] = useState('screener@phc.assam.gov.in');
   const [password, setPassword] = useState('demo123');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberDevice, setRememberDevice] = useState(true);
+
+  // Registration State
+  const [regName, setRegName] = useState('');
+  const [regEmail, setRegEmail] = useState('');
+  const [regStaffId, setRegStaffId] = useState('');
+  const [regStation, setRegStation] = useState('Diphu CHC, Karbi Anglong');
+  const [regRole, setRegRole] = useState('screener');
+  const [regPassword, setRegPassword] = useState('');
+  const [regConfirmPassword, setRegConfirmPassword] = useState('');
+  const [regSuccessMessage, setRegSuccessMessage] = useState('');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -80,6 +94,52 @@ export default function LoginView({ onLogin }) {
     } catch (err) {
       setIsSubmitting(false);
       setErrorMessage(err.message || 'Authentication failed. Please verify credentials.');
+    }
+  };
+
+  const handleRegisterSubmit = async (e) => {
+    e.preventDefault();
+    setErrorMessage('');
+    setRegSuccessMessage('');
+
+    if (!regName.trim()) {
+      setErrorMessage('Please enter your full name and clinical designation.');
+      return;
+    }
+
+    if (!regEmail.trim() || !regEmail.includes('@')) {
+      setErrorMessage('Please enter a valid institutional or personal email.');
+      return;
+    }
+
+    if (!regPassword || regPassword.length < 5) {
+      setErrorMessage('Password must be at least 5 characters long.');
+      return;
+    }
+
+    if (regPassword !== regConfirmPassword) {
+      setErrorMessage('Passwords do not match. Please re-enter your password.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const newUser = await registerUser({
+        name: regName,
+        email: regEmail,
+        staffId: regStaffId,
+        roleId: regRole,
+        station: regStation,
+        password: regPassword
+      });
+      setIsSubmitting(false);
+      setRegSuccessMessage(`Practitioner ${newUser.name} enrolled successfully! Logging in...`);
+      setTimeout(() => {
+        onLogin(newUser);
+      }, 750);
+    } catch (err) {
+      setIsSubmitting(false);
+      setErrorMessage(err.message || 'Registration could not be completed. Please try again.');
     }
   };
 
@@ -346,57 +406,56 @@ export default function LoginView({ onLogin }) {
           >
             <div className="w-full bg-surface-container-lowest rounded-2xl shadow-xl border border-surface-container p-lg sm:p-xl">
               
+              {/* Primary Tab Switcher */}
+              <div className="flex rounded-xl bg-surface-container-low p-1 border border-surface-container mb-md">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode('login');
+                    setErrorMessage('');
+                    setRegSuccessMessage('');
+                  }}
+                  className={`flex-1 py-2 rounded-lg text-xs font-bold font-label-md transition flex items-center justify-center gap-1.5 ${
+                    authMode === 'login'
+                      ? 'bg-surface-container-lowest text-primary shadow-sm'
+                      : 'text-secondary hover:text-on-surface'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[16px]">login</span>
+                  <span>Station Sign In</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode('register');
+                    setErrorMessage('');
+                    setRegSuccessMessage('');
+                  }}
+                  className={`flex-1 py-2 rounded-lg text-xs font-bold font-label-md transition flex items-center justify-center gap-1.5 ${
+                    authMode === 'register'
+                      ? 'bg-surface-container-lowest text-primary shadow-sm'
+                      : 'text-secondary hover:text-on-surface'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[16px]">person_add</span>
+                  <span>Register Practitioner</span>
+                </button>
+              </div>
+
               {/* Form Header */}
               <div className="mb-md pb-sm border-b border-surface-container">
                 <div className="flex items-center justify-between gap-xs mb-1">
                   <span className="font-headline-sm text-lg font-bold text-on-surface">
-                    Station Terminal Sign In
+                    {authMode === 'register' ? 'Enroll Station Practitioner' : 'Station Terminal Sign In'}
                   </span>
                   <span className="px-xs py-0.5 rounded bg-surface-container-high text-primary font-data-mono text-[10px] font-bold uppercase">
                     NER-SOP-09
                   </span>
                 </div>
                 <p className="font-body-sm text-secondary text-xs">
-                  Authorize your PHC screening session to access patient triage, gait camera feeds, and diagnostic reports.
-                </p>
-              </div>
-
-              {/* 1. Accessible Role Segmented Selector */}
-              <div className="mb-md">
-                <label className="block font-label-sm text-[11px] text-on-surface-variant font-bold uppercase tracking-wider mb-1.5">
-                  Select Screener Operational Role
-                </label>
-                <div
-                  role="radiogroup"
-                  aria-label="Select Station Role"
-                  className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-surface-container-low border border-surface-container"
-                >
-                  {Object.values(ROLES).map((role) => {
-                    const isSelected = selectedRole === role.id;
-                    return (
-                      <button
-                        key={role.id}
-                        role="radio"
-                        aria-checked={isSelected}
-                        onClick={() => handleRoleSelect(role.id)}
-                        className={`flex flex-col items-center justify-center p-2 rounded-lg text-center transition-all cursor-pointer ${
-                          isSelected
-                            ? 'bg-primary text-on-primary shadow-sm font-semibold'
-                            : 'text-secondary hover:text-on-surface hover:bg-white/60'
-                        }`}
-                        type="button"
-                      >
-                        <span className="material-symbols-outlined text-[18px] mb-0.5">{role.icon}</span>
-                        <span className="font-label-sm text-[11px] leading-tight block">
-                          {role.label}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-                <p className="font-body-sm text-[11px] text-secondary mt-1.5 flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[14px] text-primary">info</span>
-                  <span>{currentRoleConfig.description}</span>
+                  {authMode === 'register'
+                    ? 'Create an institutional account for frontline health screeners, Medical Officers, or IT administrators.'
+                    : 'Authorize your PHC screening session to access patient triage, gait camera feeds, and diagnostic reports.'}
                 </p>
               </div>
 
@@ -420,194 +479,388 @@ export default function LoginView({ onLogin }) {
                 </div>
               )}
 
-              {/* 2. Authentication Form */}
-              <form onSubmit={handleFormSubmit} noValidate className="space-y-md">
-                {/* Staff ID or Email Input */}
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label
-                      htmlFor="identifier-input"
-                      className="font-label-sm text-xs font-bold text-on-surface uppercase tracking-wide"
-                    >
-                      Staff ID or PHC Email *
-                    </label>
-                    <span className="text-[10px] text-secondary font-data-mono">
-                      e.g., {currentRoleConfig.defaultEmail}
+              {/* Success Notification Alert */}
+              {regSuccessMessage && (
+                <div
+                  role="status"
+                  className="mb-md p-sm rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-on-surface flex items-start gap-xs animate-fade-in"
+                >
+                  <span className="material-symbols-outlined text-emerald-600 text-[20px] shrink-0 mt-0.5">
+                    check_circle
+                  </span>
+                  <div className="flex-1">
+                    <span className="font-label-md text-xs font-bold text-emerald-700 dark:text-emerald-300 block">
+                      Registration Complete
                     </span>
+                    <p className="font-body-sm text-xs text-on-surface mt-0.5">
+                      {regSuccessMessage}
+                    </p>
                   </div>
-                  <div className="relative flex items-center">
-                    <span className="material-symbols-outlined absolute left-3 text-secondary text-[18px] pointer-events-none">
-                      badge
-                    </span>
+                </div>
+              )}
+
+              {/* MODE 1: PRACTITIONER REGISTRATION FORM */}
+              {authMode === 'register' ? (
+                <form onSubmit={handleRegisterSubmit} noValidate className="space-y-sm animate-fade-in">
+                  <div>
+                    <label className="block font-label-sm text-[11px] text-on-surface-variant font-bold uppercase tracking-wider mb-1">
+                      Full Name & Designation *
+                    </label>
                     <input
-                      id="identifier-input"
                       type="text"
                       required
-                      autoComplete="username"
-                      value={identifier}
-                      onChange={(e) => {
-                        setIdentifier(e.target.value);
-                        if (errorMessage) setErrorMessage('');
-                      }}
-                      placeholder="e.g., screener@phc.assam.gov.in"
-                      className="w-full bg-surface-container-low text-on-surface placeholder:text-outline text-xs rounded-xl pl-10 pr-3 py-2.5 border border-surface-container focus:outline-none focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition"
+                      value={regName}
+                      onChange={(e) => setRegName(e.target.value)}
+                      placeholder="e.g., Dr. A. Baruah, MO / S. Gogoi, ANM"
+                      className="w-full bg-surface-container-low text-on-surface placeholder:text-outline text-xs rounded-xl px-3 py-2 border border-surface-container focus:outline-none focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition"
                     />
                   </div>
-                </div>
 
-                {/* Password Input with Show/Hide Toggle */}
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label
-                      htmlFor="password-input"
-                      className="font-label-sm text-xs font-bold text-on-surface uppercase tracking-wide"
-                    >
-                      Station Access Password *
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setShowForgotModal(true)}
-                      className="font-label-sm text-[11px] text-primary hover:underline"
-                    >
-                      Forgot access?
-                    </button>
-                  </div>
-                  <div className="relative flex items-center">
-                    <span className="material-symbols-outlined absolute left-3 text-secondary text-[18px] pointer-events-none">
-                      lock
-                    </span>
-                    <input
-                      id="password-input"
-                      type={showPassword ? 'text' : 'password'}
-                      required
-                      autoComplete="current-password"
-                      value={password}
-                      onChange={(e) => {
-                        setPassword(e.target.value);
-                        if (errorMessage) setErrorMessage('');
-                      }}
-                      placeholder="Enter station password"
-                      className="w-full bg-surface-container-low text-on-surface placeholder:text-outline text-xs rounded-xl pl-10 pr-10 py-2.5 border border-surface-container focus:outline-none focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      aria-label={showPassword ? 'Hide password' : 'Show password'}
-                      className="absolute right-3 text-secondary hover:text-on-surface transition p-1"
-                    >
-                      <span className="material-symbols-outlined text-[18px]">
-                        {showPassword ? 'visibility_off' : 'visibility'}
-                      </span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Remember Device Checkbox & Quickfill helper */}
-                <div className="flex items-center justify-between pt-1">
-                  <label className="flex items-center gap-2 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={rememberDevice}
-                      onChange={(e) => setRememberDevice(e.target.checked)}
-                      className="w-4 h-4 accent-primary rounded cursor-pointer"
-                    />
-                    <span className="font-label-sm text-xs text-secondary">
-                      Remember this station terminal
-                    </span>
-                  </label>
-
-                  <button
-                    type="button"
-                    onClick={handleQuickFill}
-                    className="font-label-sm text-[11px] text-tertiary hover:text-tertiary-container font-semibold underline flex items-center gap-0.5"
-                    title="Populate recommended demo credentials for selected role"
-                  >
-                    <span className="material-symbols-outlined text-[13px]">magic_button</span>
-                    Fill Demo Key
-                  </button>
-                </div>
-
-                {/* Submit Action Button */}
-                <div className="pt-xs space-y-xs">
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className={`w-full py-2.5 px-md rounded-xl font-label-md text-sm font-bold text-on-primary bg-primary hover:bg-primary-container shadow-md transition-all flex items-center justify-center gap-2 ${
-                      isSubmitting ? 'opacity-70 cursor-not-allowed' : 'active:scale-95'
-                    }`}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin"></span>
-                        <span>Verifying Station Credentials...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="material-symbols-outlined text-[18px]">login</span>
-                        <span>Sign In to Screening Station</span>
-                      </>
-                    )}
-                  </button>
-
-                  {/* Google Authentication Flow */}
-                  <div className="pt-1">
-                    <button
-                      type="button"
-                      onClick={handleGoogleLogin}
-                      className="w-full py-2.5 px-md rounded-xl font-label-md text-xs font-semibold text-on-surface bg-surface-container-lowest hover:bg-surface-container border border-outline-variant/60 shadow-xs transition-all flex items-center justify-center gap-2.5 active:scale-95"
-                    >
-                      <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                        <path
-                          fill="#4285F4"
-                          d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                        />
-                        <path
-                          fill="#34A853"
-                          d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                        />
-                        <path
-                          fill="#FBBC05"
-                          d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                        />
-                        <path
-                          fill="#EA4335"
-                          d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                        />
-                      </svg>
-                      <span>Continue with Google</span>
-                    </button>
-
-                    {googleNotice && (
-                      <div className="mt-2 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 text-[11px] flex items-start gap-1.5">
-                        <span className="material-symbols-outlined text-[15px] text-amber-600 shrink-0 mt-0.5">info</span>
-                        <span>{googleNotice}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* 1-Click Local Demo Mode Action */}
-                  <div className="pt-2">
-                    <div className="relative flex items-center justify-center my-2">
-                      <div className="border-t border-surface-container w-full"></div>
-                      <span className="bg-surface-container-lowest px-2 font-label-sm text-[10px] uppercase text-secondary font-bold tracking-wider absolute">
-                        Quick Frontline Evaluation
-                      </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-sm">
+                    <div>
+                      <label className="block font-label-sm text-[11px] text-on-surface-variant font-bold uppercase tracking-wider mb-1">
+                        Assigned Operational Role *
+                      </label>
+                      <select
+                        value={regRole}
+                        onChange={(e) => setRegRole(e.target.value)}
+                        className="w-full bg-surface-container-low text-on-surface text-xs rounded-xl px-3 py-2 border border-surface-container focus:outline-none focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition"
+                      >
+                        <option value="screener">Clinical Screener (ANM / GNM)</option>
+                        <option value="officer">Medical Officer (MO / Ortho)</option>
+                        <option value="admin">System Administrator (IT / Mesh)</option>
+                      </select>
                     </div>
 
+                    <div>
+                      <label className="block font-label-sm text-[11px] text-on-surface-variant font-bold uppercase tracking-wider mb-1">
+                        Staff / Registration ID
+                      </label>
+                      <input
+                        type="text"
+                        value={regStaffId}
+                        onChange={(e) => setRegStaffId(e.target.value)}
+                        placeholder="e.g., NER-MO-0821 (or auto)"
+                        className="w-full bg-surface-container-low text-on-surface placeholder:text-outline text-xs rounded-xl px-3 py-2 border border-surface-container focus:outline-none focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition font-data-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-label-sm text-[11px] text-on-surface-variant font-bold uppercase tracking-wider mb-1">
+                      PHC / Station Facility Location
+                    </label>
+                    <input
+                      type="text"
+                      value={regStation}
+                      onChange={(e) => setRegStation(e.target.value)}
+                      placeholder="e.g., Diphu CHC / GMCH Ortho Unit"
+                      className="w-full bg-surface-container-low text-on-surface placeholder:text-outline text-xs rounded-xl px-3 py-2 border border-surface-container focus:outline-none focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-label-sm text-[11px] text-on-surface-variant font-bold uppercase tracking-wider mb-1">
+                      Institutional / Official Email *
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={regEmail}
+                      onChange={(e) => setRegEmail(e.target.value)}
+                      placeholder="e.g., dr.baruah@gmch.gov.in"
+                      className="w-full bg-surface-container-low text-on-surface placeholder:text-outline text-xs rounded-xl px-3 py-2 border border-surface-container focus:outline-none focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-sm">
+                    <div>
+                      <label className="block font-label-sm text-[11px] text-on-surface-variant font-bold uppercase tracking-wider mb-1">
+                        Access Password *
+                      </label>
+                      <input
+                        type="password"
+                        required
+                        value={regPassword}
+                        onChange={(e) => setRegPassword(e.target.value)}
+                        placeholder="Min. 5 chars"
+                        className="w-full bg-surface-container-low text-on-surface placeholder:text-outline text-xs rounded-xl px-3 py-2 border border-surface-container focus:outline-none focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-label-sm text-[11px] text-on-surface-variant font-bold uppercase tracking-wider mb-1">
+                        Confirm Password *
+                      </label>
+                      <input
+                        type="password"
+                        required
+                        value={regConfirmPassword}
+                        onChange={(e) => setRegConfirmPassword(e.target.value)}
+                        placeholder="Repeat password"
+                        className="w-full bg-surface-container-low text-on-surface placeholder:text-outline text-xs rounded-xl px-3 py-2 border border-surface-container focus:outline-none focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-2">
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className={`w-full py-2.5 px-md rounded-xl font-label-md text-sm font-bold text-on-primary bg-primary hover:bg-primary-container shadow-md transition-all flex items-center justify-center gap-2 ${
+                        isSubmitting ? 'opacity-70 cursor-not-allowed' : 'active:scale-95'
+                      }`}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin"></span>
+                          <span>Enrolling Practitioner...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="material-symbols-outlined text-[18px]">how_to_reg</span>
+                          <span>Enroll Practitioner & Enter Station</span>
+                        </>
+                      )}
+                    </button>
+
                     <button
                       type="button"
-                      onClick={handleDemoBypass}
-                      className="w-full py-2 px-md rounded-xl font-label-md text-xs font-semibold text-on-surface bg-surface-container-low hover:bg-surface-container border border-outline-variant/40 shadow-xs transition-all flex items-center justify-center gap-2 active:scale-95"
+                      onClick={() => setAuthMode('login')}
+                      className="w-full mt-2 py-1.5 text-xs text-secondary hover:text-on-surface text-center block transition"
                     >
-                      <span className="material-symbols-outlined text-[16px] text-tertiary">bolt</span>
-                      <span>Launch OrthoNex Demo</span>
-                      <span className="px-1.5 py-0.5 rounded bg-tertiary-container/30 text-tertiary font-data-mono text-[9px] font-bold">
-                        Offline Simulation
-                      </span>
+                      Already registered? <span className="text-primary font-semibold underline">Sign In</span>
                     </button>
                   </div>
-                </div>
-              </form>
+                </form>
+              ) : (
+                /* MODE 2: SIGN IN FORM */
+                <form onSubmit={handleFormSubmit} noValidate className="space-y-md">
+                  {/* 1. Accessible Role Segmented Selector */}
+                  <div>
+                    <label className="block font-label-sm text-[11px] text-on-surface-variant font-bold uppercase tracking-wider mb-1.5">
+                      Select Operational Role
+                    </label>
+                    <div
+                      role="radiogroup"
+                      aria-label="Select Station Role"
+                      className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-surface-container-low border border-surface-container"
+                    >
+                      {Object.values(ROLES).map((role) => {
+                        const isSelected = selectedRole === role.id;
+                        return (
+                          <button
+                            key={role.id}
+                            role="radio"
+                            aria-checked={isSelected}
+                            onClick={() => handleRoleSelect(role.id)}
+                            className={`flex flex-col items-center justify-center p-2 rounded-lg text-center transition-all cursor-pointer ${
+                              isSelected
+                                ? 'bg-primary text-on-primary shadow-sm font-semibold'
+                                : 'text-secondary hover:text-on-surface hover:bg-white/60'
+                            }`}
+                            type="button"
+                          >
+                            <span className="material-symbols-outlined text-[18px] mb-0.5">{role.icon}</span>
+                            <span className="font-label-sm text-[11px] leading-tight block">
+                              {role.label}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="font-body-sm text-[11px] text-secondary mt-1.5 flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[14px] text-primary">info</span>
+                      <span>{currentRoleConfig.description}</span>
+                    </p>
+                  </div>
+
+                  {/* Staff ID or Email Input */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label
+                        htmlFor="identifier-input"
+                        className="font-label-sm text-xs font-bold text-on-surface uppercase tracking-wide"
+                      >
+                        Staff ID or Registered Email *
+                      </label>
+                      <span className="text-[10px] text-secondary font-data-mono">
+                        e.g., {currentRoleConfig.defaultEmail}
+                      </span>
+                    </div>
+                    <div className="relative flex items-center">
+                      <span className="material-symbols-outlined absolute left-3 text-secondary text-[18px] pointer-events-none">
+                        badge
+                      </span>
+                      <input
+                        id="identifier-input"
+                        type="text"
+                        required
+                        autoComplete="username"
+                        value={identifier}
+                        onChange={(e) => {
+                          setIdentifier(e.target.value);
+                          if (errorMessage) setErrorMessage('');
+                        }}
+                        placeholder="e.g., screener@phc.assam.gov.in"
+                        className="w-full bg-surface-container-low text-on-surface placeholder:text-outline text-xs rounded-xl pl-10 pr-3 py-2.5 border border-surface-container focus:outline-none focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Password Input with Show/Hide Toggle */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label
+                        htmlFor="password-input"
+                        className="font-label-sm text-xs font-bold text-on-surface uppercase tracking-wide"
+                      >
+                        Station Access Password *
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowForgotModal(true)}
+                        className="font-label-sm text-[11px] text-primary hover:underline"
+                      >
+                        Forgot access?
+                      </button>
+                    </div>
+                    <div className="relative flex items-center">
+                      <span className="material-symbols-outlined absolute left-3 text-secondary text-[18px] pointer-events-none">
+                        lock
+                      </span>
+                      <input
+                        id="password-input"
+                        type={showPassword ? 'text' : 'password'}
+                        required
+                        autoComplete="current-password"
+                        value={password}
+                        onChange={(e) => {
+                          setPassword(e.target.value);
+                          if (errorMessage) setErrorMessage('');
+                        }}
+                        placeholder="Enter station password"
+                        className="w-full bg-surface-container-low text-on-surface placeholder:text-outline text-xs rounded-xl pl-10 pr-10 py-2.5 border border-surface-container focus:outline-none focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                        className="absolute right-3 text-secondary hover:text-on-surface transition p-1"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">
+                          {showPassword ? 'visibility_off' : 'visibility'}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Remember Device Checkbox & Quickfill helper */}
+                  <div className="flex items-center justify-between pt-1">
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={rememberDevice}
+                        onChange={(e) => setRememberDevice(e.target.checked)}
+                        className="w-4 h-4 accent-primary rounded cursor-pointer"
+                      />
+                      <span className="font-label-sm text-xs text-secondary">
+                        Remember this station terminal
+                      </span>
+                    </label>
+
+                    <button
+                      type="button"
+                      onClick={handleQuickFill}
+                      className="font-label-sm text-[11px] text-tertiary hover:text-tertiary-container font-semibold underline flex items-center gap-0.5"
+                      title="Populate recommended demo credentials for selected role"
+                    >
+                      <span className="material-symbols-outlined text-[13px]">magic_button</span>
+                      Fill Demo Key
+                    </button>
+                  </div>
+
+                  {/* Submit Action Button */}
+                  <div className="pt-xs space-y-xs">
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className={`w-full py-2.5 px-md rounded-xl font-label-md text-sm font-bold text-on-primary bg-primary hover:bg-primary-container shadow-md transition-all flex items-center justify-center gap-2 ${
+                        isSubmitting ? 'opacity-70 cursor-not-allowed' : 'active:scale-95'
+                      }`}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin"></span>
+                          <span>Verifying Station Credentials...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="material-symbols-outlined text-[18px]">login</span>
+                          <span>Sign In to Screening Station</span>
+                        </>
+                      )}
+                    </button>
+
+                    {/* Google Authentication Flow */}
+                    <div className="pt-1">
+                      <button
+                        type="button"
+                        onClick={handleGoogleLogin}
+                        className="w-full py-2.5 px-md rounded-xl font-label-md text-xs font-semibold text-on-surface bg-surface-container-lowest hover:bg-surface-container border border-outline-variant/60 shadow-xs transition-all flex items-center justify-center gap-2.5 active:scale-95"
+                      >
+                        <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                          <path
+                            fill="#4285F4"
+                            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                          />
+                          <path
+                            fill="#34A853"
+                            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                          />
+                          <path
+                            fill="#FBBC05"
+                            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                          />
+                          <path
+                            fill="#EA4335"
+                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                          />
+                        </svg>
+                        <span>Continue with Google</span>
+                      </button>
+
+                      {googleNotice && (
+                        <div className="mt-2 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 text-[11px] flex items-start gap-1.5">
+                          <span className="material-symbols-outlined text-[15px] text-amber-600 shrink-0 mt-0.5">info</span>
+                          <span>{googleNotice}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 1-Click Local Demo Mode Action */}
+                    <div className="pt-2">
+                      <div className="relative flex items-center justify-center my-2">
+                        <div className="border-t border-surface-container w-full"></div>
+                        <span className="bg-surface-container-lowest px-2 font-label-sm text-[10px] uppercase text-secondary font-bold tracking-wider absolute">
+                          Quick Frontline Evaluation
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleDemoBypass}
+                        className="w-full py-2 px-md rounded-xl font-label-md text-xs font-semibold text-on-surface bg-surface-container-low hover:bg-surface-container border border-outline-variant/40 shadow-xs transition-all flex items-center justify-center gap-2 active:scale-95"
+                      >
+                        <span className="material-symbols-outlined text-[16px] text-tertiary">bolt</span>
+                        <span>Launch OrthoNex Demo</span>
+                        <span className="px-1.5 py-0.5 rounded bg-tertiary-container/30 text-tertiary font-data-mono text-[9px] font-bold">
+                          Offline Simulation
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              )}
 
               {/* Demo Credentials Cheat-Sheet Card */}
               <div className="mt-md p-xs px-sm rounded-xl bg-surface-container-low/60 border border-surface-container text-[11px] text-secondary">

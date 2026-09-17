@@ -101,6 +101,37 @@ export default function QuestionnaireView({ activePatient, onSurveySubmitted, on
     }
   };
 
+  const applySurveyPreset = (presetType) => {
+    if (presetType === 'severe') {
+      setPain(8);
+      setPainPeak('walking');
+      setStiffness(45);
+      setWorkloadMatrix({ teaPlucking: true, heavyLoads: true, deepSquatting: true, slopeWalking: true, coldDamp: true });
+      setWalkDiff(3);
+      setStairsDiff(3);
+      setSquatDiff(3);
+      setPriorInjury(true);
+    } else if (presetType === 'moderate') {
+      setPain(5);
+      setPainPeak('standing');
+      setStiffness(25);
+      setWorkloadMatrix({ teaPlucking: true, heavyLoads: false, deepSquatting: true, slopeWalking: false, coldDamp: true });
+      setWalkDiff(2);
+      setStairsDiff(2);
+      setSquatDiff(2);
+      setPriorInjury(false);
+    } else {
+      setPain(1);
+      setPainPeak('morning');
+      setStiffness(5);
+      setWorkloadMatrix({ teaPlucking: false, heavyLoads: false, deepSquatting: false, slopeWalking: false, coldDamp: false });
+      setWalkDiff(0);
+      setStairsDiff(0);
+      setSquatDiff(0);
+      setPriorInjury(false);
+    }
+  };
+
   return (
     <div className="flex flex-col w-full gap-lg animate-fade-in">
       {/* Header Banner with Language Switcher */}
@@ -123,6 +154,34 @@ export default function QuestionnaireView({ activePatient, onSurveySubmitted, on
           <p className="font-body-md text-body-md text-secondary">
             {t.subtitle}
           </p>
+
+          {/* Quick Survey Presets */}
+          <div className="flex items-center gap-2 pt-1 flex-wrap">
+            <span className="font-label-sm text-[10px] text-secondary uppercase font-bold tracking-wider">
+              1-Click Fast Presets:
+            </span>
+            <button
+              type="button"
+              onClick={() => applySurveyPreset('severe')}
+              className="px-2 py-0.5 rounded-md bg-error/10 hover:bg-error/20 text-error text-[11px] font-semibold border border-error/30 transition active:scale-95 flex items-center gap-1"
+            >
+              <span>🚨 Severe OA (Tea Worker)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => applySurveyPreset('moderate')}
+              className="px-2 py-0.5 rounded-md bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 text-[11px] font-semibold border border-amber-500/30 transition active:scale-95 flex items-center gap-1"
+            >
+              <span>⚠️ Moderate Early OA</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => applySurveyPreset('mild')}
+              className="px-2 py-0.5 rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[11px] font-semibold border border-emerald-500/30 transition active:scale-95 flex items-center gap-1"
+            >
+              <span>✅ Healthy / Mild Control</span>
+            </button>
+          </div>
         </div>
 
         {/* Language Picker */}

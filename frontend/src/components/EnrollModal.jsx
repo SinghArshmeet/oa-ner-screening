@@ -13,6 +13,52 @@ export default function EnrollModal({ isOpen, onClose, onEnroll }) {
 
   if (!isOpen) return null;
 
+  const PRESETS = [
+    {
+      label: '🍃 Tea Worker (54F)',
+      name: 'Pabitra Tanti',
+      age: '54',
+      gender: 'Female',
+      occupation: 'Tea Leaf Plucker',
+      region: 'Diphu, Karbi Anglong, Assam'
+    },
+    {
+      label: '🌾 Paddy Cultivator (61M)',
+      name: 'Horen Teron',
+      age: '61',
+      gender: 'Male',
+      occupation: 'Hillside Paddy Farmer',
+      region: 'Bokajan Sub-Centre, Assam'
+    },
+    {
+      label: '🧵 Handloom Artisan (46F)',
+      name: 'Renu Bordoloi',
+      age: '46',
+      gender: 'Female',
+      occupation: 'Handloom Artisan',
+      region: 'Diphu CHC Station, Assam'
+    },
+    {
+      label: '🏃 Control Subject (29M)',
+      name: 'Rohan Saikia',
+      age: '29',
+      gender: 'Male',
+      occupation: 'General Rural Resident',
+      region: 'Diphu Town, Assam'
+    }
+  ];
+
+  const applyPreset = (p) => {
+    setFormData((prev) => ({
+      ...prev,
+      name: p.name,
+      age: p.age,
+      gender: p.gender,
+      occupation: p.occupation,
+      region: p.region
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name || !formData.age) return;
@@ -45,6 +91,29 @@ export default function EnrollModal({ isOpen, onClose, onEnroll }) {
           >
             <span className="material-symbols-outlined text-[20px]">close</span>
           </button>
+        </div>
+
+        {/* 1-Click Fast Presets Bar */}
+        <div className="px-lg pt-3 pb-1 bg-surface-container-low border-b border-surface-container flex flex-col gap-1">
+          <div className="flex items-center justify-between">
+            <span className="font-label-sm text-[10px] text-secondary uppercase font-bold tracking-wider">
+              1-Click Fast Clinical Presets:
+            </span>
+            <span className="font-data-mono text-[9px] text-primary">SOP-09 Cohorts</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5 pb-1">
+            {PRESETS.map((p, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => applyPreset(p)}
+                className="px-2 py-1 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface text-[11px] font-semibold border border-outline-variant/30 transition active:scale-95 flex items-center gap-1"
+                title={`Quick fill ${p.name}`}
+              >
+                <span>{p.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Form */}

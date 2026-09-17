@@ -110,14 +110,93 @@ export const DEMO_ACCOUNTS = [
 ];
 
 const STORAGE_KEY = 'oa_ner_auth_session';
+const REGISTERED_USERS_KEY = 'oa_ner_registered_users';
+
+/**
+ * Retrieve list of registered practitioners from localStorage
+ */
+export function getRegisteredUsers() {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(REGISTERED_USERS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    console.warn('Failed to parse registered users:', e);
+    return [];
+  }
+}
+
+/**
+ * Register a new clinical practitioner / station operator
+ */
+export async function registerUser({ name, email, staffId, roleId = 'screener', station, password }) {
+  // Simulate network latency
+  await new Promise((resolve) => setTimeout(resolve, 450));
+
+  const cleanName = (name || '').trim();
+  const cleanEmail = (email || '').trim().toLowerCase();
+  const cleanStaffId = (staffId || '').trim().toUpperCase();
+  const cleanStation = (station || '').trim();
+  const cleanPassword = (password || '').trim();
+
+  if (!cleanName) throw new Error('Full Name and designation are required.');
+  if (!cleanEmail || !cleanEmail.includes('@')) throw new Error('A valid institutional email address is required.');
+  if (!cleanPassword || cleanPassword.length < 5) throw new Error('Password must be at least 5 characters long.');
+
+  const registered = getRegisteredUsers();
+
+  // Check for duplicate email or staff ID
+  const existingUser = registered.find(
+    (u) => u.email.toLowerCase() === cleanEmail || (cleanStaffId && u.staffId?.toUpperCase() === cleanStaffId)
+  );
+
+  if (existingUser) {
+    throw new Error('An account with this email address or Staff ID already exists.');
+  }
+
+  const roleConfig = ROLES[roleId] || ROLES.screener;
+  const newStaffId = cleanStaffId || `NER-${roleConfig.id.toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+  const newUser = {
+    staffId: newStaffId,
+    name: cleanName,
+    email: cleanEmail,
+    role: roleConfig.label,
+    roleId: roleConfig.id,
+    roleBadge: roleConfig.badge,
+    station: cleanStation || 'Diphu CHC / Karbi Anglong Station',
+    password: cleanPassword,
+    registeredAt: new Date().toISOString(),
+    isRegistered: true,
+  };
+
+  registered.push(newUser);
+  try {
+    localStorage.setItem(REGISTERED_USERS_KEY, JSON.stringify(registered));
+  } catch (err) {
+    console.warn('Could not persist registered user to storage:', err);
+  }
+
+  return {
+    id: newUser.staffId,
+    staffId: newUser.staffId,
+    name: newUser.name,
+    email: newUser.email,
+    role: newUser.role,
+    roleId: newUser.roleId,
+    roleBadge: newUser.roleBadge,
+    station: newUser.station,
+    isRegistered: true,
+    isDemo: false
+  };
+}
 
 /**
  * Helper to get all accounts available for a given role
  */
 export function getAccountsForRole(roleId) {
   if (!roleId) return [];
-  return DEMO_ACCOUNTS.filter((acc) => acc.role === roleId).map((acc) => {
-    // Return sanitized account object without passwords
+  const demoAccounts = DEMO_ACCOUNTS.filter((acc) => acc.role === roleId).map((acc) => {
     const roleConfig = ROLES[acc.role] || ROLES.screener;
     return {
       id: acc.staffId,
@@ -131,6 +210,23 @@ export function getAccountsForRole(roleId) {
       isDemo: true
     };
   });
+
+  const registeredAccounts = getRegisteredUsers()
+    .filter((acc) => acc.roleId === roleId)
+    .map((acc) => ({
+      id: acc.staffId,
+      staffId: acc.staffId,
+      name: acc.name,
+      email: acc.email,
+      role: acc.role,
+      roleId: acc.roleId,
+      roleBadge: acc.roleBadge,
+      station: acc.station,
+      isDemo: false,
+      isRegistered: true
+    }));
+
+  return [...registeredAccounts, ...demoAccounts];
 }
 
 /**
@@ -169,7 +265,7 @@ export function getStoredUser() {
  */
 export async function loginUser({ identifier, password, roleId = 'screener', rememberDevice = false }) {
   // Simulate network roundtrip latency for realistic clinical UI
-  await new Promise((resolve) => setTimeout(resolve, 550));
+  await new Promise((resolve) => setTimeout(resolve, 450));
 
   const cleanId = (identifier || '').trim().toLowerCase();
   const cleanPassword = (password || '').trim();
@@ -182,14 +278,49 @@ export async function loginUser({ identifier, password, roleId = 'screener', rem
     throw new Error('Please enter your station access password.');
   }
 
-  // 1. Check exact demo accounts
+  // 1. Check custom registered practitioners
+  const registeredUsers = getRegisteredUsers();
+  const matchedRegistered = registeredUsers.find(
+    (acc) =>
+      (acc.email.toLowerCase() === cleanId || acc.staffId?.toLowerCase() === cleanId) &&
+      acc.password === cleanPassword
+  );
+
+  if (matchedRegistered) {
+    const roleConfig = ROLES[matchedRegistered.roleId] || ROLES[roleId] || ROLES.screener;
+    const user = {
+      id: matchedRegistered.staffId,
+      staffId: matchedRegistered.staffId,
+      name: matchedRegistered.name,
+      email: matchedRegistered.email,
+      role: roleConfig.label,
+      roleId: roleConfig.id,
+      roleBadge: roleConfig.badge,
+      station: matchedRegistered.station || 'Diphu CHC / Karbi Anglong Station',
+      rememberDevice,
+      isDemo: false,
+      isRegistered: true,
+      authenticatedAt: new Date().toISOString()
+    };
+
+    if (rememberDevice) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+      sessionStorage.removeItem(STORAGE_KEY);
+    } else {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+      localStorage.removeItem(STORAGE_KEY);
+    }
+    return user;
+  }
+
+  // 2. Check exact demo accounts
   const matchedDemo = DEMO_ACCOUNTS.find(
     (acc) =>
       (acc.email.toLowerCase() === cleanId || acc.staffId.toLowerCase() === cleanId) &&
       acc.password === cleanPassword
   );
 
-  // 2. Accept standard demo password 'demo123' or 'admin123' for any valid staff/email format
+  // 3. Accept standard demo password 'demo123' or 'admin123' for any valid staff/email format
   const roleConfig = ROLES[roleId] || ROLES.screener;
   const isGenericValid =
     (cleanPassword === 'demo123' || cleanPassword === 'admin123' || cleanPassword === 'password') &&
@@ -197,7 +328,7 @@ export async function loginUser({ identifier, password, roleId = 'screener', rem
 
   if (!matchedDemo && !isGenericValid) {
     throw new Error(
-      'Invalid credentials. For trial evaluation, use the demo credentials provided below or click "Continue in Local Demo Mode".'
+      'Invalid credentials. Check your email/password or create a new account using the "Register Practitioner" tab.'
     );
   }
 
@@ -227,6 +358,7 @@ export async function loginUser({ identifier, password, roleId = 'screener', rem
 
   return user;
 }
+
 
 /**
  * Quick 1-click bypass for instant local testing

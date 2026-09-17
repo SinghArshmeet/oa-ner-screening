@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { analyzeXrayImage } from '../utils/api';
 
 export default function DiagnosticReportView({ activePatient, surveyResult, gaitResult, xrayData: propXrayData, onXrayAnalyzed, onOpenTeleconsult, currentUser }) {
@@ -9,6 +9,30 @@ export default function DiagnosticReportView({ activePatient, surveyResult, gait
   const [xrayLoading, setXrayLoading] = useState(false);
   const [xrayError, setXrayError] = useState('');
   const xrayInputRef = useRef(null);
+
+  // Fast Clinical Recommendation Macros
+  const [selectedMacros, setSelectedMacros] = useState([
+    'Quadriceps strengthening & isometric VMO exercises (15 mins BID)',
+    'Ergonomic back-harness tea-basket load distribution'
+  ]);
+
+  const toggleMacro = (macro) => {
+    setSelectedMacros((prev) =>
+      prev.includes(macro) ? prev.filter((m) => m !== macro) : [...prev, macro]
+    );
+  };
+
+  // Keyboard shortcut listener (Ctrl+P / Cmd+P)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
+        e.preventDefault();
+        window.print();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Role Permissions:
   // - Medical Officer (officer) / Admin: Full clinical diagnosis sign-off & specialist referral dispatch
@@ -417,53 +441,102 @@ export default function DiagnosticReportView({ activePatient, surveyResult, gait
       </div>
 
       {/* Statutory Referral & Action Bar */}
-      <div className="bg-surface-container-lowest p-card-padding rounded-xl shadow-sm border border-surface-container flex flex-col lg:flex-row items-start lg:items-center justify-between gap-md">
-        <div>
-          <h4 className="font-headline-sm text-on-surface font-bold mb-1">
-            Clinical Recommendation & Statutory Protocol
-          </h4>
-          <p className="font-body-sm text-secondary text-xs max-w-3xl">
-            In accordance with ICMR-NER-SOP-09, patient qualifies for <strong>Tier-2 Orthopedic Clinical Consultation</strong>. Schedule radiological AP weight-bearing radiograph and bilateral physical therapy evaluation.
-          </p>
+      <div className="bg-surface-container-lowest p-card-padding rounded-xl shadow-sm border border-surface-container flex flex-col gap-md">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-md">
+          <div>
+            <h4 className="font-headline-sm text-on-surface font-bold mb-1">
+              Clinical Recommendation & Statutory Protocol
+            </h4>
+            <p className="font-body-sm text-secondary text-xs max-w-3xl">
+              In accordance with ICMR-NER-SOP-09, patient qualifies for <strong>Tier-2 Orthopedic Clinical Consultation</strong>. Schedule radiological AP weight-bearing radiograph and bilateral physical therapy evaluation.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-xs shrink-0">
+            <button
+              onClick={handlePrintDossier}
+              className="px-md py-2.5 rounded-lg bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-md text-sm font-semibold transition flex items-center gap-1.5"
+              type="button"
+              title="Print Dossier (Ctrl+P)"
+            >
+              <span className="material-symbols-outlined text-[18px]">print</span>
+              <span>Print Clinical Dossier</span>
+              <kbd className="hidden sm:inline px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/10 text-[10px] font-data-mono font-normal">
+                Ctrl+P
+              </kbd>
+            </button>
+
+            <button
+              onClick={() => setSignedOff(true)}
+              disabled={signedOff || !isMedicalOfficerOrAdmin}
+              className={`px-md py-2.5 rounded-lg font-label-md text-sm font-semibold transition flex items-center gap-1.5 ${
+                signedOff
+                  ? 'bg-tertiary-fixed text-on-tertiary-fixed font-bold'
+                  : isMedicalOfficerOrAdmin
+                  ? 'bg-primary text-on-primary hover:bg-primary-container shadow-sm cursor-pointer'
+                  : 'bg-surface-container-high text-on-surface-variant opacity-60 cursor-not-allowed'
+              }`}
+              type="button"
+              title={isMedicalOfficerOrAdmin ? 'Authorize and sign-off diagnosis' : 'Requires Medical Officer (MO) or Admin credentials'}
+            >
+              <span className="material-symbols-outlined text-[18px]">
+                {signedOff ? 'verified' : 'draw'}
+              </span>
+              <span>
+                {signedOff ? 'Dossier Signed-Off' : isMedicalOfficerOrAdmin ? 'Sign-Off & Dispatch' : 'MO Sign-Off (Locked)'}
+              </span>
+            </button>
+
+            {onOpenTeleconsult && (
+              <button
+                onClick={onOpenTeleconsult}
+                className="px-md py-2.5 rounded-lg bg-tertiary-fixed hover:bg-tertiary-fixed-dim text-on-tertiary-fixed font-label-md text-sm font-bold shadow-sm transition flex items-center gap-1.5"
+                type="button"
+              >
+                <span className="material-symbols-outlined text-[18px]">cell_tower</span>
+                <span>Refer to GMCH Ortho</span>
+              </button>
+            )}
+          </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-xs shrink-0">
-          <button
-            onClick={handlePrintDossier}
-            className="px-md py-2.5 rounded-lg bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-md text-sm font-semibold transition flex items-center gap-1.5"
-            type="button"
-          >
-            <span className="material-symbols-outlined text-[18px]">print</span>
-            Print Clinical Dossier
-          </button>
-
-          <button
-            onClick={() => setSignedOff(true)}
-            disabled={signedOff || !isMedicalOfficerOrAdmin}
-            className={`px-md py-2.5 rounded-lg font-label-md text-sm font-semibold transition flex items-center gap-1.5 ${
-              signedOff
-                ? 'bg-tertiary-fixed text-on-tertiary-fixed font-bold'
-                : isMedicalOfficerOrAdmin
-                ? 'bg-primary text-on-primary hover:bg-primary-container shadow-sm cursor-pointer'
-                : 'bg-surface-container-high text-on-surface-variant opacity-60 cursor-not-allowed'
-            }`}
-            type="button"
-            title={isMedicalOfficerOrAdmin ? 'Authorize and sign-off diagnosis' : 'Requires Medical Officer (MO) or Admin credentials'}
-          >
-            <span className="material-symbols-outlined text-[18px]">
-              {signedOff ? 'verified' : isMedicalOfficerOrAdmin ? 'draw' : 'lock'}
+        {/* 1-Click Fast Clinical Recommendation Macros */}
+        <div className="pt-2 border-t border-surface-container flex flex-col gap-1.5">
+          <div className="flex items-center justify-between">
+            <span className="font-label-sm text-[11px] text-secondary font-bold uppercase tracking-wider">
+              1-Click Standardized Intervention Macros:
             </span>
-            {signedOff ? 'Dossier Signed-Off' : isMedicalOfficerOrAdmin ? 'Sign-Off MO Diagnosis' : 'Sign-Off (MO Only)'}
-          </button>
-
-          <button
-            onClick={onOpenTeleconsult}
-            className="px-lg py-2.5 rounded-lg bg-error hover:bg-error/90 text-on-error font-label-md text-sm font-bold shadow-md transition flex items-center gap-1.5"
-            type="button"
-          >
-            <span className="material-symbols-outlined text-[18px]">cell_tower</span>
-            Dispatch Referral
-          </button>
+            <span className="text-[10px] text-primary font-data-mono">Click to toggle prescriptions</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {[
+              'Quadriceps strengthening & isometric VMO exercises (15 mins BID)',
+              'Ergonomic back-harness tea-basket load distribution',
+              'Prescribe Topical Diclofenac Gel & Paracetamol 500mg SOS',
+              'Urgent GMCH Guwahati Orthopedic Specialist Tele-Referral',
+              'Contralateral off-loading cane / walking aid prescription',
+              'Cold compress after 8h harvest shift + avoid deep squatting'
+            ].map((macro, idx) => {
+              const isActive = selectedMacros.includes(macro);
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => toggleMacro(macro)}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition border flex items-center gap-1.5 ${
+                    isActive
+                      ? 'bg-primary/10 border-primary text-primary font-bold shadow-xs'
+                      : 'bg-surface-container-low border-surface-container text-secondary hover:text-on-surface'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[14px]">
+                    {isActive ? 'check_box' : 'add_box'}
+                  </span>
+                  <span>{macro}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>

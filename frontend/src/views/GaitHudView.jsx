@@ -12,6 +12,7 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
   const [analyzing, setAnalyzing] = useState(false);
   const [gaitAnalysis, setGaitAnalysis] = useState(null);
   const [analysisError, setAnalysisError] = useState('');
+  const [batterySaver, setBatterySaver] = useState(false);
 
   // X-Ray Upload & Staging state (Direct access in Gait suite)
   const [localXrayData, setLocalXrayData] = useState(null);
@@ -99,9 +100,15 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
   // Optical motion loop when video is playing
   useEffect(() => {
     let lastTime = performance.now();
+    let lastFrameTime = performance.now();
     let frameCount = 0;
 
-    const updateKinematics = () => {
+    const updateKinematics = (timestamp) => {
+      if (batterySaver && timestamp - lastFrameTime < 65) {
+        animFrameRef.current = requestAnimationFrame(updateKinematics);
+        return;
+      }
+      lastFrameTime = timestamp;
       frameCount++;
       const now = performance.now();
       if (now - lastTime >= 1000) {
@@ -132,7 +139,7 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
     return () => {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     };
-  }, [camera.isWebcamActive, camera.sourceMode]);
+  }, [camera.isWebcamActive, camera.sourceMode, batterySaver]);
 
   // Ensure stream stays bound if video element remounts
   const setVideoNode = useCallback(
@@ -254,6 +261,24 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
       setAnalyzing(false);
     }
   };
+
+  // Spacebar hotkey to start or stop walking test
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target?.tagName)) return;
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (isRecording) {
+          setIsRecording(false);
+          finishWalkingTest();
+        } else if (!analyzing) {
+          handleStart8sTest();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isRecording, analyzing]);
 
   const handleFileUpload = (e) => {
     const file = e.target.files?.[0];
@@ -395,6 +420,23 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
               {camera.isWebcamActive ? 'videocam_off' : 'videocam'}
             </span>
             {camera.isWebcamActive ? 'Disconnect Cam' : 'Enable Camera'}
+          </button>
+
+          {/* Battery Saver Mode Toggle */}
+          <button
+            type="button"
+            onClick={() => setBatterySaver(!batterySaver)}
+            className={`px-2 py-1 rounded text-xs font-semibold transition flex items-center gap-1 border ${
+              batterySaver
+                ? 'bg-amber-500/20 text-amber-900 dark:text-amber-200 border-amber-500/50 shadow-xs'
+                : 'bg-surface-container-low text-secondary hover:text-on-surface border-outline-variant/30'
+            }`}
+            title="Throttle pose rendering to 15 FPS to preserve laptop battery at rural outreach stations"
+          >
+            <span className="material-symbols-outlined text-[14px]">
+              {batterySaver ? 'battery_saver' : 'bolt'}
+            </span>
+            <span>{batterySaver ? '15 FPS (Battery Saver)' : '30 FPS (Standard)'}</span>
           </button>
         </div>
       </div>
@@ -820,11 +862,15 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
                   : 'bg-error text-on-error hover:bg-error/90'
               }`}
               type="button"
+              title="Click or press Spacebar to start/stop walking trial"
             >
               <span className="material-symbols-outlined text-[20px] animate-pulse">
                 {isRecording ? 'stop_circle' : 'radio_button_checked'}
               </span>
-              {isRecording ? 'Stop Gait Test & Process' : '⏺ Start 8s Standardized Walking Test'}
+              <span>{isRecording ? 'Stop Gait Test & Process' : '⏺ Start 8s Standardized Walking Test'}</span>
+              <kbd className="ml-1 px-1.5 py-0.5 rounded bg-white/20 text-[10px] font-data-mono font-normal">
+                Space
+              </kbd>
             </button>
           )}
 
