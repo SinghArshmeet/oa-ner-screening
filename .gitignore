@@ -10,6 +10,7 @@ backend/screening.db-*
 .env
 __pycache__/
 *.py[cod]
+_local_archive/
 openh264.dll.bz2
 test_codec.mp4
 
