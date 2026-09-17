@@ -285,130 +285,10 @@ export default function LoginView({ onLogin }) {
       <main className="flex-1 max-w-[1400px] w-full mx-auto px-md sm:px-lg py-lg lg:py-2xl flex items-center justify-center">
         <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-xl lg:gap-2xl items-stretch">
           
-          {/* LEFT COLUMN: Branded Operational Clinical Showcase */}
-          <section
-            aria-label="OrthoNex Clinical Overview"
-            className="lg:col-span-6 xl:col-span-7 flex flex-col justify-between p-lg sm:p-xl rounded-2xl bg-surface-container-low border border-surface-container shadow-sm"
-          >
-            <div>
-              {/* Institution & App Header */}
-              <div className="flex items-center gap-md mb-md">
-                <div className="w-14 h-14 rounded-2xl bg-inverse-surface border border-white/15 p-1.5 shadow-md flex items-center justify-center shrink-0">
-                  <img
-                    src="/logo.png"
-                    alt="OrthoNex Logo"
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-                <div>
-                  <div className="flex items-center gap-xs flex-wrap">
-                    <h1 className="font-headline-lg text-[26px] sm:text-[30px] text-on-surface font-extrabold tracking-tight">
-                      OrthoNex
-                    </h1>
-                    <span className="px-xs py-2xs rounded bg-primary text-on-primary font-data-mono text-[10px] uppercase font-bold tracking-wider">
-                      ICMR National Protocol
-                    </span>
-                  </div>
-                  <p className="font-label-sm text-body-sm text-secondary font-medium">
-                    Multimodal AI Musculoskeletal Screening & Tele-Triage
-                  </p>
-                </div>
-              </div>
-
-              {/* Station Deployment Badge */}
-              <div className="inline-flex items-center gap-xs px-sm py-1.5 rounded-full bg-surface-container text-on-surface font-label-sm text-[12px] font-semibold mb-lg border border-outline-variant/30">
-                <span className="material-symbols-outlined text-[16px] text-primary">local_hospital</span>
-                <span>Frontline Field Station: Primary Healthcare & District Clinics (Pan-India)</span>
-              </div>
-
-              {/* Core Operational Capabilities Matrix */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-sm mb-lg">
-                <div className="p-md rounded-xl bg-surface-container-lowest border border-surface-container flex flex-col justify-between">
-                  <div className="flex items-center gap-xs mb-1">
-                    <span className="material-symbols-outlined text-primary text-[20px]">directions_walk</span>
-                    <h3 className="font-headline-sm text-sm font-bold text-on-surface">
-                      Gait Biomechanics HUD
-                    </h3>
-                  </div>
-                  <p className="font-body-sm text-secondary text-xs leading-relaxed">
-                    MediaPipe 33-point sagittal skeleton capture at 30 FPS. Measures antalgic lag and knee ROM asymmetry in 8-second walking trials.
-                  </p>
-                </div>
-
-                <div className="p-md rounded-xl bg-surface-container-lowest border border-surface-container flex flex-col justify-between">
-                  <div className="flex items-center gap-xs mb-1">
-                    <span className="material-symbols-outlined text-tertiary text-[20px]">checklist</span>
-                    <h3 className="font-headline-sm text-sm font-bold text-on-surface">
-                      KOOS-India Symptom Survey
-                    </h3>
-                  </div>
-                  <p className="font-body-sm text-secondary text-xs leading-relaxed">
-                    Visual Analog Scales (VAS) & pan-India physical load matrix available in 7 major Indian languages.
-                  </p>
-                </div>
-
-                <div className="p-md rounded-xl bg-surface-container-lowest border border-surface-container flex flex-col justify-between">
-                  <div className="flex items-center gap-xs mb-1">
-                    <span className="material-symbols-outlined text-error text-[20px]">radiology</span>
-                    <h3 className="font-headline-sm text-sm font-bold text-on-surface">
-                      X-Ray & Grad-CAM Heatmap
-                    </h3>
-                  </div>
-                  <p className="font-body-sm text-secondary text-xs leading-relaxed">
-                    Kellgren-Lawrence (KL Grade 0-4) classification with joint space Grad-CAM attention heatmap verification.
-                  </p>
-                </div>
-
-                <div className="p-md rounded-xl bg-surface-container-lowest border border-surface-container flex flex-col justify-between">
-                  <div className="flex items-center gap-xs mb-1">
-                    <span className="material-symbols-outlined text-primary text-[20px]">cell_tower</span>
-                    <h3 className="font-headline-sm text-sm font-bold text-on-surface">
-                      National Specialist Mesh
-                    </h3>
-                  </div>
-                  <p className="font-body-sm text-secondary text-xs leading-relaxed">
-                    Instant 1-click clinical dossier transfer to orthopedic specialist faculties at AIIMS New Delhi, PGIMER Chandigarh, CMC Vellore, KEM Mumbai, and GMCH Guwahati.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Edge AI & Offline Diagnostics Status Card */}
-            <div className="p-md rounded-xl bg-inverse-surface text-surface border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-md">
-              <div className="flex items-center gap-sm">
-                <div className="w-10 h-10 rounded-xl bg-tertiary-container/30 border border-tertiary-fixed-dim/40 flex items-center justify-center text-tertiary-fixed shrink-0">
-                  <span className="material-symbols-outlined text-[22px]">memory</span>
-                </div>
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <h4 className="font-headline-sm text-xs font-bold text-surface-container-lowest uppercase tracking-wider">
-                      Edge-AI Baseline Loaded
-                    </h4>
-                    <span className="px-1.5 py-0.5 rounded bg-emerald-900/60 text-emerald-300 font-data-mono text-[9px] font-bold border border-emerald-500/40">
-                      OFFLINE ACTIVE
-                    </span>
-                  </div>
-                  <p className="font-body-sm text-surface-dim text-[11px] mt-0.5">
-                    Local inference runs on frontline station CPU without requiring constant cloud connectivity.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex sm:flex-col items-end gap-xs text-right shrink-0">
-                <span className="font-data-mono text-tertiary-fixed text-[11px] font-semibold">
-                  MediaPipe Pose v2.4
-                </span>
-                <span className="font-data-mono text-surface-dim text-[10px]">
-                  Mesh Bus: 192.168.1.105
-                </span>
-              </div>
-            </div>
-          </section>
-
-          {/* RIGHT COLUMN: Focused Clinical Login Terminal */}
+          {/* LEFT COLUMN: Focused Clinical Login Terminal */}
           <section
             aria-label="Clinical Sign In Form"
-            className="lg:col-span-6 xl:col-span-5 flex flex-col justify-center"
+            className="lg:col-span-5 xl:col-span-5 flex flex-col justify-center"
           >
             <div className="w-full bg-surface-container-lowest rounded-2xl shadow-xl border border-surface-container p-lg sm:p-xl">
               
@@ -887,6 +767,127 @@ export default function LoginView({ onLogin }) {
               </div>
             </div>
           </section>
+
+          {/* RIGHT COLUMN: Branded Operational Clinical Showcase & Site Explanation */}
+          <section
+            aria-label="OrthoNex Clinical Overview"
+            className="lg:col-span-7 xl:col-span-7 flex flex-col justify-between p-lg sm:p-xl rounded-2xl bg-surface-container-low border border-surface-container shadow-sm"
+          >
+            <div>
+              {/* Institution & App Header */}
+              <div className="flex items-center gap-md mb-md">
+                <div className="w-14 h-14 rounded-2xl bg-inverse-surface border border-white/15 p-1.5 shadow-md flex items-center justify-center shrink-0">
+                  <img
+                    src="/logo.png"
+                    alt="OrthoNex Logo"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                <div>
+                  <div className="flex items-center gap-xs flex-wrap">
+                    <h1 className="font-headline-lg text-[26px] sm:text-[30px] text-on-surface font-extrabold tracking-tight">
+                      OrthoNex
+                    </h1>
+                    <span className="px-xs py-2xs rounded bg-primary text-on-primary font-data-mono text-[10px] uppercase font-bold tracking-wider">
+                      ICMR National Protocol
+                    </span>
+                  </div>
+                  <p className="font-label-sm text-body-sm text-secondary font-medium">
+                    Multimodal AI Musculoskeletal Screening & Tele-Triage
+                  </p>
+                </div>
+              </div>
+
+              {/* Station Deployment Badge */}
+              <div className="inline-flex items-center gap-xs px-sm py-1.5 rounded-full bg-surface-container text-on-surface font-label-sm text-[12px] font-semibold mb-lg border border-outline-variant/30">
+                <span className="material-symbols-outlined text-[16px] text-primary">local_hospital</span>
+                <span>Frontline Field Station: Primary Healthcare & District Clinics (Pan-India)</span>
+              </div>
+
+              {/* Core Operational Capabilities Matrix */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-sm mb-lg">
+                <div className="p-md rounded-xl bg-surface-container-lowest border border-surface-container flex flex-col justify-between">
+                  <div className="flex items-center gap-xs mb-1">
+                    <span className="material-symbols-outlined text-primary text-[20px]">directions_walk</span>
+                    <h3 className="font-headline-sm text-sm font-bold text-on-surface">
+                      Gait Biomechanics HUD
+                    </h3>
+                  </div>
+                  <p className="font-body-sm text-secondary text-xs leading-relaxed">
+                    MediaPipe 33-point sagittal skeleton capture at 30 FPS. Measures antalgic lag and knee ROM asymmetry in 8-second walking trials.
+                  </p>
+                </div>
+
+                <div className="p-md rounded-xl bg-surface-container-lowest border border-surface-container flex flex-col justify-between">
+                  <div className="flex items-center gap-xs mb-1">
+                    <span className="material-symbols-outlined text-tertiary text-[20px]">checklist</span>
+                    <h3 className="font-headline-sm text-sm font-bold text-on-surface">
+                      KOOS-India Symptom Survey
+                    </h3>
+                  </div>
+                  <p className="font-body-sm text-secondary text-xs leading-relaxed">
+                    Visual Analog Scales (VAS) & pan-India physical load matrix available in 7 major Indian languages.
+                  </p>
+                </div>
+
+                <div className="p-md rounded-xl bg-surface-container-lowest border border-surface-container flex flex-col justify-between">
+                  <div className="flex items-center gap-xs mb-1">
+                    <span className="material-symbols-outlined text-error text-[20px]">radiology</span>
+                    <h3 className="font-headline-sm text-sm font-bold text-on-surface">
+                      X-Ray & Grad-CAM Heatmap
+                    </h3>
+                  </div>
+                  <p className="font-body-sm text-secondary text-xs leading-relaxed">
+                    Kellgren-Lawrence (KL Grade 0-4) classification with joint space Grad-CAM attention heatmap verification.
+                  </p>
+                </div>
+
+                <div className="p-md rounded-xl bg-surface-container-lowest border border-surface-container flex flex-col justify-between">
+                  <div className="flex items-center gap-xs mb-1">
+                    <span className="material-symbols-outlined text-primary text-[20px]">cell_tower</span>
+                    <h3 className="font-headline-sm text-sm font-bold text-on-surface">
+                      National Specialist Mesh
+                    </h3>
+                  </div>
+                  <p className="font-body-sm text-secondary text-xs leading-relaxed">
+                    Instant 1-click clinical dossier transfer to orthopedic specialist faculties at AIIMS New Delhi, PGIMER Chandigarh, CMC Vellore, KEM Mumbai, and GMCH Guwahati.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Edge AI & Offline Diagnostics Status Card */}
+            <div className="p-md rounded-xl bg-inverse-surface text-surface border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-md">
+              <div className="flex items-center gap-sm">
+                <div className="w-10 h-10 rounded-xl bg-tertiary-container/30 border border-tertiary-fixed-dim/40 flex items-center justify-center text-tertiary-fixed shrink-0">
+                  <span className="material-symbols-outlined text-[22px]">memory</span>
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <h4 className="font-headline-sm text-xs font-bold text-surface-container-lowest uppercase tracking-wider">
+                      Multimodal Cloud + Edge Engine
+                    </h4>
+                    <span className="px-1.5 py-0.5 rounded bg-emerald-900/60 text-emerald-300 font-data-mono text-[9px] font-bold border border-emerald-500/40">
+                      OFFLINE ACTIVE
+                    </span>
+                  </div>
+                  <p className="font-body-sm text-surface-dim text-[11px] mt-0.5">
+                    FastAPI AI inference on Render + Supabase Cloud PostgreSQL with automatic offline edge simulation.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex sm:flex-col items-end gap-xs text-right shrink-0">
+                <span className="font-data-mono text-tertiary-fixed text-[11px] font-semibold">
+                  MediaPipe Pose v2.4
+                </span>
+                <span className="font-data-mono text-surface-dim text-[10px]">
+                  Mesh Bus: 192.168.1.105
+                </span>
+              </div>
+            </div>
+          </section>
+
 
         </div>
       </main>
