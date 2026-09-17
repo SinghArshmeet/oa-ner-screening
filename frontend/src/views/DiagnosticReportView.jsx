@@ -1,20 +1,184 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { analyzeXrayImage } from '../utils/api';
 
-export default function DiagnosticReportView({ activePatient, surveyResult, gaitResult, xrayData: propXrayData, onXrayAnalyzed, onOpenTeleconsult, currentUser }) {
+export default function DiagnosticReportView({
+  activePatient,
+  surveyResult,
+  gaitResult,
+  xrayData: propXrayData,
+  onXrayAnalyzed,
+  onOpenTeleconsult,
+  currentUser
+}) {
   const [signedOff, setSignedOff] = useState(false);
-  const [showPrintModal, setShowPrintModal] = useState(false);
   const [localXrayData, setLocalXrayData] = useState(null);
   const xrayData = propXrayData || localXrayData;
   const [xrayLoading, setXrayLoading] = useState(false);
   const [xrayError, setXrayError] = useState('');
   const xrayInputRef = useRef(null);
 
-  // Fast Clinical Recommendation Macros
-  const [selectedMacros, setSelectedMacros] = useState([
-    'Quadriceps strengthening & isometric VMO exercises (15 mins BID)',
-    'Ergonomic back-harness tea-basket load distribution'
-  ]);
+  // Role Permissions:
+  // - Medical Officer (officer) / Admin: Full clinical diagnosis sign-off & specialist referral dispatch
+  // - Screener: Frontline triage capture & dossier printing
+  const isMedicalOfficerOrAdmin =
+    currentUser?.roleId === 'officer' ||
+    currentUser?.roleId === 'admin' ||
+    currentUser?.role?.toLowerCase().includes('officer') ||
+    currentUser?.role?.toLowerCase().includes('admin');
+
+  // Baseline extraction from actual patient and screening session inputs
+  const defaultPain = surveyResult?.pain ?? (activePatient?.surveyScore?.includes('29') ? 8 : (activePatient?.surveyScore?.includes('24') ? 6 : 3));
+  const defaultStiffness = surveyResult?.stiffness ?? (activePatient?.surveyScore?.includes('29') ? 45 : 30);
+  const defaultAsymmetry = gaitResult?.kneeAngleAsymmetry
+    ? parseFloat(String(gaitResult.kneeAngleAsymmetry).replace(/[^0-9.]/g, ''))
+    : (activePatient?.gaitRisk?.includes('High') ? 14.2 : 5.8);
+  const defaultVelocity = gaitResult?.velocity ?? (activePatient?.gaitRisk?.includes('High') ? 0.86 : 1.12);
+  const defaultCadence = gaitResult?.cadence ?? (activePatient?.gaitRisk?.includes('High') ? 92 : 106);
+  const defaultKlGrade = xrayData?.kl_grade !== undefined
+    ? xrayData.kl_grade
+    : (activePatient?.xrayResult?.includes('KL-3') ? 3 : activePatient?.xrayResult?.includes('KL-2') ? 2 : null);
+  const defaultHeavyWork = surveyResult?.workloadMatrix?.heavyLoads ?? Boolean(
+    activePatient?.occupation?.includes('Squat') ||
+    activePatient?.occupation?.includes('Labor') ||
+    activePatient?.occupation?.includes('Plucker') ||
+    activePatient?.occupation?.includes('Weaver')
+  );
+
+  // Interactive Live Diagnostic Calibration state
+  const [isCalibrating, setIsCalibrating] = useState(false);
+  const [calPain, setCalPain] = useState(defaultPain);
+  const [calStiffness, setCalStiffness] = useState(defaultStiffness);
+  const [calAsymmetry, setCalAsymmetry] = useState(defaultAsymmetry);
+  const [calVelocity, setCalVelocity] = useState(defaultVelocity);
+  const [calKlGrade, setCalKlGrade] = useState(defaultKlGrade !== null ? defaultKlGrade : -1);
+  const [calHeavyWork, setCalHeavyWork] = useState(defaultHeavyWork);
+  const [showCalibrationDrawer, setShowCalibrationDrawer] = useState(false);
+
+  // Synchronize when patient or prop results change if not actively tweaking
+  useEffect(() => {
+    if (!isCalibrating) {
+      setCalPain(defaultPain);
+      setCalStiffness(defaultStiffness);
+      setCalAsymmetry(defaultAsymmetry);
+      setCalVelocity(defaultVelocity);
+      setCalKlGrade(defaultKlGrade !== null ? defaultKlGrade : -1);
+      setCalHeavyWork(defaultHeavyWork);
+    }
+  }, [defaultPain, defaultStiffness, defaultAsymmetry, defaultVelocity, defaultKlGrade, defaultHeavyWork, isCalibrating]);
+
+  // Active runtime parameters
+  const currentPain = isCalibrating ? calPain : defaultPain;
+  const currentStiffness = isCalibrating ? calStiffness : defaultStiffness;
+  const currentAsymmetry = isCalibrating ? calAsymmetry : defaultAsymmetry;
+  const currentVelocity = isCalibrating ? calVelocity : defaultVelocity;
+  const currentKlGrade = isCalibrating ? (calKlGrade >= 0 ? calKlGrade : null) : defaultKlGrade;
+  const currentHeavyWork = isCalibrating ? calHeavyWork : defaultHeavyWork;
+
+  const patientAge = activePatient?.age || 52;
+  const patientState = activePatient?.state || 'Punjab';
+  const patientAbha = activePatient?.abhaId || '91-4452-8921-3310';
+  const patientRegion = activePatient?.region || 'CHC Ludhiana West, Punjab';
+
+  // Dynamic Clinical Calculation Formula
+  const {
+    symptomScore,
+    kinematicScore,
+    xrayScore,
+    hasXray,
+    combinedRiskIndex,
+    riskClassification,
+    isHighRisk,
+    isModerateRisk,
+    isLowRisk,
+    strokeDashoffset,
+    prescriptions
+  } = useMemo(() => {
+    // 1. Symptom Burden (0-100)
+    const painPts = (currentPain / 10) * 45;
+    const stiffPts = currentStiffness >= 45 ? 20 : currentStiffness >= 30 ? 15 : currentStiffness >= 15 ? 10 : 3;
+    const agePts = patientAge >= 65 ? 15 : patientAge >= 55 ? 10 : patientAge >= 45 ? 5 : 2;
+    const workPts = currentHeavyWork ? 12 : 4;
+    const diffPts = surveyResult ? ((surveyResult.walkDiff ?? 2) + (surveyResult.stairsDiff ?? 2)) * 1.5 : 6;
+    const sScore = Math.min(100, Math.round(painPts + stiffPts + agePts + workPts + diffPts));
+
+    // 2. Kinematic Deficit (0-100)
+    const asymPts = Math.min(50, (currentAsymmetry / 18) * 50);
+    const velPts = currentVelocity <= 0.7 ? 30 : currentVelocity <= 0.9 ? 22 : currentVelocity <= 1.1 ? 12 : 4;
+    const cadPts = defaultCadence < 92 ? 20 : defaultCadence < 102 ? 12 : 5;
+    const kScore = Math.min(100, Math.round(asymPts + velPts + cadPts));
+
+    // 3. Radiographic Severity (0-100)
+    const validXray = currentKlGrade !== null && currentKlGrade !== undefined;
+    const xScore = validXray
+      ? (currentKlGrade === 4 ? 98 : currentKlGrade === 3 ? 76 : currentKlGrade === 2 ? 50 : currentKlGrade === 1 ? 24 : 8)
+      : null;
+
+    // 4. Combined Multimodal Fusion Index (0-100%)
+    let riskIdx;
+    if (validXray) {
+      riskIdx = +(kScore * 0.35 + sScore * 0.30 + xScore * 0.35).toFixed(1);
+    } else {
+      riskIdx = +(kScore * 0.55 + sScore * 0.45).toFixed(1);
+    }
+
+    const high = riskIdx >= 65;
+    const mod = riskIdx >= 30 && riskIdx < 65;
+    const low = riskIdx < 30;
+
+    let classification = 'Low Risk (Normal Joint Mechanics)';
+    if (high) {
+      classification = validXray && currentKlGrade >= 3
+        ? `Grade ${currentKlGrade === 4 ? 'IV Severe' : 'III Moderate-Severe'} Structural Knee OA`
+        : 'High-Burden Clinical OA (Marked Antalgic Compensation)';
+    } else if (mod) {
+      classification = validXray && currentKlGrade === 2
+        ? 'Grade II Mild-to-Moderate Osteoarthritis (Early Sclerosis)'
+        : 'Moderate Burden / Early Functional Joint Strain';
+    }
+
+    const offset = +(263.89 - (263.89 * (riskIdx / 100))).toFixed(1);
+
+    // Recommended Prescriptions
+    const rx = [];
+    if (high) {
+      rx.push('Urgent Tertiary Specialist Tele-Referral (AIIMS / PGIMER / CMC / KEM / GMCH)');
+      rx.push('Prescribe bilateral weight-bearing AP/Lateral radiograph');
+      rx.push('Contralateral joint off-loading cane / walking orthosis');
+      rx.push('Isometric Vastus Medialis Oblique (VMO) & Quadriceps rehabilitation');
+      rx.push('Prescribe Topical Diclofenac Gel & Paracetamol 500mg SOS');
+      rx.push('Absolute restriction of heavy ground squatting (>15 min)');
+    } else if (mod) {
+      rx.push('Prescribe structured physical therapy & quadriceps strengthening (15m BID)');
+      rx.push('Prescribe Topical Diclofenac Gel SOS for pain exacerbations');
+      rx.push('Ergonomic load distribution & avoidance of prolonged cross-legged sitting');
+      rx.push('Review at Primary Health Centre in 12 weeks');
+    } else {
+      rx.push('Routine joint preservation lifestyle education & aerobic walking');
+      rx.push('Low-impact knee flexibility stretches');
+      rx.push('Annual routine musculoskeletal re-evaluation');
+    }
+
+    return {
+      symptomScore: sScore,
+      kinematicScore: kScore,
+      xrayScore: xScore,
+      hasXray: validXray,
+      combinedRiskIndex: riskIdx,
+      riskClassification: classification,
+      isHighRisk: high,
+      isModerateRisk: mod,
+      isLowRisk: low,
+      strokeDashoffset: offset,
+      prescriptions: rx
+    };
+  }, [currentPain, currentStiffness, currentAsymmetry, currentVelocity, defaultCadence, currentKlGrade, currentHeavyWork, patientAge, surveyResult]);
+
+  // Fast Clinical Recommendation Macros Selection
+  const [selectedMacros, setSelectedMacros] = useState(prescriptions.slice(0, 3));
+
+  useEffect(() => {
+    setSelectedMacros(prescriptions.slice(0, 3));
+  }, [prescriptions]);
 
   const toggleMacro = (macro) => {
     setSelectedMacros((prev) =>
@@ -33,11 +197,6 @@ export default function DiagnosticReportView({ activePatient, surveyResult, gait
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
-
-  // Role Permissions:
-  // - Medical Officer (officer) / Admin: Full clinical diagnosis sign-off & specialist referral dispatch
-  // - Screener: Standard frontline triage capture & dossier printing
-  const isMedicalOfficerOrAdmin = currentUser?.roleId === 'officer' || currentUser?.roleId === 'admin' || currentUser?.role?.toLowerCase().includes('officer') || currentUser?.role?.toLowerCase().includes('admin');
 
   const handleXrayUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -58,43 +217,19 @@ export default function DiagnosticReportView({ activePatient, surveyResult, gait
     }
   };
 
-  // Dynamic gait metrics
-  const gaitCadence = gaitResult?.cadence || 94;
-  const gaitVelocity = gaitResult?.velocity || 0.86;
-  const gaitAsymmetryStr = gaitResult?.kneeAngleAsymmetry || '+14.2°';
-  const gaitRiskTier = gaitResult?.risk?.includes('High') ? 'HIGH RISK' : gaitResult?.risk?.includes('Moderate') ? 'MODERATE RISK' : 'LOW RISK';
-
-  // Dynamic survey metrics
-  const painScore = surveyResult?.pain ?? (activePatient?.surveyScore?.includes('29') ? 8 : 7);
-  const stiffnessMins = surveyResult?.stiffness ?? 35;
-  const surveyScoreDisplay = surveyResult?.compositeScore ? `${surveyResult.compositeScore}/40` : (surveyResult?.raw_score ? `${surveyResult.raw_score}/40` : (activePatient?.surveyScore || '24/40'));
-  const surveyRiskTier = (surveyResult?.category === 'high' || activePatient?.combinedRisk === 'high') ? 'HIGH BURDEN' : (surveyResult?.category === 'low' ? 'MILD BURDEN' : 'MODERATE BURDEN');
-
-  // Combined Risk Fusion
-  // When X-ray is unassessed, calculate multimodal index dynamically from available modules
-  const gaitConfidence = gaitResult ? (gaitResult.confidence || 85) / 100 : 0.85;
-  const surveyFactor = surveyResult ? (surveyResult.compositeScore ? surveyResult.compositeScore / 40 : (surveyResult.raw_score ? surveyResult.raw_score / 40 : 0.65)) : 0.70;
-  
-  // X-ray status: Check if an assessed result exists from live scan or patient record
-  const isXrayAssessed = Boolean(xrayData || (activePatient?.xrayResult && activePatient?.xrayResult !== 'Not assessed'));
-  const xrayGradeVal = xrayData?.kl_grade ?? (activePatient?.xrayResult?.includes('KL-3') ? 3 : activePatient?.xrayResult?.includes('KL-2') ? 2 : 0);
-  const xrayFactor = isXrayAssessed ? Math.min(1.0, (xrayGradeVal / 4) * 0.85 + 0.15) : 0;
-  
-  const combinedRiskIndex = isXrayAssessed
-    ? +( (gaitConfidence * 0.40 + surveyFactor * 0.30 + xrayFactor * 0.30) * 100 ).toFixed(1)
-    : +( (gaitConfidence * 0.55 + surveyFactor * 0.45) * 100 ).toFixed(1);
-
-  const isHighRisk = combinedRiskIndex >= 70;
-  const isModerateRisk = combinedRiskIndex >= 45 && combinedRiskIndex < 70;
-  const strokeDashoffset = +(263.89 - (263.89 * (combinedRiskIndex / 100))).toFixed(1);
-
-  const handlePrintDossier = () => {
-    window.print();
+  const handleResetCalibration = () => {
+    setIsCalibrating(false);
+    setCalPain(defaultPain);
+    setCalStiffness(defaultStiffness);
+    setCalAsymmetry(defaultAsymmetry);
+    setCalVelocity(defaultVelocity);
+    setCalKlGrade(defaultKlGrade !== null ? defaultKlGrade : -1);
+    setCalHeavyWork(defaultHeavyWork);
   };
 
   return (
     <div className="flex flex-col w-full gap-lg animate-fade-in print:p-0">
-      {/* Patient Context Strip */}
+      {/* Patient Context & National ABDM Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-md p-card-padding rounded-xl bg-surface-container-lowest shadow-sm border border-surface-container">
         <div className="flex flex-wrap items-center gap-md">
           <div className="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center shrink-0">
@@ -107,32 +242,187 @@ export default function DiagnosticReportView({ activePatient, surveyResult, gait
               <h2 className="font-headline-md text-headline-md text-on-surface font-bold">
                 Diagnostic Decision Support
               </h2>
-              <span className="px-xs py-2xs rounded bg-surface-container-high text-on-surface-variant font-data-mono text-data-mono">
-                Triage Phase 2
+              <span className="px-xs py-2xs rounded bg-surface-container-high text-primary font-data-mono text-data-mono font-bold">
+                Pan-India Triage
               </span>
             </div>
             <p className="font-body-sm text-body-sm text-on-surface-variant">
-              Multimodal Gait Sensor Fusion & Algorithmic Referral Assessment
+              Multimodal Sensor Fusion & Algorithmic Referral Assessment (ABDM / ICMR Aligned)
             </p>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-lg text-on-surface-variant font-body-sm text-body-sm">
           <div className="flex flex-col">
-            <span className="font-label-sm text-[10px] text-outline uppercase font-semibold">Protocol Timestamp</span>
-            <span className="font-data-mono text-[12px] text-on-surface font-medium">18 Oct 2024 · 11:42 IST</span>
+            <span className="font-label-sm text-[10px] text-outline uppercase font-semibold">State / Location</span>
+            <span className="font-body-md text-on-surface font-semibold">{patientState} · {patientRegion}</span>
           </div>
           <div className="w-px h-8 bg-surface-container hidden sm:block"></div>
           <div className="flex flex-col">
-            <span className="font-label-sm text-[10px] text-outline uppercase font-semibold">Screening Hub</span>
-            <span className="font-body-md text-on-surface font-medium">Diphu CHC · Assam (NER)</span>
+            <span className="font-label-sm text-[10px] text-outline uppercase font-semibold">ABHA Health ID</span>
+            <span className="font-data-mono text-[12px] text-primary font-bold">{patientAbha}</span>
           </div>
           <div className="w-px h-8 bg-surface-container hidden sm:block"></div>
           <div className="flex flex-col">
             <span className="font-label-sm text-[10px] text-outline uppercase font-semibold">Registry Token</span>
-            <span className="font-data-mono text-[12px] text-primary font-bold">{activePatient?.id || 'NER-OA-2024-0892'}</span>
+            <span className="font-data-mono text-[12px] text-on-surface font-bold">{activePatient?.id || 'IND-OA-2025-0892'}</span>
           </div>
         </div>
+      </div>
+
+      {/* Calibration Controls Banner (Interactive Doctor Sandbox) */}
+      <div className="p-md rounded-xl bg-surface-container-low border border-outline-variant/30 flex flex-col gap-sm shadow-xs">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+              <span className="material-symbols-outlined text-[18px]">tune</span>
+            </div>
+            <div>
+              <h3 className="font-headline-sm text-xs font-bold text-on-surface uppercase tracking-wider">
+                Live Diagnostic Parameter Calibration & Clinical Sandbox
+              </h3>
+              <p className="font-body-sm text-[11px] text-secondary">
+                {isCalibrating ? '⚡ Interactive Simulation Mode Active — Metrics recalculate continuously from adjusted sliders' : 'Active Patient Telemetry Mode — Showing real screened data from patient visit'}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {isCalibrating && (
+              <button
+                type="button"
+                onClick={handleResetCalibration}
+                className="px-2.5 py-1 rounded-lg bg-surface-container text-on-surface text-xs font-semibold hover:bg-surface-container-high transition flex items-center gap-1 border border-outline-variant/30"
+              >
+                <span className="material-symbols-outlined text-[14px]">replay</span>
+                <span>Reset to Real Data</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setShowCalibrationDrawer(!showCalibrationDrawer)}
+              className="px-3 py-1 rounded-lg bg-primary text-on-primary text-xs font-semibold hover:bg-primary-container transition flex items-center gap-1 shadow-xs"
+            >
+              <span className="material-symbols-outlined text-[14px]">
+                {showCalibrationDrawer ? 'expand_less' : 'tune'}
+              </span>
+              <span>{showCalibrationDrawer ? 'Hide Controls' : 'Adjust Clinical Sliders'}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Collapsible Calibration Sliders */}
+        {showCalibrationDrawer && (
+          <div className="pt-sm border-t border-outline-variant/20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-md text-xs animate-in fade-in duration-200">
+            {/* Slider 1: Pain VAS */}
+            <div className="p-sm rounded-lg bg-surface-container-lowest border border-surface-container flex flex-col gap-1">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-on-surface">Pain Severity (VAS)</span>
+                <span className="font-data-mono font-bold text-error">{currentPain} / 10</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="10"
+                step="1"
+                value={currentPain}
+                onChange={(e) => {
+                  setIsCalibrating(true);
+                  setCalPain(Number(e.target.value));
+                }}
+                className="w-full accent-primary h-1.5 rounded bg-surface-container cursor-pointer"
+              />
+              <span className="text-[10px] text-secondary">
+                {currentPain >= 7 ? 'Severe joint pain' : currentPain >= 4 ? 'Moderate weight-bearing pain' : 'Mild / asymptomatic'}
+              </span>
+            </div>
+
+            {/* Slider 2: Morning Stiffness */}
+            <div className="p-sm rounded-lg bg-surface-container-lowest border border-surface-container flex flex-col gap-1">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-on-surface">Morning Stiffness</span>
+                <span className="font-data-mono font-bold text-primary">{currentStiffness} mins</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="90"
+                step="5"
+                value={currentStiffness}
+                onChange={(e) => {
+                  setIsCalibrating(true);
+                  setCalStiffness(Number(e.target.value));
+                }}
+                className="w-full accent-primary h-1.5 rounded bg-surface-container cursor-pointer"
+              />
+              <span className="text-[10px] text-secondary">
+                {currentStiffness >= 45 ? 'Marked morning gel phenomenon' : currentStiffness >= 20 ? 'Moderate OA stiffness' : 'Physiologic'}
+              </span>
+            </div>
+
+            {/* Slider 3: Gait Knee Asymmetry */}
+            <div className="p-sm rounded-lg bg-surface-container-lowest border border-surface-container flex flex-col gap-1">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-on-surface">Gait Knee Asymmetry</span>
+                <span className="font-data-mono font-bold text-error">+{currentAsymmetry.toFixed(1)}°</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="25"
+                step="0.5"
+                value={currentAsymmetry}
+                onChange={(e) => {
+                  setIsCalibrating(true);
+                  setCalAsymmetry(Number(e.target.value));
+                }}
+                className="w-full accent-primary h-1.5 rounded bg-surface-container cursor-pointer"
+              />
+              <span className="text-[10px] text-secondary">
+                {currentAsymmetry >= 12 ? 'Marked sagittal antalgic limp' : currentAsymmetry >= 6 ? 'Early compensatory offload' : 'Normal bilateral symmetry'}
+              </span>
+            </div>
+
+            {/* Slider 4: X-Ray KL Grade */}
+            <div className="p-sm rounded-lg bg-surface-container-lowest border border-surface-container flex flex-col gap-1">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-on-surface">Radiograph Staging</span>
+                <span className="font-data-mono font-bold text-tertiary">
+                  {currentKlGrade !== null ? `KL-${currentKlGrade}` : 'Unassessed'}
+                </span>
+              </div>
+              <select
+                value={currentKlGrade !== null ? currentKlGrade : -1}
+                onChange={(e) => {
+                  setIsCalibrating(true);
+                  const v = Number(e.target.value);
+                  setCalKlGrade(v);
+                }}
+                className="w-full px-2 py-1 text-xs rounded bg-surface-container border border-outline-variant/30 text-on-surface font-semibold"
+              >
+                <option value="-1">Frontline Optical Only (No X-ray)</option>
+                <option value="0">KL Grade 0 (Doubtful / Normal)</option>
+                <option value="1">KL Grade 1 (Doubtful JSN, Possible Osteophytes)</option>
+                <option value="2">KL Grade 2 (Definite Osteophytes, Mild JSN)</option>
+                <option value="3">KL Grade 3 (Multiple Moderate Osteophytes, Marked JSN)</option>
+                <option value="4">KL Grade 4 (Severe JSN, Marked Bone Sclerosis)</option>
+              </select>
+              <div className="flex items-center justify-between pt-1">
+                <label className="flex items-center gap-1 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={currentHeavyWork}
+                    onChange={(e) => {
+                      setIsCalibrating(true);
+                      setCalHeavyWork(e.target.checked);
+                    }}
+                    className="w-3.5 h-3.5 accent-primary"
+                  />
+                  <span className="text-[11px] text-on-surface">Heavy Manual Workload</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Hero Multimodal Screening Result Banner */}
@@ -145,38 +435,58 @@ export default function DiagnosticReportView({ activePatient, surveyResult, gait
           <div className="flex flex-col justify-between max-w-xl">
             <div className="flex flex-col gap-sm">
               <div className="flex flex-wrap items-center gap-xs">
-                <div className={`inline-flex items-center gap-xs px-sm py-1 rounded-full w-fit border ${
-                  isHighRisk
-                    ? 'bg-error-container/20 text-error-container border-error/30'
-                    : isModerateRisk
-                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
-                    : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-                }`}>
-                  <span className={`w-2.5 h-2.5 rounded-full ${isHighRisk ? 'bg-error animate-ping' : isModerateRisk ? 'bg-amber-400' : 'bg-emerald-400'}`}></span>
+                <div
+                  className={`inline-flex items-center gap-xs px-sm py-1 rounded-full w-fit border ${
+                    isHighRisk
+                      ? 'bg-error-container/20 text-error-container border-error/30'
+                      : isModerateRisk
+                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                      : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                  }`}
+                >
+                  <span
+                    className={`w-2.5 h-2.5 rounded-full ${
+                      isHighRisk ? 'bg-error animate-ping' : isModerateRisk ? 'bg-amber-400' : 'bg-emerald-400'
+                    }`}
+                  ></span>
                   <span className="font-label-sm text-xs uppercase font-bold tracking-wider">
-                    {isHighRisk ? 'Urgent Tier-2 Stratification' : isModerateRisk ? 'Tier-1 Clinical Follow-Up' : 'Routine Preventive Monitoring'}
+                    {isHighRisk
+                      ? 'Urgent Tier-2 Specialist Referral'
+                      : isModerateRisk
+                      ? 'Tier-1 Clinical Rehabilitation Follow-Up'
+                      : 'Routine Preventive Monitoring'}
                   </span>
                 </div>
-                <div className={`inline-flex items-center gap-xs px-2.5 py-0.5 rounded-full text-xs font-bold uppercase border ${
-                  (gaitResult?.binaryScreening === 'screen_positive' || isHighRisk || isModerateRisk)
-                    ? 'bg-red-500/30 text-red-200 border-red-500/50'
-                    : 'bg-emerald-500/30 text-emerald-200 border-emerald-500/50'
-                }`}>
+
+                <div
+                  className={`inline-flex items-center gap-xs px-2.5 py-0.5 rounded-full text-xs font-bold uppercase border ${
+                    isHighRisk || isModerateRisk
+                      ? 'bg-red-500/30 text-red-200 border-red-500/50'
+                      : 'bg-emerald-500/30 text-emerald-200 border-emerald-500/50'
+                  }`}
+                >
                   <span className="material-symbols-outlined text-[14px]">
-                    {(gaitResult?.binaryScreening === 'screen_positive' || isHighRisk || isModerateRisk) ? 'notification_important' : 'check_circle'}
+                    {isHighRisk || isModerateRisk ? 'notification_important' : 'check_circle'}
                   </span>
                   <span>
-                    {(gaitResult?.binaryScreening === 'screen_positive' || isHighRisk || isModerateRisk)
+                    {isHighRisk || isModerateRisk
                       ? 'Screen Positive (Suspected OA)'
-                      : 'Screen Negative (Low Risk)'}
+                      : 'Screen Negative (Low OA Risk)'}
                   </span>
                 </div>
               </div>
+
               <h1 className="font-headline-lg text-headline-lg text-surface-container-lowest font-bold leading-tight">
-                {isHighRisk ? 'High Risk for Clinical Osteoarthritis' : isModerateRisk ? 'Moderate Risk for Early Osteoarthritis' : 'Low Risk (Normal Biomechanics)'}
+                {riskClassification}
               </h1>
+
               <p className="font-body-md text-surface-dim leading-relaxed text-sm">
-                Multimodal algorithmic convergence indicates {isHighRisk ? 'marked uncompensated mechanical unloading and high-severity clinical symptom loading consistent with moderate-to-severe degenerative joint disease' : isModerateRisk ? 'early sagittal compensation and intermittent weight-bearing symptoms requiring proactive joint-sparing therapy' : 'normal joint symmetry and low symptom severity'}{' '}
+                Multimodal algorithmic convergence indicates{' '}
+                {isHighRisk
+                  ? 'marked uncompensated mechanical unloading and high-severity clinical symptom loading consistent with moderate-to-severe degenerative joint disease'
+                  : isModerateRisk
+                  ? 'early sagittal compensation and intermittent weight-bearing symptoms requiring proactive joint-sparing therapy and quadriceps conditioning'
+                  : 'normal joint symmetry, low pain loading, and preserved biomechanical mobility'}{' '}
                 in {activePatient?.name || 'the patient'}.
               </p>
             </div>
@@ -186,8 +496,13 @@ export default function DiagnosticReportView({ activePatient, surveyResult, gait
                 Dominant Axis: {gaitResult?.affectedLimb || 'Right Limb (Sagittal Deficit)'}
               </span>
               <span className="px-sm py-1 rounded bg-surface-container-highest/10 text-surface-dim font-data-mono text-[11px] border border-white/5">
-                Model Confidence: {Math.round(gaitConfidence * 100)}% (RandomForest Baseline)
+                Model Confidence: {gaitResult?.confidence || 86}% (RandomForest Multi-Sensor)
               </span>
+              {isCalibrating && (
+                <span className="px-sm py-1 rounded bg-amber-500/20 text-amber-200 font-data-mono text-[11px] border border-amber-400/30">
+                  Calibrated Mode
+                </span>
+              )}
             </div>
           </div>
 
@@ -220,7 +535,8 @@ export default function DiagnosticReportView({ activePatient, surveyResult, gait
                 </svg>
                 <div className="absolute flex flex-col items-center">
                   <span className="font-data-metric text-[26px] font-extrabold text-surface-container-lowest">
-                    {combinedRiskIndex}<span className="text-error text-lg">%</span>
+                    {combinedRiskIndex}
+                    <span className="text-error text-lg">%</span>
                   </span>
                 </div>
               </div>
@@ -228,7 +544,7 @@ export default function DiagnosticReportView({ activePatient, surveyResult, gait
                 Combined Risk Index
               </span>
               <span className="font-data-mono text-[10px] text-surface-dim mt-0.5">
-                Fusion Model Prob.
+                Multimodal Fusion Probability
               </span>
             </div>
 
@@ -237,31 +553,36 @@ export default function DiagnosticReportView({ activePatient, surveyResult, gait
             <div className="flex flex-col gap-sm text-left">
               <div>
                 <div className="flex items-center justify-between gap-md mb-1">
-                  <span className="font-label-sm text-xs text-surface-dim">Baseline ROC AUC</span>
-                  <span className="font-data-mono text-xs text-surface-container-lowest font-bold">74.4%</span>
+                  <span className="font-label-sm text-xs text-surface-dim">Movement Kinematics</span>
+                  <span className="font-data-mono text-xs text-error font-bold">{kinematicScore}%</span>
                 </div>
                 <div className="w-36 bg-surface-container-highest/20 h-1.5 rounded-full overflow-hidden">
-                  <div className="bg-primary-fixed h-full rounded-full" style={{ width: '74.4%' }}></div>
+                  <div className="bg-error h-full rounded-full" style={{ width: `${kinematicScore}%` }}></div>
                 </div>
               </div>
 
               <div>
                 <div className="flex items-center justify-between gap-md mb-1">
-                  <span className="font-label-sm text-xs text-surface-dim">Gait Asymmetry</span>
-                  <span className="font-data-mono text-xs text-error font-bold">{gaitAsymmetryStr}</span>
+                  <span className="font-label-sm text-xs text-surface-dim">Symptom Burden</span>
+                  <span className="font-data-mono text-xs text-tertiary-fixed font-bold">{symptomScore}%</span>
                 </div>
                 <div className="w-36 bg-surface-container-highest/20 h-1.5 rounded-full overflow-hidden">
-                  <div className="bg-error h-full rounded-full" style={{ width: `${Math.min(100, Math.round(gaitConfidence * 100))}%` }}></div>
+                  <div className="bg-tertiary-fixed h-full rounded-full" style={{ width: `${symptomScore}%` }}></div>
                 </div>
               </div>
 
               <div>
                 <div className="flex items-center justify-between gap-md mb-1">
-                  <span className="font-label-sm text-xs text-surface-dim">Symptom Severity</span>
-                  <span className="font-data-mono text-xs text-tertiary-fixed font-bold">{surveyScoreDisplay}</span>
+                  <span className="font-label-sm text-xs text-surface-dim">Radiograph Staging</span>
+                  <span className="font-data-mono text-xs text-cyan-300 font-bold">
+                    {hasXray ? `${xrayScore}% (KL-${currentKlGrade})` : 'Frontline Optical'}
+                  </span>
                 </div>
                 <div className="w-36 bg-surface-container-highest/20 h-1.5 rounded-full overflow-hidden">
-                  <div className="bg-tertiary-fixed h-full rounded-full" style={{ width: `${Math.min(100, Math.round(surveyFactor * 100))}%` }}></div>
+                  <div
+                    className="bg-cyan-400 h-full rounded-full"
+                    style={{ width: `${hasXray ? xrayScore : 45}%` }}
+                  ></div>
                 </div>
               </div>
             </div>
@@ -276,32 +597,38 @@ export default function DiagnosticReportView({ activePatient, surveyResult, gait
           <div>
             <div className="flex items-center justify-between pb-xs border-b border-surface-container mb-xs">
               <span className="font-label-sm text-[11px] uppercase font-semibold text-secondary">
-                Module 01 · Movement Analysis
+                Module 01 · Gait Kinematics
               </span>
-              <span className={`px-2 py-0.5 rounded-full font-data-mono text-[10px] font-bold ${
-                gaitRiskTier === 'HIGH RISK' ? 'bg-error-container text-on-error-container' : 'bg-amber-100 text-amber-900'
-              }`}>
-                {gaitRiskTier}
+              <span
+                className={`px-2 py-0.5 rounded-full font-data-mono text-[10px] font-bold ${
+                  kinematicScore >= 65
+                    ? 'bg-error-container text-on-error-container'
+                    : kinematicScore >= 35
+                    ? 'bg-amber-100 text-amber-900'
+                    : 'bg-emerald-100 text-emerald-900'
+                }`}
+              >
+                {kinematicScore >= 65 ? 'HIGH DEFICIT' : kinematicScore >= 35 ? 'MODERATE DEFICIT' : 'SYMMETRIC'}
               </span>
             </div>
             <h3 className="font-headline-sm text-on-surface font-bold mb-1">
               Sagittal Kinematic Stance
             </h3>
             <p className="font-body-sm text-secondary text-xs mb-sm">
-              MediaPipe BlazePose 33-point sagittal tracking during 8s walking test.
+              MediaPipe BlazePose 33-point sagittal tracking during walking trial.
             </p>
             <div className="space-y-xs text-xs">
               <div className="flex justify-between py-1 border-b border-surface-container">
-                <span className="text-secondary">Cadence</span>
-                <span className="font-data-mono font-bold text-on-surface">{gaitCadence} cpm</span>
+                <span className="text-secondary">Walking Cadence</span>
+                <span className="font-data-mono font-bold text-on-surface">{defaultCadence} cpm</span>
               </div>
               <div className="flex justify-between py-1 border-b border-surface-container">
                 <span className="text-secondary">Gait Velocity</span>
-                <span className="font-data-mono font-bold text-error">{gaitVelocity} m/s</span>
+                <span className="font-data-mono font-bold text-error">{currentVelocity.toFixed(2)} m/s</span>
               </div>
               <div className="flex justify-between py-1">
                 <span className="text-secondary">Extension Deficit</span>
-                <span className="font-data-mono font-bold text-error">{gaitAsymmetryStr} Asymmetry</span>
+                <span className="font-data-mono font-bold text-error">+{currentAsymmetry.toFixed(1)}° Asymmetry</span>
               </div>
             </div>
           </div>
@@ -314,30 +641,36 @@ export default function DiagnosticReportView({ activePatient, surveyResult, gait
               <span className="font-label-sm text-[11px] uppercase font-semibold text-secondary">
                 Module 02 · Patient Inputs
               </span>
-              <span className={`px-2 py-0.5 rounded-full font-data-mono text-[10px] font-bold ${
-                surveyRiskTier === 'HIGH BURDEN' ? 'bg-error-container text-on-error-container' : 'bg-amber-100 text-amber-900'
-              }`}>
-                {surveyRiskTier}
+              <span
+                className={`px-2 py-0.5 rounded-full font-data-mono text-[10px] font-bold ${
+                  symptomScore >= 65
+                    ? 'bg-error-container text-on-error-container'
+                    : symptomScore >= 35
+                    ? 'bg-amber-100 text-amber-900'
+                    : 'bg-emerald-100 text-emerald-900'
+                }`}
+              >
+                {symptomScore >= 65 ? 'HIGH BURDEN' : symptomScore >= 35 ? 'MODERATE BURDEN' : 'LOW BURDEN'}
               </span>
             </div>
             <h3 className="font-headline-sm text-on-surface font-bold mb-1">
-              KOOS-NER Clinical Survey
+              KOOS-India Symptom Survey
             </h3>
             <p className="font-body-sm text-secondary text-xs mb-sm">
-              Visual Analog Scale (VAS) & regional tea plantation workload matrix.
+              Visual Analog Scale (VAS) & pan-India physical load matrix.
             </p>
             <div className="space-y-xs text-xs">
               <div className="flex justify-between py-1 border-b border-surface-container">
                 <span className="text-secondary">Self-Reported Pain</span>
-                <span className="font-data-mono font-bold text-error">{painScore} / 10 (VAS)</span>
+                <span className="font-data-mono font-bold text-error">{currentPain} / 10 (VAS)</span>
               </div>
               <div className="flex justify-between py-1 border-b border-surface-container">
                 <span className="text-secondary">Morning Stiffness</span>
-                <span className="font-data-mono font-bold text-primary">{stiffnessMins} mins</span>
+                <span className="font-data-mono font-bold text-primary">{currentStiffness} mins</span>
               </div>
               <div className="flex justify-between py-1">
-                <span className="text-secondary">Composite Burden</span>
-                <span className="font-data-mono font-bold text-on-surface">{surveyScoreDisplay}</span>
+                <span className="text-secondary">Calculated Symptom Load</span>
+                <span className="font-data-mono font-bold text-on-surface">{symptomScore} / 100</span>
               </div>
             </div>
           </div>
@@ -350,20 +683,38 @@ export default function DiagnosticReportView({ activePatient, surveyResult, gait
               <span className="font-label-sm text-[11px] uppercase font-semibold text-secondary">
                 Module 03 · Radiographic Staging
               </span>
-              <span className={`px-2 py-0.5 rounded-full font-data-mono text-[10px] font-bold ${
-                xrayData ? (xrayData.kl_grade >= 3 ? 'bg-error-container text-on-error-container' : xrayData.kl_grade >= 2 ? 'bg-amber-100 text-amber-900' : 'bg-emerald-100 text-emerald-900') : 'bg-surface-container-high text-on-surface'
-              }`}>
-                {xrayData ? `KL GRADE ${xrayData.kl_grade}` : (isXrayAssessed ? activePatient?.xrayResult : 'NOT ASSESSED')}
+              <span
+                className={`px-2 py-0.5 rounded-full font-data-mono text-[10px] font-bold ${
+                  currentKlGrade !== null
+                    ? currentKlGrade >= 3
+                      ? 'bg-error-container text-on-error-container'
+                      : currentKlGrade >= 2
+                      ? 'bg-amber-100 text-amber-900'
+                      : 'bg-emerald-100 text-emerald-900'
+                    : 'bg-surface-container-high text-on-surface'
+                }`}
+              >
+                {currentKlGrade !== null ? `KL GRADE ${currentKlGrade}` : 'NOT ASSESSED'}
               </span>
             </div>
             <h3 className="font-headline-sm text-on-surface font-bold mb-1">
-              {xrayData ? xrayData.label : (isXrayAssessed ? activePatient?.xrayResult : 'X-ray: Not assessed')}
+              {currentKlGrade !== null
+                ? (currentKlGrade === 4
+                    ? 'KL Grade 4 (Severe OA)'
+                    : currentKlGrade === 3
+                    ? 'KL Grade 3 (Moderate OA)'
+                    : currentKlGrade === 2
+                    ? 'KL Grade 2 (Definite OA)'
+                    : currentKlGrade === 1
+                    ? 'KL Grade 1 (Doubtful OA)'
+                    : 'KL Grade 0 (Normal Joints)')
+                : 'Frontline Optical Staging'}
             </h3>
             <p className="font-body-sm text-secondary text-xs mb-sm">
               {xrayData
                 ? xrayData.findings
-                : isXrayAssessed
-                ? `Radiological report: ${activePatient?.xrayResult}`
+                : currentKlGrade !== null
+                ? `Radiological staging recorded as KL-${currentKlGrade}.`
                 : 'Frontline optical and survey triage complete. Weight-bearing radiograph can be uploaded for instant KL-grade & Grad-CAM analysis.'}
             </p>
 
@@ -405,13 +756,25 @@ export default function DiagnosticReportView({ activePatient, surveyResult, gait
               <div className="flex justify-between py-1 border-b border-surface-container">
                 <span className="text-secondary">Joint Space Width</span>
                 <span className="font-data-mono font-bold text-on-surface">
-                  {xrayData ? (xrayData.kl_grade >= 3 ? 'Marked Narrowing' : xrayData.kl_grade >= 2 ? 'Mild Reduction' : 'Preserved') : (isXrayAssessed ? 'Assessed' : 'Pending Referral')}
+                  {currentKlGrade !== null
+                    ? currentKlGrade >= 3
+                      ? 'Marked Narrowing'
+                      : currentKlGrade >= 2
+                      ? 'Mild Reduction'
+                      : 'Preserved'
+                    : 'Pending Referral'}
                 </span>
               </div>
               <div className="flex justify-between py-1 border-b border-surface-container">
                 <span className="text-secondary">Osteophyte Likelihood</span>
                 <span className="font-data-mono font-bold text-secondary">
-                  {xrayData ? (xrayData.kl_grade >= 3 ? 'Definite / Moderate' : xrayData.kl_grade >= 2 ? 'Definite / Minimal' : 'Absent / Doubtful') : (isXrayAssessed ? 'Recorded' : 'Pending Referral')}
+                  {currentKlGrade !== null
+                    ? currentKlGrade >= 3
+                      ? 'Definite / Moderate'
+                      : currentKlGrade >= 2
+                      ? 'Definite / Minimal'
+                      : 'Absent / Doubtful'
+                    : 'Pending Referral'}
                 </span>
               </div>
             </div>
@@ -445,22 +808,23 @@ export default function DiagnosticReportView({ activePatient, surveyResult, gait
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-md">
           <div>
             <h4 className="font-headline-sm text-on-surface font-bold mb-1">
-              Clinical Recommendation & Statutory Protocol
+              Clinical Recommendation & Statutory National Protocol
             </h4>
             <p className="font-body-sm text-secondary text-xs max-w-3xl">
-              In accordance with ICMR-NER-SOP-09, patient qualifies for <strong>Tier-2 Orthopedic Clinical Consultation</strong>. Schedule radiological AP weight-bearing radiograph and bilateral physical therapy evaluation.
+              In accordance with ICMR National Musculoskeletal Tele-Triage Protocols & ABDM, patient qualifies for{' '}
+              <strong>{isHighRisk ? 'Tier-2 Tertiary Orthopedic Consultation' : isModerateRisk ? 'Tier-1 Community Physiotherapy Follow-Up' : 'Routine Primary Care Monitoring'}</strong>.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-xs shrink-0">
             <button
-              onClick={handlePrintDossier}
+              onClick={() => window.print()}
               className="px-md py-2.5 rounded-lg bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-md text-sm font-semibold transition flex items-center gap-1.5"
               type="button"
-              title="Print Dossier (Ctrl+P)"
+              title="Print Clinical Dossier (Ctrl+P)"
             >
               <span className="material-symbols-outlined text-[18px]">print</span>
-              <span>Print Clinical Dossier</span>
+              <span>Print Dossier</span>
               <kbd className="hidden sm:inline px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/10 text-[10px] font-data-mono font-normal">
                 Ctrl+P
               </kbd>
@@ -494,7 +858,7 @@ export default function DiagnosticReportView({ activePatient, surveyResult, gait
                 type="button"
               >
                 <span className="material-symbols-outlined text-[18px]">cell_tower</span>
-                <span>Refer to GMCH Ortho</span>
+                <span>Refer to Specialist Network</span>
               </button>
             )}
           </div>
@@ -504,19 +868,12 @@ export default function DiagnosticReportView({ activePatient, surveyResult, gait
         <div className="pt-2 border-t border-surface-container flex flex-col gap-1.5">
           <div className="flex items-center justify-between">
             <span className="font-label-sm text-[11px] text-secondary font-bold uppercase tracking-wider">
-              1-Click Standardized Intervention Macros:
+              1-Click Dynamic Intervention Prescriptions:
             </span>
             <span className="text-[10px] text-primary font-data-mono">Click to toggle prescriptions</span>
           </div>
           <div className="flex flex-wrap gap-1.5">
-            {[
-              'Quadriceps strengthening & isometric VMO exercises (15 mins BID)',
-              'Ergonomic back-harness tea-basket load distribution',
-              'Prescribe Topical Diclofenac Gel & Paracetamol 500mg SOS',
-              'Urgent GMCH Guwahati Orthopedic Specialist Tele-Referral',
-              'Contralateral off-loading cane / walking aid prescription',
-              'Cold compress after 8h harvest shift + avoid deep squatting'
-            ].map((macro, idx) => {
+            {prescriptions.map((macro, idx) => {
               const isActive = selectedMacros.includes(macro);
               return (
                 <button

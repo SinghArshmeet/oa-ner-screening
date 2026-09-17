@@ -1,12 +1,64 @@
 import React, { useState } from 'react';
 
+export const INDIAN_STATES_UTS = [
+  'Andhra Pradesh',
+  'Arunachal Pradesh',
+  'Assam',
+  'Bihar',
+  'Chhattisgarh',
+  'Goa',
+  'Gujarat',
+  'Haryana',
+  'Himachal Pradesh',
+  'Jharkhand',
+  'Karnataka',
+  'Kerala',
+  'Madhya Pradesh',
+  'Maharashtra',
+  'Manipur',
+  'Meghalaya',
+  'Mizoram',
+  'Nagaland',
+  'Odisha',
+  'Punjab',
+  'Rajasthan',
+  'Sikkim',
+  'Tamil Nadu',
+  'Telangana',
+  'Tripura',
+  'Uttar Pradesh',
+  'Uttarakhand',
+  'West Bengal',
+  'Andaman and Nicobar Islands',
+  'Chandigarh',
+  'Dadra and Nagar Haveli and Daman and Diu',
+  'Delhi NCR',
+  'Jammu and Kashmir',
+  'Ladakh',
+  'Lakshadweep',
+  'Puducherry'
+];
+
+export const PAN_INDIA_OCCUPATIONS = [
+  'Paddy / Wheat Agro-Cultivator (Squatting & Heavy Lift)',
+  'Tea Plantation / Mountain Slope Worker',
+  'Construction Worker / Heavy Manual Labor',
+  'Handloom Weaver / Artisan (Floor Cross-Legged)',
+  'Domestic / Anganwadi / Housekeeping Worker',
+  'Desk Executive / Sedentary Urban Worker',
+  'Senior Citizen / Retired Resident',
+  'General Rural / Semi-Urban Resident'
+];
+
 export default function EnrollModal({ isOpen, onClose, onEnroll }) {
   const [formData, setFormData] = useState({
     name: '',
     age: '',
     gender: 'Female',
-    occupation: 'Tea Leaf Plucker',
-    region: 'Diphu, Karbi Anglong, Assam',
+    occupation: 'Paddy / Wheat Agro-Cultivator (Squatting & Heavy Lift)',
+    state: 'Punjab',
+    region: 'CHC Ludhiana West, Punjab',
+    abhaId: '',
     consent: true
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -15,36 +67,64 @@ export default function EnrollModal({ isOpen, onClose, onEnroll }) {
 
   const PRESETS = [
     {
-      label: '🍃 Tea Worker (54F)',
-      name: 'Pabitra Tanti',
+      label: '🌾 Punjab Agro-Cultivator (58M)',
+      name: 'Gurpreet Singh',
+      age: '58',
+      gender: 'Male',
+      occupation: 'Paddy / Wheat Agro-Cultivator (Squatting & Heavy Lift)',
+      state: 'Punjab',
+      region: 'CHC Ludhiana West, Punjab',
+      abhaId: '91-4452-8921-3310'
+    },
+    {
+      label: '🧵 Tamil Nadu Weaver (54F)',
+      name: 'Lakshmi Soundararajan',
       age: '54',
       gender: 'Female',
-      occupation: 'Tea Leaf Plucker',
-      region: 'Diphu, Karbi Anglong, Assam'
+      occupation: 'Handloom Weaver / Artisan (Floor Cross-Legged)',
+      state: 'Tamil Nadu',
+      region: 'PHC Kanchipuram, Tamil Nadu',
+      abhaId: '91-3829-1940-5521'
     },
     {
-      label: '🌾 Paddy Cultivator (61M)',
-      name: 'Horen Teron',
-      age: '61',
+      label: '🏗️ Maharashtra Construction (49M)',
+      name: 'Rameshwar Patil',
+      age: '49',
       gender: 'Male',
-      occupation: 'Hillside Paddy Farmer',
-      region: 'Bokajan Sub-Centre, Assam'
+      occupation: 'Construction Worker / Heavy Manual Labor',
+      state: 'Maharashtra',
+      region: 'Sub-District Hospital Pune, Maharashtra',
+      abhaId: '91-7712-4019-8832'
     },
     {
-      label: '🧵 Handloom Artisan (46F)',
-      name: 'Renu Bordoloi',
-      age: '46',
+      label: '🍃 Assam Plantation (52F)',
+      name: 'Pabitra Tanti',
+      age: '52',
       gender: 'Female',
-      occupation: 'Handloom Artisan',
-      region: 'Diphu CHC Station, Assam'
+      occupation: 'Tea Plantation / Mountain Slope Worker',
+      state: 'Assam',
+      region: 'Diphu CHC, Karbi Anglong, Assam',
+      abhaId: '91-6204-5519-7430'
     },
     {
-      label: '🏃 Control Subject (29M)',
-      name: 'Rohan Saikia',
-      age: '29',
+      label: '💻 Delhi Executive (38M)',
+      name: 'Aarav Sharma',
+      age: '38',
       gender: 'Male',
-      occupation: 'General Rural Resident',
-      region: 'Diphu Town, Assam'
+      occupation: 'Desk Executive / Sedentary Urban Worker',
+      state: 'Delhi NCR',
+      region: 'Safdarjung OPD Clinic, New Delhi',
+      abhaId: '91-1029-4482-9901'
+    },
+    {
+      label: '👵 Kerala Senior Resident (67F)',
+      name: 'Mary Varghese',
+      age: '67',
+      gender: 'Female',
+      occupation: 'Senior Citizen / Retired Resident',
+      state: 'Kerala',
+      region: 'Taluk Hospital Kottayam, Kerala',
+      abhaId: '91-5581-2290-6714'
     }
   ];
 
@@ -55,8 +135,17 @@ export default function EnrollModal({ isOpen, onClose, onEnroll }) {
       age: p.age,
       gender: p.gender,
       occupation: p.occupation,
-      region: p.region
+      state: p.state,
+      region: p.region,
+      abhaId: p.abhaId
     }));
+  };
+
+  const generateRandomAbha = () => {
+    const part1 = Math.floor(1000 + Math.random() * 9000);
+    const part2 = Math.floor(1000 + Math.random() * 9000);
+    const part3 = Math.floor(1000 + Math.random() * 9000);
+    setFormData((prev) => ({ ...prev, abhaId: `91-${part1}-${part2}-${part3}` }));
   };
 
   const handleSubmit = async (e) => {
@@ -66,22 +155,28 @@ export default function EnrollModal({ isOpen, onClose, onEnroll }) {
     await onEnroll({
       ...formData,
       age: parseInt(formData.age, 10),
-      id: `NER-OA-2024-${Math.floor(1000 + Math.random() * 9000)}`
+      id: `IND-OA-2025-${Math.floor(1000 + Math.random() * 9000)}`
     });
     setIsSubmitting(false);
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-md bg-black/50 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-lg bg-surface-container-lowest rounded-2xl shadow-2xl border border-outline-variant/30 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-md bg-black/60 backdrop-blur-sm animate-fade-in">
+      <div className="w-full max-w-xl bg-surface-container-lowest rounded-2xl shadow-2xl border border-outline-variant/30 overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="px-lg py-md bg-inverse-surface text-surface flex items-center justify-between">
+        <div className="px-lg py-md bg-inverse-surface text-surface flex items-center justify-between shrink-0">
           <div className="flex items-center gap-xs">
-            <span className="material-symbols-outlined text-[22px] text-primary-fixed">person_add</span>
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white">
+              <span className="material-symbols-outlined text-[20px]">person_add</span>
+            </div>
             <div>
-              <h2 className="font-headline-sm text-surface font-bold">Enroll Rural Clinic Patient</h2>
-              <p className="font-label-sm text-surface-dim text-[11px]">ICMR-NER Osteoarthritis Screening Protocol</p>
+              <h2 className="font-headline-sm text-surface font-bold text-base sm:text-lg">
+                Enroll Patient (Pan-India Registry)
+              </h2>
+              <p className="font-label-sm text-surface-dim text-[11px]">
+                ICMR National Musculoskeletal Tele-Triage & ABDM Protocol
+              </p>
             </div>
           </div>
           <button
@@ -94,14 +189,14 @@ export default function EnrollModal({ isOpen, onClose, onEnroll }) {
         </div>
 
         {/* 1-Click Fast Presets Bar */}
-        <div className="px-lg pt-3 pb-1 bg-surface-container-low border-b border-surface-container flex flex-col gap-1">
-          <div className="flex items-center justify-between">
+        <div className="px-lg pt-3 pb-2 bg-surface-container-low border-b border-surface-container shrink-0">
+          <div className="flex items-center justify-between mb-1">
             <span className="font-label-sm text-[10px] text-secondary uppercase font-bold tracking-wider">
-              1-Click Fast Clinical Presets:
+              1-Click Pan-India Cohort Presets:
             </span>
-            <span className="font-data-mono text-[9px] text-primary">SOP-09 Cohorts</span>
+            <span className="font-data-mono text-[9px] text-primary font-bold">Pan-India Demographics</span>
           </div>
-          <div className="flex flex-wrap gap-1.5 pb-1">
+          <div className="flex flex-wrap gap-1.5">
             {PRESETS.map((p, idx) => (
               <button
                 key={idx}
@@ -116,8 +211,8 @@ export default function EnrollModal({ isOpen, onClose, onEnroll }) {
           </div>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-lg flex flex-col gap-md">
+        {/* Form Body (Scrollable) */}
+        <form onSubmit={handleSubmit} className="p-lg flex flex-col gap-md overflow-y-auto">
           <div>
             <label className="font-label-sm text-[11px] text-on-surface-variant uppercase font-semibold block mb-1">
               Patient Full Name *
@@ -127,7 +222,7 @@ export default function EnrollModal({ isOpen, onClose, onEnroll }) {
               required
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="e.g. Boron Boruah / Anjali Gogoi"
+              placeholder="e.g. Gurpreet Singh / Lakshmi Soundararajan"
               className="w-full px-md py-2 text-body-md text-on-surface bg-surface-container-low border border-outline-variant/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
@@ -144,7 +239,7 @@ export default function EnrollModal({ isOpen, onClose, onEnroll }) {
                 required
                 value={formData.age}
                 onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                placeholder="52"
+                placeholder="54"
                 className="w-full px-md py-2 text-body-md text-on-surface bg-surface-container-low border border-outline-variant/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
@@ -164,32 +259,74 @@ export default function EnrollModal({ isOpen, onClose, onEnroll }) {
             </div>
           </div>
 
+          {/* State / UT Selection & ABHA ID */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-md">
+            <div>
+              <label className="font-label-sm text-[11px] text-on-surface-variant uppercase font-semibold block mb-1">
+                State / Union Territory *
+              </label>
+              <select
+                value={formData.state}
+                onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                className="w-full px-md py-2 text-body-md text-on-surface bg-surface-container-low border border-outline-variant/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                {INDIAN_STATES_UTS.map((st) => (
+                  <option key={st} value={st}>
+                    {st}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="font-label-sm text-[11px] text-on-surface-variant uppercase font-semibold block">
+                  ABHA ID (Ayushman Bharat)
+                </label>
+                <button
+                  type="button"
+                  onClick={generateRandomAbha}
+                  className="text-[10px] text-primary hover:underline font-data-mono font-bold"
+                >
+                  Generate ID
+                </button>
+              </div>
+              <input
+                type="text"
+                value={formData.abhaId}
+                onChange={(e) => setFormData({ ...formData, abhaId: e.target.value })}
+                placeholder="91-XXXX-XXXX-XXXX"
+                className="w-full px-md py-2 text-body-md font-data-mono text-on-surface bg-surface-container-low border border-outline-variant/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
+          </div>
+
           <div>
             <label className="font-label-sm text-[11px] text-on-surface-variant uppercase font-semibold block mb-1">
-              Primary Occupation / Agro-Exposure
+              Primary Occupation / Physical Exposure
             </label>
             <select
               value={formData.occupation}
               onChange={(e) => setFormData({ ...formData, occupation: e.target.value })}
               className="w-full px-md py-2 text-body-md text-on-surface bg-surface-container-low border border-outline-variant/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             >
-              <option value="Tea Leaf Plucker">Tea Leaf Plucker (&gt;8h/day carry)</option>
-              <option value="Tea Garden Agronomist">Tea Garden Agronomist</option>
-              <option value="Hillside Paddy Farmer">Hillside Paddy Farmer (Terrace/Slopes)</option>
-              <option value="Handloom Artisan">Handloom Artisan (Prolonged Sitting)</option>
-              <option value="Forestry & Firewood Collector">Forestry & Firewood Collector</option>
-              <option value="General Rural Resident">General Rural Resident</option>
+              {PAN_INDIA_OCCUPATIONS.map((occ) => (
+                <option key={occ} value={occ}>
+                  {occ}
+                </option>
+              ))}
             </select>
           </div>
 
           <div>
             <label className="font-label-sm text-[11px] text-on-surface-variant uppercase font-semibold block mb-1">
-              Screening PHC / District Clinic
+              Screening PHC / CHC / District Health Center
             </label>
             <input
               type="text"
               value={formData.region}
               onChange={(e) => setFormData({ ...formData, region: e.target.value })}
+              placeholder="e.g. CHC Ludhiana West / PHC Kanchipuram"
               className="w-full px-md py-2 text-body-md text-on-surface bg-surface-container-low border border-outline-variant/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
@@ -202,11 +339,11 @@ export default function EnrollModal({ isOpen, onClose, onEnroll }) {
               className="w-4 h-4 accent-primary"
             />
             <span className="font-body-sm text-[12px] text-on-surface">
-              Patient informed consent recorded (ICMR SOP-09 screening registry)
+              Patient informed consent recorded (ICMR National Tele-Screening Registry & ABDM)
             </span>
           </label>
 
-          <div className="flex items-center justify-end gap-xs pt-xs border-t border-outline-variant/20">
+          <div className="flex items-center justify-end gap-xs pt-xs border-t border-outline-variant/20 shrink-0">
             <button
               onClick={onClose}
               type="button"

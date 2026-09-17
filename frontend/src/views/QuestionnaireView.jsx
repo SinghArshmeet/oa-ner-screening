@@ -142,10 +142,10 @@ export default function QuestionnaireView({ activePatient, onSurveySubmitted, on
               Validated Tool
             </span>
             <span className="px-xs py-2xs rounded bg-surface-container-high text-on-surface-variant font-data-mono text-[11px]">
-              KOOS-NER Form v2.1
+              KOOS-India Form v2.4
             </span>
             <span className="text-secondary font-label-sm text-[11px]">
-              · Revised for Rural Assam Hill & Valley Cohorts
+              · Validated for Pan-India Cohorts (Agrarian, Industrial, Artisanal & Urban)
             </span>
           </div>
           <h1 className="font-headline-lg text-headline-lg text-on-surface font-bold tracking-tight">
@@ -165,7 +165,7 @@ export default function QuestionnaireView({ activePatient, onSurveySubmitted, on
               onClick={() => applySurveyPreset('severe')}
               className="px-2 py-0.5 rounded-md bg-error/10 hover:bg-error/20 text-error text-[11px] font-semibold border border-error/30 transition active:scale-95 flex items-center gap-1"
             >
-              <span>🚨 Severe OA (Tea Worker)</span>
+              <span>🚨 Severe OA (Agrarian/Labor)</span>
             </button>
             <button
               type="button"
@@ -188,14 +188,17 @@ export default function QuestionnaireView({ activePatient, onSurveySubmitted, on
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-md shrink-0">
           <div className="flex flex-col gap-1">
             <span className="font-label-sm text-[11px] text-secondary uppercase font-semibold">
-              Interview Language
+              Interview Language (7 Indian Languages)
             </span>
-            <div className="inline-flex rounded-lg p-1 bg-surface-container gap-1 border border-outline-variant/30">
+            <div className="inline-flex flex-wrap rounded-lg p-1 bg-surface-container gap-1 border border-outline-variant/30">
               {[
                 { id: 'en', label: 'English' },
-                { id: 'as', label: 'অসমীয়া' },
+                { id: 'hi', label: 'हिन्दी' },
                 { id: 'bn', label: 'বাংলা' },
-                { id: 'hi', label: 'हिन्दी' }
+                { id: 'ta', label: 'தமிழ்' },
+                { id: 'te', label: 'తెలుగు' },
+                { id: 'mr', label: 'मराठी' },
+                { id: 'as', label: 'অসমীয়া' }
               ].map((l) => (
                 <button
                   key={l.id}

@@ -132,7 +132,7 @@ export default function App() {
 
   const handleEnrollPatient = async (newPatient) => {
     const created = await createPatient(newPatient);
-    const patient = { ...newPatient, dbId: created.id, id: `NER-OA-2024-${String(created.id).padStart(4, '0')}` };
+    const patient = { ...newPatient, dbId: created.id, id: newPatient.id || `IND-OA-2025-${String(created.id).padStart(4, '0')}` };
     setPatients((prev) => [patient, ...prev]);
     setActivePatient(patient);
   };

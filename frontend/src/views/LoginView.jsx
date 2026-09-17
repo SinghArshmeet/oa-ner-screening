@@ -20,7 +20,7 @@ export default function LoginView({ onLogin }) {
   const [regName, setRegName] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regStaffId, setRegStaffId] = useState('');
-  const [regStation, setRegStation] = useState('Diphu CHC, Karbi Anglong');
+  const [regStation, setRegStation] = useState('CHC Station / PHC Hub');
   const [regRole, setRegRole] = useState('screener');
   const [regPassword, setRegPassword] = useState('');
   const [regConfirmPassword, setRegConfirmPassword] = useState('');
@@ -221,7 +221,7 @@ export default function LoginView({ onLogin }) {
             </span>
           </div>
           <p className="font-label-sm text-xs text-on-surface-variant font-medium mb-lg">
-            ICMR-RMRC North East Joint Tele-Screening Initiative
+            ICMR National Musculoskeletal Tele-Screening & ABDM Initiative
           </p>
 
           {/* Loading Progress Bar */}
@@ -259,15 +259,15 @@ export default function LoginView({ onLogin }) {
         <div className="flex items-center gap-xs">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
           <span className="font-data-mono text-tertiary-fixed font-semibold uppercase tracking-wider">
-            OrthoNex Frontline Triage Network
+            OrthoNex India · National Tele-Triage Network
           </span>
           <span className="text-white/20 hidden sm:inline">|</span>
-          <span className="text-surface-dim hidden sm:inline">Station: PHC-DIPHU-NODE-01</span>
+          <span className="text-surface-dim hidden sm:inline">ABDM National Hub</span>
         </div>
         <div className="flex items-center gap-sm">
           <span className="font-label-sm text-[11px] text-surface-dim flex items-center gap-1">
             <span className="material-symbols-outlined text-[14px] text-tertiary">location_on</span>
-            Karbi Anglong, Assam
+            National Clinical Registry
           </span>
           <span className="px-1.5 py-0.5 rounded bg-white/10 font-data-mono text-[10px] text-tertiary-fixed">
             Edge Ready
@@ -300,7 +300,7 @@ export default function LoginView({ onLogin }) {
                       OrthoNex
                     </h1>
                     <span className="px-xs py-2xs rounded bg-primary text-on-primary font-data-mono text-[10px] uppercase font-bold tracking-wider">
-                      ICMR/NER Protocol
+                      ICMR National Protocol
                     </span>
                   </div>
                   <p className="font-label-sm text-body-sm text-secondary font-medium">
@@ -312,7 +312,7 @@ export default function LoginView({ onLogin }) {
               {/* Station Deployment Badge */}
               <div className="inline-flex items-center gap-xs px-sm py-1.5 rounded-full bg-surface-container text-on-surface font-label-sm text-[12px] font-semibold mb-lg border border-outline-variant/30">
                 <span className="material-symbols-outlined text-[16px] text-primary">local_hospital</span>
-                <span>Frontline Field Station: Diphu CHC & Sub-Centers, Assam Hub</span>
+                <span>Frontline Field Station: Primary Healthcare & District Clinics (Pan-India)</span>
               </div>
 
               {/* Core Operational Capabilities Matrix */}
@@ -333,11 +333,11 @@ export default function LoginView({ onLogin }) {
                   <div className="flex items-center gap-xs mb-1">
                     <span className="material-symbols-outlined text-tertiary text-[20px]">checklist</span>
                     <h3 className="font-headline-sm text-sm font-bold text-on-surface">
-                      KOOS-NER Symptom Survey
+                      KOOS-India Symptom Survey
                     </h3>
                   </div>
                   <p className="font-body-sm text-secondary text-xs leading-relaxed">
-                    Visual Analog Scales (VAS) and tea plantation agrarian workload matrix available in English, Assamese, Bengali, and Hindi.
+                    Visual Analog Scales (VAS) & pan-India physical load matrix available in 7 major Indian languages.
                   </p>
                 </div>
 
@@ -357,11 +357,11 @@ export default function LoginView({ onLogin }) {
                   <div className="flex items-center gap-xs mb-1">
                     <span className="material-symbols-outlined text-primary text-[20px]">cell_tower</span>
                     <h3 className="font-headline-sm text-sm font-bold text-on-surface">
-                      Rural Specialist Mesh
+                      National Specialist Mesh
                     </h3>
                   </div>
                   <p className="font-body-sm text-secondary text-xs leading-relaxed">
-                    Instant 1-click clinical dossier transfer to orthopedic specialists at GMCH Guwahati, Diphu Civil Hospital, and AMCH Dibrugarh.
+                    Instant 1-click clinical dossier transfer to orthopedic specialist faculties at AIIMS New Delhi, PGIMER Chandigarh, CMC Vellore, KEM Mumbai, and GMCH Guwahati.
                   </p>
                 </div>
               </div>

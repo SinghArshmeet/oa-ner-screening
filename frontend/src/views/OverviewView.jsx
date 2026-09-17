@@ -29,11 +29,11 @@ export default function OverviewView({
                   Standard Frontline Triage Session
                 </h2>
                 <span className="px-xs py-2xs rounded bg-surface-container-high text-primary font-data-mono text-data-mono font-bold">
-                  ICMR-NER-SOP-09
+                  ICMR-NAT-OA-09
                 </span>
               </div>
               <p className="font-body-sm text-body-sm text-on-surface-variant">
-                Screener Station: PHC-Karbi-A2 · Patient: {activePatient?.name || 'Boron Boruah'} ({activePatient?.age || 52}y {activePatient?.gender || 'M'}, ID: #{activePatient?.id || '0892'})
+                Screening Station: {activePatient?.region || 'CHC Ludhiana West, Punjab'} · Patient: {activePatient?.name || 'Gurpreet Singh'} ({activePatient?.age || 58}y {activePatient?.gender || 'M'}, ID: #{activePatient?.id || 'IND-OA-2025-0892'})
               </p>
             </div>
           </div>

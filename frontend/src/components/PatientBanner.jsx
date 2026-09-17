@@ -18,6 +18,11 @@ export default function PatientBanner({ activePatient, onSwitchPatient, onOpenEn
             <span className="font-data-mono text-[11px] px-xs py-2xs bg-surface-container rounded text-on-surface-variant font-medium">
               ID: {activePatient.id}
             </span>
+            {activePatient.abhaId && (
+              <span className="font-data-mono text-[10px] px-xs py-2xs bg-primary/10 rounded text-primary font-bold hidden sm:inline">
+                ABHA: {activePatient.abhaId}
+              </span>
+            )}
           </div>
 
           <div className="hidden lg:flex items-center gap-xs text-on-surface-variant font-body-sm text-[12px]">

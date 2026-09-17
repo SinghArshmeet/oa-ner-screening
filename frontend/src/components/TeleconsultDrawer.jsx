@@ -9,10 +9,63 @@ export default function TeleconsultDrawer({ isOpen, onClose, activePatient, scre
 
   const centers = [
     {
+      id: 'aiims',
+      name: 'AIIMS New Delhi · Apex Center',
+      hospital: 'Prof. Rajesh Malhotra · Dept of Orthopedics & Joint Reconstruction',
+      dist: 'National Apex',
+      zone: 'North',
+      specialty: 'Arthroplasty',
+      status: 'Online · ABDM Tele-Triage Node',
+      statusColor: 'text-tertiary',
+      dotColor: 'bg-tertiary',
+      actionLabel: 'Transmit ABHA Dossier',
+      actionType: 'primary'
+    },
+    {
+      id: 'pgimer',
+      name: 'PGIMER Chandigarh',
+      hospital: 'Dept of Orthopedic Surgery & Sports Rehabilitation',
+      dist: 'Regional Hub',
+      zone: 'North',
+      specialty: 'Rehab & PT',
+      status: 'Online for Tele-Review',
+      statusColor: 'text-tertiary',
+      dotColor: 'bg-tertiary',
+      actionLabel: 'Send Dossier',
+      actionType: 'primary'
+    },
+    {
+      id: 'cmc',
+      name: 'CMC Vellore Ortho Center',
+      hospital: 'Dept of Orthopedics & Arthroplasty Clinic',
+      dist: 'Regional Hub',
+      zone: 'South',
+      specialty: 'Arthroplasty',
+      status: 'Tele-Clinic active now',
+      statusColor: 'text-tertiary',
+      dotColor: 'bg-tertiary',
+      actionLabel: 'Instant Tele-Review',
+      actionType: 'tertiary'
+    },
+    {
+      id: 'kem',
+      name: 'KEM Hospital & Seth GSMC Mumbai',
+      hospital: 'Joint Replacement & Arthroscopy Division',
+      dist: 'Regional Hub',
+      zone: 'West',
+      specialty: 'Arthroplasty',
+      status: 'Queueing open for today',
+      statusColor: 'text-tertiary',
+      dotColor: 'bg-tertiary',
+      actionLabel: 'Queue Referral',
+      actionType: 'primary'
+    },
+    {
       id: 'gmch',
-      name: 'Dr. B. K. Sarma, MS Ortho',
-      hospital: 'GMCH Guwahati · Knee Joint Specialist',
-      dist: '185 km',
+      name: 'GMCH Guwahati · Joint Care Hub',
+      hospital: 'Dr. B. K. Sarma, MS Ortho · Regional Specialist Unit',
+      dist: 'NER Hub',
+      zone: 'East/NER',
       specialty: 'Arthroplasty',
       status: 'Online for Tele-Triage',
       statusColor: 'text-tertiary',
@@ -21,27 +74,16 @@ export default function TeleconsultDrawer({ isOpen, onClose, activePatient, scre
       actionType: 'primary'
     },
     {
-      id: 'diphu',
-      name: 'Diphu Civil Hospital Ortho Unit',
-      hospital: 'Dr. P. Rongphar · Secondary Referral Center',
-      dist: '12 km',
+      id: 'nims',
+      name: 'NIMS Hyderabad',
+      hospital: 'Dept of Physical Medicine & Joint Rehabilitation',
+      dist: 'Regional Hub',
+      zone: 'South',
       specialty: 'Rehab & PT',
-      status: 'Available in 10 mins',
-      statusColor: 'text-tertiary',
-      dotColor: 'bg-tertiary',
-      actionLabel: 'Instant Tele-Review',
-      actionType: 'tertiary'
-    },
-    {
-      id: 'amch',
-      name: 'Assam Medical College (AMCH)',
-      hospital: 'Dibrugarh · Dept of Physical Medicine',
-      dist: '310 km',
-      specialty: 'Radiology',
-      status: 'Scheduled tele-clinic: 2:30 PM',
+      status: 'Scheduled Tele-OPD: 2:00 PM',
       statusColor: 'text-on-surface-variant',
       dotColor: 'bg-secondary',
-      actionLabel: 'Queue Referral',
+      actionLabel: 'Schedule Review',
       actionType: 'secondary'
     }
   ];
@@ -54,7 +96,13 @@ export default function TeleconsultDrawer({ isOpen, onClose, activePatient, scre
   };
 
   const filteredCenters = centers.filter(c => {
-    if (filter !== 'All' && c.specialty !== filter) return false;
+    if (filter !== 'All') {
+      if (['North', 'South', 'West', 'East/NER'].includes(filter)) {
+        if (c.zone !== filter) return false;
+      } else if (c.specialty !== filter) {
+        return false;
+      }
+    }
     if (searchQuery && !c.name.toLowerCase().includes(searchQuery.toLowerCase()) && !c.hospital.toLowerCase().includes(searchQuery.toLowerCase())) {
       return false;
     }
@@ -62,7 +110,7 @@ export default function TeleconsultDrawer({ isOpen, onClose, activePatient, scre
   });
 
   return (
-    <aside aria-label="Teleconsult & Referral Network Desk" className="fixed bottom-6 right-6 z-50 w-96 max-w-[calc(100vw-2rem)] bg-surface-container-lowest rounded-xl shadow-2xl border border-outline-variant/40 flex flex-col overflow-hidden transition-all duration-300">
+    <aside aria-label="Teleconsult & Referral Network Desk" className="fixed bottom-6 right-6 z-50 w-[420px] max-w-[calc(100vw-2rem)] bg-surface-container-lowest rounded-xl shadow-2xl border border-outline-variant/40 flex flex-col overflow-hidden transition-all duration-300">
       {/* Top Banner */}
       <div className="bg-inverse-surface text-inverse-on-surface px-md py-sm flex items-center justify-between">
         <div className="flex items-center gap-xs">
@@ -71,17 +119,17 @@ export default function TeleconsultDrawer({ isOpen, onClose, activePatient, scre
           </div>
           <div>
             <span className="font-headline-sm text-[13px] font-bold block leading-tight text-surface-container-lowest">
-              Nearby Specialist & Referral Network
+              National Tertiary Referral Network
             </span>
             <span className="font-label-sm text-[10px] text-tertiary-fixed block">
-              Assam & NER Tele-Consult Desk
+              Pan-India ABDM & ICMR Tele-Consult Desk
             </span>
           </div>
         </div>
         <div className="flex items-center gap-xs">
           <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-surface-container-highest/20">
             <span className="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>
-            <span className="font-data-mono text-[10px] text-surface-dim">3 Online</span>
+            <span className="font-data-mono text-[10px] text-surface-dim">6 Centers Live</span>
           </div>
           <button
             onClick={onClose}
@@ -97,7 +145,7 @@ export default function TeleconsultDrawer({ isOpen, onClose, activePatient, scre
       {activePatient && (
         <div className="px-sm py-1.5 bg-primary-fixed/20 border-b border-outline-variant/20 flex items-center justify-between text-[11px]">
           <span className="text-on-primary-fixed font-medium truncate">
-            Payload: {activePatient.name} ({activePatient.id})
+            ABHA: {activePatient.abhaId || '91-4452-8921-3310'} · {activePatient.name}
           </span>
           <span className="font-data-mono font-bold text-primary text-[10px] uppercase">
             {screeningData?.category ? `${screeningData.category} Risk` : 'Ready to Send'}
@@ -114,32 +162,32 @@ export default function TeleconsultDrawer({ isOpen, onClose, activePatient, scre
             </span>
             <input
               className="w-full bg-surface-container-lowest text-on-surface rounded text-[11px] pl-6 pr-2 py-1.5 border border-outline-variant/30 focus:ring-1 focus:ring-primary focus:outline-none"
-              placeholder="Search specialists or hospital..."
+              placeholder="Search AIIMS, PGIMER, CMC, or specialists..."
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
           <div className="flex items-center gap-1 shrink-0 text-on-surface-variant">
-            <span className="material-symbols-outlined text-[14px]">tune</span>
-            <span className="font-label-sm text-[10px] font-semibold">&lt; 350km</span>
+            <span className="material-symbols-outlined text-[14px]">public</span>
+            <span className="font-label-sm text-[10px] font-semibold">Pan-India</span>
           </div>
         </div>
 
         {/* Filter Pills */}
         <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pt-1">
-          {['All', 'Arthroplasty', 'Rehab & PT', 'Radiology'].map((t) => (
+          {['All', 'North', 'South', 'West', 'East/NER', 'Arthroplasty', 'Rehab & PT'].map((t) => (
             <button
               key={t}
               onClick={() => setFilter(t)}
-              className={`px-xs py-1 rounded-full font-label-sm text-[10px] font-semibold transition shrink-0 ${
+              className={`px-2 py-0.5 rounded-full font-label-sm text-[10px] font-semibold transition shrink-0 ${
                 filter === t
                   ? 'bg-primary text-on-primary'
                   : 'bg-surface-container text-on-surface-variant hover:text-on-surface'
               }`}
               type="button"
             >
-              {t === 'All' ? 'All Specialties' : t}
+              {t === 'All' ? 'All Centers' : t}
             </button>
           ))}
         </div>
@@ -197,7 +245,7 @@ export default function TeleconsultDrawer({ isOpen, onClose, activePatient, scre
                   <a
                     href="tel:104"
                     className="p-1 rounded bg-surface-container text-on-surface hover:bg-surface-container-high transition"
-                    title="Call Referral Line"
+                    title="Call National Referral Line"
                   >
                     <span className="material-symbols-outlined text-[14px]">call</span>
                   </a>
@@ -211,10 +259,10 @@ export default function TeleconsultDrawer({ isOpen, onClose, activePatient, scre
       {/* Footer */}
       <div className="p-xs px-sm bg-surface-container-low border-t border-outline-variant/20 flex items-center justify-between">
         <span className="font-label-sm text-[10px] text-on-surface-variant">
-          Emergency Helpline: 104 / NER-TeleMed
+          National Toll-Free: 104 / 14477 (e-Sanjeevani)
         </span>
         <span className="font-label-sm text-[10px] text-primary font-bold">
-          ICMR SOP-09 Network
+          ABDM / ICMR Network
         </span>
       </div>
     </aside>

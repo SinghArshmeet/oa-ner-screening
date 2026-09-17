@@ -31,15 +31,15 @@ export default function PatientsCohortView({
         <div>
           <div className="flex items-center gap-xs mb-1">
             <span className="px-xs py-2xs rounded bg-surface-container-high text-primary font-data-mono text-[11px] font-bold uppercase">
-              RURAL PHC REGISTRY
+              NATIONAL ABDM REGISTRY
             </span>
-            <span className="font-label-sm text-secondary text-xs">· Karbi Anglong, Assam Hub</span>
+            <span className="font-label-sm text-secondary text-xs">· Pan-India Health Centers & Clinics</span>
           </div>
           <h1 className="font-headline-lg text-headline-lg text-on-surface font-bold">
-            Patient Cohort & Frontline Triage Roster
+            National Patient Cohort & Triage Roster
           </h1>
           <p className="font-body-md text-secondary text-sm">
-            Active registry of tea plantation workers, agro-cultivators, and rural residents screened for early musculoskeletal degeneration.
+            Active ABDM registry of agricultural cultivators, weavers, manual laborers, and residents screened across Indian States and UTs.
           </p>
         </div>
 
@@ -57,14 +57,14 @@ export default function PatientsCohortView({
                 `"${p.region || ''}"`,
                 `"${p.surveyScore || '24/40'}"`,
                 p.combinedRisk || 'moderate',
-                p.enrolledDate || '2024-10-18'
+                p.enrolledDate || '2025-02-18'
               ]);
               const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
               const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
               const url = URL.createObjectURL(blob);
               const link = document.createElement('a');
               link.setAttribute('href', url);
-              link.setAttribute('download', `OA_NER_Patient_Registry_${new Date().toISOString().slice(0,10)}.csv`);
+              link.setAttribute('download', `OrthoNex_India_Patient_Registry_${new Date().toISOString().slice(0,10)}.csv`);
               document.body.appendChild(link);
               link.click();
               document.body.removeChild(link);

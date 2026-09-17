@@ -2,30 +2,34 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 export const mockPatients = [
   {
-    id: 'NER-OA-2024-0892',
+    id: 'IND-OA-2025-0892',
     dbId: 1,
-    name: 'Boron Boruah',
-    age: 52,
+    name: 'Gurpreet Singh',
+    age: 58,
     gender: 'Male',
-    occupation: 'Tea Garden Agronomist',
-    region: 'Diphu, Karbi Anglong, Assam',
+    occupation: 'Paddy / Wheat Agro-Cultivator (Squatting & Heavy Lift)',
+    state: 'Punjab',
+    region: 'CHC Ludhiana West, Punjab',
+    abhaId: '91-4452-8921-3310',
     sopStatus: 'Stage 3 Req.',
     surveyCompleted: true,
-    surveyScore: '24/40 (WOMAC)',
+    surveyScore: '24/40 (Moderate)',
     gaitTested: false,
     gaitRisk: 'High (Antalgic Lag)',
     combinedRisk: 'high',
     consent: true,
-    enrolledDate: '2024-10-18'
+    enrolledDate: '2025-02-18'
   },
   {
-    id: 'NER-OA-2024-0887',
+    id: 'IND-OA-2025-0887',
     dbId: 2,
-    name: 'Anjali Gogoi',
-    age: 49,
+    name: 'Lakshmi Soundararajan',
+    age: 54,
     gender: 'Female',
-    occupation: 'Tea Leaf Plucker',
-    region: 'Bokajan CHC, Assam',
+    occupation: 'Handloom Weaver / Artisan (Floor Cross-Legged)',
+    state: 'Tamil Nadu',
+    region: 'PHC Kanchipuram, Tamil Nadu',
+    abhaId: '91-3829-1940-5521',
     sopStatus: 'Complete',
     surveyCompleted: true,
     surveyScore: '29/40 (High)',
@@ -33,16 +37,18 @@ export const mockPatients = [
     gaitRisk: 'High (1.4m Asymmetry)',
     combinedRisk: 'high',
     consent: true,
-    enrolledDate: '2024-10-17'
+    enrolledDate: '2025-02-17'
   },
   {
-    id: 'NER-OA-2024-0881',
+    id: 'IND-OA-2025-0881',
     dbId: 3,
-    name: 'Mohendra Saikia',
-    age: 61,
+    name: 'Rameshwar Patil',
+    age: 49,
     gender: 'Male',
-    occupation: 'Hill Paddy Farmer',
-    region: 'Hamren PHC, Assam',
+    occupation: 'Construction Worker / Heavy Manual Labor',
+    state: 'Maharashtra',
+    region: 'Sub-District Hospital Pune, Maharashtra',
+    abhaId: '91-7712-4019-8832',
     sopStatus: 'Complete',
     surveyCompleted: true,
     surveyScore: '18/40 (Moderate)',
@@ -50,16 +56,18 @@ export const mockPatients = [
     gaitRisk: 'Moderate (0.92 m/s)',
     combinedRisk: 'moderate',
     consent: true,
-    enrolledDate: '2024-10-16'
+    enrolledDate: '2025-02-16'
   },
   {
-    id: 'NER-OA-2024-0879',
+    id: 'IND-OA-2025-0879',
     dbId: 4,
-    name: 'Sunita Terangpi',
-    age: 44,
+    name: 'Pabitra Tanti',
+    age: 52,
     gender: 'Female',
-    occupation: 'Handloom Weaver',
-    region: 'Diphu PHC, Assam',
+    occupation: 'Tea Plantation / Mountain Slope Worker',
+    state: 'Assam',
+    region: 'Diphu CHC, Karbi Anglong, Assam',
+    abhaId: '91-6204-5519-7430',
     sopStatus: 'Stage 2 In-Progress',
     surveyCompleted: false,
     surveyScore: 'Pending',
@@ -67,7 +75,7 @@ export const mockPatients = [
     gaitRisk: 'Pending',
     combinedRisk: 'low',
     consent: true,
-    enrolledDate: '2024-10-15'
+    enrolledDate: '2025-02-15'
   }
 ];
 

@@ -142,13 +142,13 @@ export default function Header({
               </span>
               <span
                 className="px-1.5 py-0.5 rounded bg-primary-container/80 text-on-primary font-data-mono text-[9px] uppercase font-semibold tracking-wide"
-                title="Indian Council of Medical Research · North Eastern Region Screening Protocol"
+                title="Indian Council of Medical Research · National Musculoskeletal Screening Initiative & ABDM"
               >
-                ICMR/NER
+                ICMR-INDIA
               </span>
             </div>
             <span className="font-label-sm text-surface-dim/80 text-[11px] font-normal hidden xs:inline">
-              Multimodal AI Orthopedic Triage
+              National AI Orthopedic Tele-Triage
             </span>
           </div>
         </div>
