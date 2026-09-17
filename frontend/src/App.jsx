@@ -284,6 +284,7 @@ export default function App() {
             xrayData={xrayResult}
             onXrayAnalyzed={setXrayResult}
             onOpenTeleconsult={() => setShowTeleconsult(true)}
+            currentUser={currentUser}
           />
         )}
 
@@ -294,11 +295,14 @@ export default function App() {
             onSelectPatient={(p) => setActivePatient(p)}
             onOpenEnrollModal={() => setShowEnrollModal(true)}
             onNavigate={setActiveTab}
+            currentUser={currentUser}
           />
         )}
 
         {activeTab === 'hardware' && (
-          <HardwareFleetView />
+          <HardwareFleetView
+            currentUser={currentUser}
+          />
         )}
       </main>
 

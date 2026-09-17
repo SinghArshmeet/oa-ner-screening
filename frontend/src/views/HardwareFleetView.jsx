@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { pingDevice } from '../utils/api';
 
-export default function HardwareFleetView() {
+export default function HardwareFleetView({ currentUser }) {
+  const isAdmin = currentUser?.roleId === 'admin' || currentUser?.role?.toLowerCase().includes('admin');
   const [nodes, setNodes] = useState([
     {
       id: 'ESP-NODE-01',
@@ -83,11 +84,11 @@ export default function HardwareFleetView() {
         </div>
 
         {/* Quick Actions */}
-        <div className="flex items-center gap-xs shrink-0 self-start xl:self-center">
+        <div className="flex flex-wrap items-center gap-xs shrink-0 self-start xl:self-center">
           <button
             onClick={handleScanMesh}
             disabled={isScanning}
-            className="flex items-center gap-1.5 px-md py-2.5 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high transition shadow-xs font-label-md text-xs font-semibold"
+            className="flex items-center gap-1.5 px-md py-2.5 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high transition shadow-xs font-label-md text-xs font-semibold cursor-pointer"
             type="button"
           >
             <span className={`material-symbols-outlined text-[18px] text-secondary ${isScanning ? 'animate-spin' : ''}`}>
@@ -96,12 +97,25 @@ export default function HardwareFleetView() {
             {isScanning ? 'Scanning Bus...' : 'Scan Mesh Bus'}
           </button>
           <button
-            onClick={() => alert('All remote nodes transitioned to low-power standby mode.')}
-            className="flex items-center gap-1.5 px-md py-2.5 rounded-lg bg-error-container text-on-error-container hover:bg-error/20 transition font-label-md text-xs font-semibold"
+            onClick={() => {
+              if (isAdmin) {
+                alert('All remote nodes transitioned to low-power standby mode.');
+              } else {
+                alert('Access Denied: Only System Administrators can execute Master Standby commands.');
+              }
+            }}
+            className={`flex items-center gap-1.5 px-md py-2.5 rounded-lg transition font-label-md text-xs font-semibold ${
+              isAdmin
+                ? 'bg-error-container text-on-error-container hover:bg-error/20 cursor-pointer'
+                : 'bg-surface-container-high text-on-surface-variant opacity-60 cursor-not-allowed'
+            }`}
             type="button"
+            title={isAdmin ? 'Trigger global node standby' : 'Requires System Administrator role'}
           >
-            <span className="material-symbols-outlined text-[18px]">power_settings_new</span>
-            Master Standby
+            <span className="material-symbols-outlined text-[18px]">
+              {isAdmin ? 'power_settings_new' : 'lock'}
+            </span>
+            {isAdmin ? 'Master Standby' : 'Standby (Admin Only)'}
           </button>
         </div>
       </div>

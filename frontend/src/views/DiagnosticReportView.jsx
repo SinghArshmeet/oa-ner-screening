@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { analyzeXrayImage } from '../utils/api';
 
-export default function DiagnosticReportView({ activePatient, surveyResult, gaitResult, xrayData: propXrayData, onXrayAnalyzed, onOpenTeleconsult }) {
+export default function DiagnosticReportView({ activePatient, surveyResult, gaitResult, xrayData: propXrayData, onXrayAnalyzed, onOpenTeleconsult, currentUser }) {
   const [signedOff, setSignedOff] = useState(false);
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [localXrayData, setLocalXrayData] = useState(null);
@@ -9,6 +9,11 @@ export default function DiagnosticReportView({ activePatient, surveyResult, gait
   const [xrayLoading, setXrayLoading] = useState(false);
   const [xrayError, setXrayError] = useState('');
   const xrayInputRef = useRef(null);
+
+  // Role Permissions:
+  // - Medical Officer (officer) / Admin: Full clinical diagnosis sign-off & specialist referral dispatch
+  // - Screener: Standard frontline triage capture & dossier printing
+  const isMedicalOfficerOrAdmin = currentUser?.roleId === 'officer' || currentUser?.roleId === 'admin' || currentUser?.role?.toLowerCase().includes('officer') || currentUser?.role?.toLowerCase().includes('admin');
 
   const handleXrayUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -434,18 +439,21 @@ export default function DiagnosticReportView({ activePatient, surveyResult, gait
 
           <button
             onClick={() => setSignedOff(true)}
-            disabled={signedOff}
+            disabled={signedOff || !isMedicalOfficerOrAdmin}
             className={`px-md py-2.5 rounded-lg font-label-md text-sm font-semibold transition flex items-center gap-1.5 ${
               signedOff
                 ? 'bg-tertiary-fixed text-on-tertiary-fixed font-bold'
-                : 'bg-primary text-on-primary hover:bg-primary-container shadow-sm'
+                : isMedicalOfficerOrAdmin
+                ? 'bg-primary text-on-primary hover:bg-primary-container shadow-sm cursor-pointer'
+                : 'bg-surface-container-high text-on-surface-variant opacity-60 cursor-not-allowed'
             }`}
             type="button"
+            title={isMedicalOfficerOrAdmin ? 'Authorize and sign-off diagnosis' : 'Requires Medical Officer (MO) or Admin credentials'}
           >
             <span className="material-symbols-outlined text-[18px]">
-              {signedOff ? 'verified' : 'draw'}
+              {signedOff ? 'verified' : isMedicalOfficerOrAdmin ? 'draw' : 'lock'}
             </span>
-            {signedOff ? 'Dossier Signed-Off' : 'Sign-Off Screener'}
+            {signedOff ? 'Dossier Signed-Off' : isMedicalOfficerOrAdmin ? 'Sign-Off MO Diagnosis' : 'Sign-Off (MO Only)'}
           </button>
 
           <button

@@ -1,7 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ROLES, DEMO_ACCOUNTS, loginUser, loginAsDemo } from '../utils/auth';
 
 export default function LoginView({ onLogin }) {
+  // Splash introduction animation state
+  const [showSplash, setShowSplash] = useState(true);
+  const [splashProgress, setSplashProgress] = useState(0);
+
   const [selectedRole, setSelectedRole] = useState('screener');
   const [identifier, setIdentifier] = useState('screener@phc.assam.gov.in');
   const [password, setPassword] = useState('demo123');
@@ -11,6 +15,22 @@ export default function LoginView({ onLogin }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [showForgotModal, setShowForgotModal] = useState(false);
+
+  // Splash Screen Intro Animation sequence (lasts ~2.6s)
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSplashProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(timer);
+          setTimeout(() => setShowSplash(false), 300);
+          return 100;
+        }
+        return prev + 5;
+      });
+    }, 110);
+
+    return () => clearInterval(timer);
+  }, []);
 
   // Switch role and update default demo credential suggestion
   const handleRoleSelect = (roleId) => {
@@ -102,31 +122,80 @@ export default function LoginView({ onLogin }) {
       );
       return;
     }
-    // Secure backend-managed OAuth 2.0 PKCE flow (Redirects to backend -> Google -> callback -> frontend)
     window.location.href = `${API_BASE}/auth/google/login?role=${encodeURIComponent(selectedRole)}`;
   };
 
   const currentRoleConfig = ROLES[selectedRole] || ROLES.screener;
 
-  return (
-    <div className="min-h-screen bg-[#070d18] text-surface font-body-md flex flex-col justify-between selection:bg-primary-fixed selection:text-on-primary-fixed relative overflow-hidden">
-      {/* Dynamic Animated Background Mesh Grid */}
-      <div className="absolute inset-0 pointer-events-none z-0">
-        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-cyan-600/15 blur-[120px] animate-pulse"></div>
-        <div className="absolute top-1/2 -right-40 w-[550px] h-[550px] rounded-full bg-blue-600/15 blur-[140px] animate-pulse" style={{ animationDelay: '1.5s' }}></div>
-        <div className="absolute -bottom-40 left-1/3 w-[500px] h-[500px] rounded-full bg-emerald-600/10 blur-[130px] animate-pulse" style={{ animationDelay: '3s' }}></div>
-        <svg className="w-full h-full opacity-20" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <pattern id="login-grid" width="40" height="40" patternUnits="userSpaceOnUse">
-              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#38bdf8" strokeWidth="0.5" strokeDasharray="3 3"></path>
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#login-grid)"></rect>
-        </svg>
-      </div>
+  // 1. Initial Animated Splash Screen
+  if (showSplash) {
+    return (
+      <div className="min-h-screen bg-[#f8f9ff] flex flex-col items-center justify-center p-md relative overflow-hidden select-none">
+        {/* Background Aura Rings */}
+        <div className="absolute w-[500px] h-[500px] rounded-full bg-primary/10 blur-3xl animate-pulse pointer-events-none"></div>
+        <div className="absolute w-[400px] h-[400px] rounded-full bg-tertiary/10 blur-2xl animate-pulse pointer-events-none" style={{ animationDelay: '1s' }}></div>
 
+        {/* Center Animated Logo & Biomechanical Hologram */}
+        <div className="relative z-10 flex flex-col items-center text-center max-w-md w-full">
+          <div className="relative w-24 h-24 mb-md">
+            {/* Animated Rotating Radar Ring */}
+            <div className="absolute inset-0 rounded-3xl border-2 border-primary/30 animate-spin" style={{ animationDuration: '6s' }}></div>
+            <div className="absolute inset-1.5 rounded-2xl border-2 border-dashed border-tertiary/40 animate-spin" style={{ animationDuration: '9s', animationDirection: 'reverse' }}></div>
+            
+            {/* Logo Center */}
+            <div className="w-full h-full rounded-2xl bg-surface-container-lowest shadow-xl border border-surface-container flex items-center justify-center p-3">
+              <img
+                src="/logo.png"
+                alt="OrthoNex Logo"
+                className="w-full h-full object-contain animate-pulse"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 mb-1">
+            <h1 className="font-headline-lg text-3xl font-extrabold text-on-surface tracking-tight">
+              OrthoNex
+            </h1>
+            <span className="px-2 py-0.5 rounded bg-primary text-on-primary font-data-mono text-[10px] font-bold uppercase tracking-wider">
+              AI Triage
+            </span>
+          </div>
+          <p className="font-label-sm text-xs text-on-surface-variant font-medium mb-lg">
+            ICMR-RMRC North East Joint Tele-Screening Initiative
+          </p>
+
+          {/* Loading Progress Bar */}
+          <div className="w-full bg-surface-container-high h-2 rounded-full overflow-hidden mb-2 border border-surface-container shadow-inner">
+            <div
+              className="bg-primary h-full rounded-full transition-all duration-150 ease-out"
+              style={{ width: `${splashProgress}%` }}
+            ></div>
+          </div>
+
+          <div className="flex items-center justify-between w-full font-data-mono text-[11px] text-secondary">
+            <span>Initializing Neural Modules...</span>
+            <span className="font-bold text-primary">{splashProgress}%</span>
+          </div>
+
+          {/* Skip Intro button */}
+          <button
+            onClick={() => setShowSplash(false)}
+            className="mt-lg px-md py-1 rounded-full text-[11px] text-secondary hover:text-on-surface hover:bg-surface-container transition flex items-center gap-1"
+            type="button"
+          >
+            <span>Skip Intro</span>
+            <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. Main Login View with the exact original light/clinical theme colors
+  return (
+    <div className="min-h-screen bg-background font-body-md text-on-surface flex flex-col justify-between selection:bg-primary-fixed selection:text-on-primary-fixed animate-fade-in">
       {/* Top Clinical Agency Bar */}
-      <header className="relative z-10 w-full bg-black/40 backdrop-blur-md text-surface py-2.5 px-lg border-b border-white/10 flex items-center justify-between text-xs">
+      <header className="w-full bg-inverse-surface text-surface py-2 px-lg border-b border-white/10 flex items-center justify-between text-xs">
         <div className="flex items-center gap-xs">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
           <span className="font-data-mono text-tertiary-fixed font-semibold uppercase tracking-wider">
@@ -140,153 +209,133 @@ export default function LoginView({ onLogin }) {
             <span className="material-symbols-outlined text-[14px] text-tertiary">location_on</span>
             Karbi Anglong, Assam
           </span>
-          <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-data-mono text-[10px] border border-emerald-500/30">
-            Node Online
+          <span className="px-1.5 py-0.5 rounded bg-white/10 font-data-mono text-[10px] text-tertiary-fixed">
+            Edge Ready
           </span>
         </div>
       </header>
 
       {/* Main Two-Column Portal Container */}
-      <main className="relative z-10 flex-1 max-w-[1400px] w-full mx-auto px-md sm:px-lg py-lg lg:py-xl flex items-center justify-center">
+      <main className="flex-1 max-w-[1400px] w-full mx-auto px-md sm:px-lg py-lg lg:py-2xl flex items-center justify-center">
         <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-xl lg:gap-2xl items-stretch">
           
-          {/* LEFT COLUMN: Animated OrthoNex Biomechanical Telemetry Card */}
+          {/* LEFT COLUMN: Branded Operational Clinical Showcase */}
           <section
             aria-label="OrthoNex Clinical Overview"
-            className="lg:col-span-6 xl:col-span-7 flex flex-col justify-between p-lg sm:p-xl rounded-2xl bg-[#0f172a]/80 backdrop-blur-xl border border-white/10 shadow-2xl relative overflow-hidden"
+            className="lg:col-span-6 xl:col-span-7 flex flex-col justify-between p-lg sm:p-xl rounded-2xl bg-surface-container-low border border-surface-container shadow-sm"
           >
             <div>
               {/* Institution & App Header */}
               <div className="flex items-center gap-md mb-md">
-                <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 p-0.5 shadow-lg shadow-cyan-500/30 flex items-center justify-center shrink-0 group">
-                  <div className="w-full h-full bg-[#090e17] rounded-2xl flex items-center justify-center overflow-hidden">
-                    <img
-                      src="/logo.png"
-                      alt="OrthoNex Logo"
-                      className="w-10 h-10 object-contain drop-shadow-md group-hover:scale-110 transition duration-300"
-                    />
-                  </div>
-                  <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-cyan-500"></span>
-                  </span>
+                <div className="w-14 h-14 rounded-2xl bg-inverse-surface border border-white/15 p-1.5 shadow-md flex items-center justify-center shrink-0">
+                  <img
+                    src="/logo.png"
+                    alt="OrthoNex Logo"
+                    className="w-full h-full object-contain"
+                  />
                 </div>
                 <div>
                   <div className="flex items-center gap-xs flex-wrap">
-                    <h1 className="font-headline-lg text-[28px] sm:text-[32px] text-white font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-cyan-300 bg-clip-text text-transparent">
+                    <h1 className="font-headline-lg text-[26px] sm:text-[30px] text-on-surface font-extrabold tracking-tight">
                       OrthoNex
                     </h1>
-                    <span className="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-data-mono text-[10px] uppercase font-bold tracking-wider">
-                      ICMR/NER-SOP-09
+                    <span className="px-xs py-2xs rounded bg-primary text-on-primary font-data-mono text-[10px] uppercase font-bold tracking-wider">
+                      ICMR/NER Protocol
                     </span>
                   </div>
-                  <p className="font-label-sm text-body-sm text-slate-300 font-medium">
+                  <p className="font-label-sm text-body-sm text-secondary font-medium">
                     Multimodal AI Musculoskeletal Screening & Tele-Triage
                   </p>
                 </div>
               </div>
 
               {/* Station Deployment Badge */}
-              <div className="inline-flex items-center gap-xs px-sm py-1.5 rounded-full bg-white/5 text-slate-200 font-label-sm text-[12px] font-semibold mb-lg border border-white/10 backdrop-blur-sm">
-                <span className="material-symbols-outlined text-[16px] text-cyan-400">local_hospital</span>
+              <div className="inline-flex items-center gap-xs px-sm py-1.5 rounded-full bg-surface-container text-on-surface font-label-sm text-[12px] font-semibold mb-lg border border-outline-variant/30">
+                <span className="material-symbols-outlined text-[16px] text-primary">local_hospital</span>
                 <span>Frontline Field Station: Diphu CHC & Sub-Centers, Assam Hub</span>
-              </div>
-
-              {/* Animated Biomechanical Scan Banner */}
-              <div className="relative rounded-xl bg-[#060b13] border border-cyan-500/30 p-md mb-lg overflow-hidden shadow-inner">
-                {/* Visual Laser Scanning Line */}
-                <div className="absolute top-0 bottom-0 w-1 bg-gradient-to-b from-transparent via-cyan-400 to-transparent animate-[pulse_2s_ease-in-out_infinite] shadow-[0_0_15px_#22d3ee]"></div>
-
-                <div className="flex items-center justify-between gap-md relative z-10">
-                  <div className="flex items-center gap-sm">
-                    <div className="w-10 h-10 rounded-xl bg-cyan-950/60 border border-cyan-500/40 text-cyan-400 flex items-center justify-center shrink-0">
-                      <span className="material-symbols-outlined text-[24px]">radiology</span>
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-headline-sm text-xs font-bold text-white uppercase tracking-wider">
-                          Tri-Modal Neural Fusion Active
-                        </span>
-                        <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-data-mono text-[9px] font-bold">
-                          READY
-                        </span>
-                      </div>
-                      <p className="font-body-sm text-slate-400 text-[11px] mt-0.5">
-                        Optical Gait Kinematics (MediaPipe) · KOOS-NER Burden · Grad-CAM Radiographs
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="hidden sm:flex flex-col items-end text-right font-data-mono">
-                    <span className="text-cyan-400 font-bold text-xs">ROC-AUC 74.4%</span>
-                    <span className="text-slate-400 text-[10px]">Model v3.4.2</span>
-                  </div>
-                </div>
               </div>
 
               {/* Core Operational Capabilities Matrix */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-sm mb-lg">
-                <div className="p-md rounded-xl bg-white/5 border border-white/10 hover:border-cyan-500/30 transition flex flex-col justify-between">
+                <div className="p-md rounded-xl bg-surface-container-lowest border border-surface-container flex flex-col justify-between">
                   <div className="flex items-center gap-xs mb-1">
-                    <span className="material-symbols-outlined text-cyan-400 text-[20px]">directions_walk</span>
-                    <h3 className="font-headline-sm text-sm font-bold text-white">
+                    <span className="material-symbols-outlined text-primary text-[20px]">directions_walk</span>
+                    <h3 className="font-headline-sm text-sm font-bold text-on-surface">
                       Gait Biomechanics HUD
                     </h3>
                   </div>
-                  <p className="font-body-sm text-slate-300 text-xs leading-relaxed">
-                    MediaPipe 33-point sagittal skeleton tracking at 30 FPS. Evaluates knee flexion asymmetry in 8-second walking tests.
+                  <p className="font-body-sm text-secondary text-xs leading-relaxed">
+                    MediaPipe 33-point sagittal skeleton capture at 30 FPS. Measures antalgic lag and knee ROM asymmetry in 8-second walking trials.
                   </p>
                 </div>
 
-                <div className="p-md rounded-xl bg-white/5 border border-white/10 hover:border-cyan-500/30 transition flex flex-col justify-between">
+                <div className="p-md rounded-xl bg-surface-container-lowest border border-surface-container flex flex-col justify-between">
                   <div className="flex items-center gap-xs mb-1">
-                    <span className="material-symbols-outlined text-emerald-400 text-[20px]">checklist</span>
-                    <h3 className="font-headline-sm text-sm font-bold text-white">
-                      KOOS-NER Clinical Survey
+                    <span className="material-symbols-outlined text-tertiary text-[20px]">checklist</span>
+                    <h3 className="font-headline-sm text-sm font-bold text-on-surface">
+                      KOOS-NER Symptom Survey
                     </h3>
                   </div>
-                  <p className="font-body-sm text-slate-300 text-xs leading-relaxed">
-                    Visual Analog Scales (VAS) & regional tea plantation workload matrix in Assamese, Bengali, and Hindi.
+                  <p className="font-body-sm text-secondary text-xs leading-relaxed">
+                    Visual Analog Scales (VAS) and tea plantation agrarian workload matrix available in English, Assamese, Bengali, and Hindi.
                   </p>
                 </div>
 
-                <div className="p-md rounded-xl bg-white/5 border border-white/10 hover:border-cyan-500/30 transition flex flex-col justify-between">
+                <div className="p-md rounded-xl bg-surface-container-lowest border border-surface-container flex flex-col justify-between">
                   <div className="flex items-center gap-xs mb-1">
-                    <span className="material-symbols-outlined text-amber-400 text-[20px]">heat_map</span>
-                    <h3 className="font-headline-sm text-sm font-bold text-white">
+                    <span className="material-symbols-outlined text-error text-[20px]">radiology</span>
+                    <h3 className="font-headline-sm text-sm font-bold text-on-surface">
                       X-Ray & Grad-CAM Heatmap
                     </h3>
                   </div>
-                  <p className="font-body-sm text-slate-300 text-xs leading-relaxed">
-                    Kellgren-Lawrence (KL 0-4) grading with real-time articular joint space attention maps.
+                  <p className="font-body-sm text-secondary text-xs leading-relaxed">
+                    Kellgren-Lawrence (KL Grade 0-4) classification with joint space Grad-CAM attention heatmap verification.
                   </p>
                 </div>
 
-                <div className="p-md rounded-xl bg-white/5 border border-white/10 hover:border-cyan-500/30 transition flex flex-col justify-between">
+                <div className="p-md rounded-xl bg-surface-container-lowest border border-surface-container flex flex-col justify-between">
                   <div className="flex items-center gap-xs mb-1">
-                    <span className="material-symbols-outlined text-indigo-400 text-[20px]">cell_tower</span>
-                    <h3 className="font-headline-sm text-sm font-bold text-white">
+                    <span className="material-symbols-outlined text-primary text-[20px]">cell_tower</span>
+                    <h3 className="font-headline-sm text-sm font-bold text-on-surface">
                       Rural Specialist Mesh
                     </h3>
                   </div>
-                  <p className="font-body-sm text-slate-300 text-xs leading-relaxed">
-                    Instant 1-click clinical dossier transfer to orthopedic specialists at GMCH Guwahati and Diphu Civil Hospital.
+                  <p className="font-body-sm text-secondary text-xs leading-relaxed">
+                    Instant 1-click clinical dossier transfer to orthopedic specialists at GMCH Guwahati, Diphu Civil Hospital, and AMCH Dibrugarh.
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Bottom Status Card */}
-            <div className="p-md rounded-xl bg-black/40 border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-md">
+            {/* Edge AI & Offline Diagnostics Status Card */}
+            <div className="p-md rounded-xl bg-inverse-surface text-surface border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-md">
               <div className="flex items-center gap-sm">
-                <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
-                <span className="font-body-sm text-xs text-slate-300">
-                  Frontline Edge Screening Station Active · Hardware Fleet Synced
+                <div className="w-10 h-10 rounded-xl bg-tertiary-container/30 border border-tertiary-fixed-dim/40 flex items-center justify-center text-tertiary-fixed shrink-0">
+                  <span className="material-symbols-outlined text-[22px]">memory</span>
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <h4 className="font-headline-sm text-xs font-bold text-surface-container-lowest uppercase tracking-wider">
+                      Edge-AI Baseline Loaded
+                    </h4>
+                    <span className="px-1.5 py-0.5 rounded bg-emerald-900/60 text-emerald-300 font-data-mono text-[9px] font-bold border border-emerald-500/40">
+                      OFFLINE ACTIVE
+                    </span>
+                  </div>
+                  <p className="font-body-sm text-surface-dim text-[11px] mt-0.5">
+                    Local inference runs on frontline station CPU without requiring constant cloud connectivity.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex sm:flex-col items-end gap-xs text-right shrink-0">
+                <span className="font-data-mono text-tertiary-fixed text-[11px] font-semibold">
+                  MediaPipe Pose v2.4
+                </span>
+                <span className="font-data-mono text-surface-dim text-[10px]">
+                  Mesh Bus: 192.168.1.105
                 </span>
               </div>
-              <span className="font-data-mono text-cyan-300 text-[11px] font-semibold">
-                v3.4.2-LTS
-              </span>
             </div>
           </section>
 
@@ -295,32 +344,32 @@ export default function LoginView({ onLogin }) {
             aria-label="Clinical Sign In Form"
             className="lg:col-span-6 xl:col-span-5 flex flex-col justify-center"
           >
-            <div className="w-full bg-[#0f172a]/90 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/15 p-lg sm:p-xl text-slate-100">
+            <div className="w-full bg-surface-container-lowest rounded-2xl shadow-xl border border-surface-container p-lg sm:p-xl">
               
               {/* Form Header */}
-              <div className="mb-md pb-sm border-b border-white/10">
+              <div className="mb-md pb-sm border-b border-surface-container">
                 <div className="flex items-center justify-between gap-xs mb-1">
-                  <span className="font-headline-sm text-lg font-bold text-white">
+                  <span className="font-headline-sm text-lg font-bold text-on-surface">
                     Station Terminal Sign In
                   </span>
-                  <span className="px-xs py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-data-mono text-[10px] font-bold uppercase border border-cyan-500/30">
+                  <span className="px-xs py-0.5 rounded bg-surface-container-high text-primary font-data-mono text-[10px] font-bold uppercase">
                     NER-SOP-09
                   </span>
                 </div>
-                <p className="font-body-sm text-slate-400 text-xs">
+                <p className="font-body-sm text-secondary text-xs">
                   Authorize your PHC screening session to access patient triage, gait camera feeds, and diagnostic reports.
                 </p>
               </div>
 
               {/* 1. Accessible Role Segmented Selector */}
               <div className="mb-md">
-                <label className="block font-label-sm text-[11px] text-slate-300 font-bold uppercase tracking-wider mb-1.5">
+                <label className="block font-label-sm text-[11px] text-on-surface-variant font-bold uppercase tracking-wider mb-1.5">
                   Select Screener Operational Role
                 </label>
                 <div
                   role="radiogroup"
                   aria-label="Select Station Role"
-                  className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-black/40 border border-white/10"
+                  className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-surface-container-low border border-surface-container"
                 >
                   {Object.values(ROLES).map((role) => {
                     const isSelected = selectedRole === role.id;
@@ -332,8 +381,8 @@ export default function LoginView({ onLogin }) {
                         onClick={() => handleRoleSelect(role.id)}
                         className={`flex flex-col items-center justify-center p-2 rounded-lg text-center transition-all cursor-pointer ${
                           isSelected
-                            ? 'bg-cyan-600 text-white shadow-md font-semibold ring-1 ring-cyan-400'
-                            : 'text-slate-400 hover:text-white hover:bg-white/5'
+                            ? 'bg-primary text-on-primary shadow-sm font-semibold'
+                            : 'text-secondary hover:text-on-surface hover:bg-white/60'
                         }`}
                         type="button"
                       >
@@ -345,8 +394,8 @@ export default function LoginView({ onLogin }) {
                     );
                   })}
                 </div>
-                <p className="font-body-sm text-[11px] text-slate-400 mt-1.5 flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[14px] text-cyan-400">info</span>
+                <p className="font-body-sm text-[11px] text-secondary mt-1.5 flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[14px] text-primary">info</span>
                   <span>{currentRoleConfig.description}</span>
                 </p>
               </div>
@@ -355,16 +404,16 @@ export default function LoginView({ onLogin }) {
               {errorMessage && (
                 <div
                   role="alert"
-                  className="mb-md p-sm rounded-xl bg-rose-950/40 border border-rose-500/50 text-rose-200 flex items-start gap-xs animate-fade-in"
+                  className="mb-md p-sm rounded-xl bg-error-container/30 border border-error/50 text-on-surface flex items-start gap-xs animate-fade-in"
                 >
-                  <span className="material-symbols-outlined text-rose-400 text-[20px] shrink-0 mt-0.5">
+                  <span className="material-symbols-outlined text-error text-[20px] shrink-0 mt-0.5">
                     error
                   </span>
                   <div className="flex-1">
-                    <span className="font-label-md text-xs font-bold text-rose-400 block">
+                    <span className="font-label-md text-xs font-bold text-error block">
                       Authentication Alert
                     </span>
-                    <p className="font-body-sm text-xs text-rose-200 mt-0.5">
+                    <p className="font-body-sm text-xs text-on-surface mt-0.5">
                       {errorMessage}
                     </p>
                   </div>
@@ -378,16 +427,16 @@ export default function LoginView({ onLogin }) {
                   <div className="flex items-center justify-between mb-1">
                     <label
                       htmlFor="identifier-input"
-                      className="font-label-sm text-xs font-bold text-slate-200 uppercase tracking-wide"
+                      className="font-label-sm text-xs font-bold text-on-surface uppercase tracking-wide"
                     >
                       Staff ID or PHC Email *
                     </label>
-                    <span className="text-[10px] text-slate-400 font-data-mono">
+                    <span className="text-[10px] text-secondary font-data-mono">
                       e.g., {currentRoleConfig.defaultEmail}
                     </span>
                   </div>
                   <div className="relative flex items-center">
-                    <span className="material-symbols-outlined absolute left-3 text-slate-400 text-[18px] pointer-events-none">
+                    <span className="material-symbols-outlined absolute left-3 text-secondary text-[18px] pointer-events-none">
                       badge
                     </span>
                     <input
@@ -401,7 +450,7 @@ export default function LoginView({ onLogin }) {
                         if (errorMessage) setErrorMessage('');
                       }}
                       placeholder="e.g., screener@phc.assam.gov.in"
-                      className="w-full bg-black/40 text-white placeholder:text-slate-500 text-xs rounded-xl pl-10 pr-3 py-2.5 border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition"
+                      className="w-full bg-surface-container-low text-on-surface placeholder:text-outline text-xs rounded-xl pl-10 pr-3 py-2.5 border border-surface-container focus:outline-none focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition"
                     />
                   </div>
                 </div>
@@ -411,20 +460,20 @@ export default function LoginView({ onLogin }) {
                   <div className="flex items-center justify-between mb-1">
                     <label
                       htmlFor="password-input"
-                      className="font-label-sm text-xs font-bold text-slate-200 uppercase tracking-wide"
+                      className="font-label-sm text-xs font-bold text-on-surface uppercase tracking-wide"
                     >
                       Station Access Password *
                     </label>
                     <button
                       type="button"
                       onClick={() => setShowForgotModal(true)}
-                      className="font-label-sm text-[11px] text-cyan-400 hover:underline"
+                      className="font-label-sm text-[11px] text-primary hover:underline"
                     >
                       Forgot access?
                     </button>
                   </div>
                   <div className="relative flex items-center">
-                    <span className="material-symbols-outlined absolute left-3 text-slate-400 text-[18px] pointer-events-none">
+                    <span className="material-symbols-outlined absolute left-3 text-secondary text-[18px] pointer-events-none">
                       lock
                     </span>
                     <input
@@ -438,13 +487,13 @@ export default function LoginView({ onLogin }) {
                         if (errorMessage) setErrorMessage('');
                       }}
                       placeholder="Enter station password"
-                      className="w-full bg-black/40 text-white placeholder:text-slate-500 text-xs rounded-xl pl-10 pr-10 py-2.5 border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition"
+                      className="w-full bg-surface-container-low text-on-surface placeholder:text-outline text-xs rounded-xl pl-10 pr-10 py-2.5 border border-surface-container focus:outline-none focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       aria-label={showPassword ? 'Hide password' : 'Show password'}
-                      className="absolute right-3 text-slate-400 hover:text-white transition p-1"
+                      className="absolute right-3 text-secondary hover:text-on-surface transition p-1"
                     >
                       <span className="material-symbols-outlined text-[18px]">
                         {showPassword ? 'visibility_off' : 'visibility'}
@@ -460,9 +509,9 @@ export default function LoginView({ onLogin }) {
                       type="checkbox"
                       checked={rememberDevice}
                       onChange={(e) => setRememberDevice(e.target.checked)}
-                      className="w-4 h-4 accent-cyan-500 rounded cursor-pointer"
+                      className="w-4 h-4 accent-primary rounded cursor-pointer"
                     />
-                    <span className="font-label-sm text-xs text-slate-300">
+                    <span className="font-label-sm text-xs text-secondary">
                       Remember this station terminal
                     </span>
                   </label>
@@ -470,7 +519,7 @@ export default function LoginView({ onLogin }) {
                   <button
                     type="button"
                     onClick={handleQuickFill}
-                    className="font-label-sm text-[11px] text-cyan-400 hover:text-cyan-300 font-semibold underline flex items-center gap-0.5"
+                    className="font-label-sm text-[11px] text-tertiary hover:text-tertiary-container font-semibold underline flex items-center gap-0.5"
                     title="Populate recommended demo credentials for selected role"
                   >
                     <span className="material-symbols-outlined text-[13px]">magic_button</span>
@@ -483,7 +532,7 @@ export default function LoginView({ onLogin }) {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className={`w-full py-2.5 px-md rounded-xl font-label-md text-sm font-bold text-white bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 shadow-lg shadow-cyan-600/30 transition-all flex items-center justify-center gap-2 ${
+                    className={`w-full py-2.5 px-md rounded-xl font-label-md text-sm font-bold text-on-primary bg-primary hover:bg-primary-container shadow-md transition-all flex items-center justify-center gap-2 ${
                       isSubmitting ? 'opacity-70 cursor-not-allowed' : 'active:scale-95'
                     }`}
                   >
@@ -495,7 +544,7 @@ export default function LoginView({ onLogin }) {
                     ) : (
                       <>
                         <span className="material-symbols-outlined text-[18px]">login</span>
-                        <span>Sign In to Station</span>
+                        <span>Sign In to Screening Station</span>
                       </>
                     )}
                   </button>
@@ -505,7 +554,7 @@ export default function LoginView({ onLogin }) {
                     <button
                       type="button"
                       onClick={handleGoogleLogin}
-                      className="w-full py-2.5 px-md rounded-xl font-label-md text-xs font-semibold text-white bg-white/5 hover:bg-white/10 border border-white/15 shadow-xs transition-all flex items-center justify-center gap-2.5 active:scale-95"
+                      className="w-full py-2.5 px-md rounded-xl font-label-md text-xs font-semibold text-on-surface bg-surface-container-lowest hover:bg-surface-container border border-outline-variant/60 shadow-xs transition-all flex items-center justify-center gap-2.5 active:scale-95"
                     >
                       <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                         <path
@@ -529,8 +578,8 @@ export default function LoginView({ onLogin }) {
                     </button>
 
                     {googleNotice && (
-                      <div className="mt-2 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-200 text-[11px] flex items-start gap-1.5">
-                        <span className="material-symbols-outlined text-[15px] text-amber-400 shrink-0 mt-0.5">info</span>
+                      <div className="mt-2 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 text-[11px] flex items-start gap-1.5">
+                        <span className="material-symbols-outlined text-[15px] text-amber-600 shrink-0 mt-0.5">info</span>
                         <span>{googleNotice}</span>
                       </div>
                     )}
@@ -539,21 +588,21 @@ export default function LoginView({ onLogin }) {
                   {/* 1-Click Local Demo Mode Action */}
                   <div className="pt-2">
                     <div className="relative flex items-center justify-center my-2">
-                      <div className="border-t border-white/10 w-full"></div>
-                      <span className="bg-[#0f172a] px-2 font-label-sm text-[10px] uppercase text-slate-400 font-bold tracking-wider absolute">
-                        Instant Evaluation
+                      <div className="border-t border-surface-container w-full"></div>
+                      <span className="bg-surface-container-lowest px-2 font-label-sm text-[10px] uppercase text-secondary font-bold tracking-wider absolute">
+                        Quick Frontline Evaluation
                       </span>
                     </div>
 
                     <button
                       type="button"
                       onClick={handleDemoBypass}
-                      className="w-full py-2 px-md rounded-xl font-label-md text-xs font-semibold text-white bg-cyan-950/40 hover:bg-cyan-900/50 border border-cyan-500/30 shadow-xs transition-all flex items-center justify-center gap-2 active:scale-95"
+                      className="w-full py-2 px-md rounded-xl font-label-md text-xs font-semibold text-on-surface bg-surface-container-low hover:bg-surface-container border border-outline-variant/40 shadow-xs transition-all flex items-center justify-center gap-2 active:scale-95"
                     >
-                      <span className="material-symbols-outlined text-[16px] text-cyan-400">bolt</span>
+                      <span className="material-symbols-outlined text-[16px] text-tertiary">bolt</span>
                       <span>Launch OrthoNex Demo</span>
-                      <span className="px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-data-mono text-[9px] font-bold">
-                        Offline Ready
+                      <span className="px-1.5 py-0.5 rounded bg-tertiary-container/30 text-tertiary font-data-mono text-[9px] font-bold">
+                        Offline Simulation
                       </span>
                     </button>
                   </div>
@@ -561,19 +610,19 @@ export default function LoginView({ onLogin }) {
               </form>
 
               {/* Demo Credentials Cheat-Sheet Card */}
-              <div className="mt-md p-xs px-sm rounded-xl bg-black/40 border border-white/10 text-[11px] text-slate-400">
-                <span className="font-semibold text-slate-200 block mb-0.5">
-                  Evaluation Credentials:
+              <div className="mt-md p-xs px-sm rounded-xl bg-surface-container-low/60 border border-surface-container text-[11px] text-secondary">
+                <span className="font-semibold text-on-surface block mb-0.5">
+                  Frontline Trial Credentials:
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 font-data-mono text-[10px]">
                   <div>
-                    <span className="text-cyan-400 font-bold">Screener:</span> demo123
+                    <span className="text-primary font-bold">Screener:</span> demo123
                   </div>
                   <div>
-                    <span className="text-emerald-400 font-bold">MO:</span> demo123
+                    <span className="text-tertiary font-bold">MO:</span> demo123
                   </div>
                   <div>
-                    <span className="text-slate-200 font-bold">Admin:</span> admin123
+                    <span className="text-on-surface font-bold">Admin:</span> admin123
                   </div>
                 </div>
               </div>
@@ -584,19 +633,19 @@ export default function LoginView({ onLogin }) {
       </main>
 
       {/* Institutional Clinical Footer */}
-      <footer className="relative z-10 w-full bg-black/40 backdrop-blur-md border-t border-white/10 py-sm mt-auto">
-        <div className="max-w-[1400px] mx-auto px-lg flex flex-wrap items-center justify-between gap-sm text-slate-400 font-body-sm text-[11px]">
+      <footer className="w-full bg-surface-container-lowest shadow-[0_-1px_4px_rgba(0,0,0,0.03)] border-t border-surface-container py-sm mt-auto">
+        <div className="max-w-[1400px] mx-auto px-lg flex flex-wrap items-center justify-between gap-sm text-secondary font-body-sm text-[11px]">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-white">OrthoNex AI Musculoskeletal Platform</span>
+            <span className="font-semibold text-on-surface">OrthoNex AI Musculoskeletal Platform</span>
             <span>·</span>
             <span>ICMR-RMRC North East Joint Tele-Screening Initiative</span>
           </div>
           <div className="flex items-center gap-md">
-            <span className="italic text-slate-400 font-normal">
+            <span className="italic text-secondary font-normal">
               Research prototype — not for standalone diagnosis
             </span>
-            <span className="text-white/20">|</span>
-            <span className="font-data-mono font-medium text-cyan-400">v3.4.2-clinical-lts</span>
+            <span className="text-outline-variant">|</span>
+            <span className="font-data-mono font-medium text-on-surface">v3.4.2-clinical-lts</span>
           </div>
         </div>
       </footer>
@@ -606,19 +655,19 @@ export default function LoginView({ onLogin }) {
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center p-md bg-black/80 backdrop-blur-md animate-fade-in"
+          className="fixed inset-0 z-50 flex items-center justify-center p-md bg-black/60 backdrop-blur-sm animate-fade-in"
         >
-          <div className="w-full max-w-md bg-[#0f172a] rounded-2xl shadow-2xl border border-white/20 overflow-hidden text-slate-200">
-            <div className="px-lg py-md bg-black/40 text-surface flex items-center justify-between border-b border-white/10">
+          <div className="w-full max-w-md bg-surface-container-lowest rounded-2xl shadow-2xl border border-outline-variant/30 overflow-hidden">
+            <div className="px-lg py-md bg-inverse-surface text-surface flex items-center justify-between">
               <div className="flex items-center gap-xs">
-                <span className="material-symbols-outlined text-[20px] text-cyan-400">help</span>
-                <h3 className="font-headline-sm text-sm font-bold text-white">
+                <span className="material-symbols-outlined text-[20px] text-primary-fixed">help</span>
+                <h3 className="font-headline-sm text-sm font-bold text-surface">
                   Station Access Recovery SOP
                 </h3>
               </div>
               <button
                 onClick={() => setShowForgotModal(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition"
+                className="p-1 rounded-lg text-surface-dim hover:text-white hover:bg-white/10 transition"
                 type="button"
                 aria-label="Close recovery dialog"
               >
@@ -626,25 +675,25 @@ export default function LoginView({ onLogin }) {
               </button>
             </div>
 
-            <div className="p-lg space-y-sm text-xs text-slate-300">
-              <p className="text-white font-medium">
+            <div className="p-lg space-y-sm text-xs text-secondary">
+              <p className="text-on-surface font-medium">
                 Under the <strong>ICMR-NER-SOP-09</strong> clinical protocol, station passwords cannot be reset over public unencrypted SMS or email.
               </p>
-              <div className="p-sm rounded-lg bg-black/40 border border-white/10 space-y-1">
-                <div className="font-semibold text-cyan-400">Station IT Desk (Karbi Anglong Hub):</div>
+              <div className="p-sm rounded-lg bg-surface-container border border-surface-container-high space-y-1">
+                <div className="font-semibold text-on-surface">Station IT Desk (Karbi Anglong Hub):</div>
                 <div className="font-data-mono text-[11px]">Phone / Intercom: Ext. 204 (03671-272210)</div>
                 <div className="font-data-mono text-[11px]">Station Admin: admin.diphu@icmr.gov.in</div>
-                <div className="text-[10px] text-slate-400">Hours: 08:00 - 18:00 IST (Mon-Sat)</div>
+                <div className="text-[10px] text-secondary">Hours: 08:00 - 18:00 IST (Mon-Sat)</div>
               </div>
               <p className="text-[11px]">
-                For instant trial and testing on this device, use default credential <strong>demo123</strong> or click <strong>Launch OrthoNex Demo</strong>.
+                For instant trial and testing on this device, you can use the default credential <strong>demo123</strong> or click <strong>Launch OrthoNex Demo</strong>.
               </p>
             </div>
 
-            <div className="px-lg py-sm bg-black/40 border-t border-white/10 flex justify-end">
+            <div className="px-lg py-sm bg-surface-container-low border-t border-surface-container flex justify-end">
               <button
                 onClick={() => setShowForgotModal(false)}
-                className="px-md py-1.5 rounded-lg bg-cyan-600 text-white font-label-md text-xs font-bold shadow-xs hover:bg-cyan-500 transition"
+                className="px-md py-1.5 rounded-lg bg-primary text-on-primary font-label-md text-xs font-bold shadow-xs hover:bg-primary-container transition"
                 type="button"
               >
                 Understood
