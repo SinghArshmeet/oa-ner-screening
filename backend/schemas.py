@@ -14,6 +14,9 @@ class PatientCreate(BaseModel):
     gender: str | None = Field(default=None, max_length=40)
     occupation: str | None = Field(default=None, max_length=160)
     region: str | None = Field(default=None, max_length=160)
+    state: str | None = Field(default=None, max_length=120)
+    district: str | None = Field(default=None, max_length=120)
+    abha_id: str | None = Field(default=None, max_length=60)
     consent: bool = False
 
 

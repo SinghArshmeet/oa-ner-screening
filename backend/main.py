@@ -299,8 +299,8 @@ def create_patient(payload: PatientCreate, _: dict[str, object] = Depends(requir
         raise HTTPException(status_code=422, detail="Recorded consent is required before creating a patient record.")
     conn = get_connection()
     cursor = conn.execute(
-        "INSERT INTO patients (name, age, gender, occupation, region, consent) VALUES (?, ?, ?, ?, ?, ?)",
-        (payload.name.strip(), payload.age, payload.gender, payload.occupation, payload.region, int(payload.consent))
+        "INSERT INTO patients (name, age, gender, occupation, region, state, district, abha_id, consent) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (payload.name.strip(), payload.age, payload.gender, payload.occupation, payload.region, payload.state, payload.district, payload.abha_id, int(payload.consent))
     )
     conn.commit()
     patient_id = cursor.lastrowid
@@ -312,6 +312,9 @@ def create_patient(payload: PatientCreate, _: dict[str, object] = Depends(requir
         "gender": payload.gender,
         "occupation": payload.occupation,
         "region": payload.region,
+        "state": payload.state,
+        "district": payload.district,
+        "abha_id": payload.abha_id,
         "consent": payload.consent,
         "message": "Patient registered successfully"
     }
@@ -320,7 +323,7 @@ def create_patient(payload: PatientCreate, _: dict[str, object] = Depends(requir
 @app.get("/api/patients")
 def list_patients(_: dict[str, object] = Depends(require_authenticated_user)) -> list[dict[str, object]]:
     conn = get_connection()
-    rows = conn.execute("SELECT id, name, age, gender, occupation, region, consent, created_at FROM patients ORDER BY id DESC").fetchall()
+    rows = conn.execute("SELECT id, name, age, gender, occupation, region, state, district, abha_id, consent, created_at FROM patients ORDER BY id DESC").fetchall()
     conn.close()
     return [dict(row) for row in rows]
 

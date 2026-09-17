@@ -92,10 +92,17 @@ def init_db() -> None:
         """
     )
 
-    # Safe migration: check if 'occupation' column exists in 'patients'
+    # Safe migration: check if new columns exist in 'patients'
     patient_columns = [row[1] for row in conn.execute("PRAGMA table_info(patients)").fetchall()]
-    if "occupation" not in patient_columns:
-        conn.execute("ALTER TABLE patients ADD COLUMN occupation TEXT")
+    new_patient_cols = {
+        "occupation": "TEXT",
+        "state": "TEXT",
+        "district": "TEXT",
+        "abha_id": "TEXT",
+    }
+    for col, col_type in new_patient_cols.items():
+        if col not in patient_columns:
+            conn.execute(f"ALTER TABLE patients ADD COLUMN {col} {col_type}")
 
     # Safe migration: check if new columns exist in 'screenings'
     screening_columns = [row[1] for row in conn.execute("PRAGMA table_info(screenings)").fetchall()]

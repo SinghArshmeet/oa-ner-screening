@@ -1,30 +1,40 @@
-# OA-NER Screening (Osteoarthritis Risk Screening System)
+# OrthoNex India (OA-NER Screening Platform)
 
 [![Vercel Deployment](https://img.shields.io/badge/Vercel-Live%20Demo-success?style=for-the-badge&logo=vercel)](https://oa-ner-scanning-project.vercel.app)
 [![Python 3.11](https://img.shields.io/badge/Python-3.11-blue?style=for-the-badge&logo=python)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com)
 [![React Vite](https://img.shields.io/badge/Frontend-React%2018%20%2B%20Vite-61DAFB?style=for-the-badge&logo=react)](https://vitejs.dev)
+[![ABDM Ready](https://img.shields.io/badge/ABDM-ABHA%20Integrated-indigo?style=for-the-badge)](https://abdm.gov.in)
 
-Clinical frontline osteoarthritis (OA) screening platform developed for rural primary health centres (PHCs) in the North Eastern Region (NER). Combines sagittal computer vision gait analysis, standardized clinical questionnaire (KOOS-NER), dual-tier binary triage, and knee radiograph Grad-CAM explainability.
+National clinical frontline musculoskeletal and Knee Osteoarthritis (OA) tele-screening platform aligned with the **Ayushman Bharat Digital Mission (ABDM)** and **ICMR National Screening Protocols**. Combines sagittal computer vision gait analysis, localized clinical questionnaire (KOOS-India), dual-tier triage, knee radiograph Grad-CAM explainability, dynamic user-data diagnosability, and direct tertiary referral across India (including Delhi NCR and Noida networks).
 
 > 🌐 **Live Web Application**: **[https://oa-ner-scanning-project.vercel.app](https://oa-ner-scanning-project.vercel.app)**
 
 ---
 
-## System Architecture
+## Key Capabilities & System Architecture
 
+- **Pan-India Accessibility & ABDM Integration**:
+  - Full support for **all 28 States & 8 Union Territories** with dedicated district selection.
+  - **ABHA Health ID (Ayushman Bharat Health Account)** integration with auto-generator and checksum formatting (`91-XXXX-XXXX-XXXX`).
+  - **7 Regional Indian Languages**: English, हिन्दी (Hindi), বাংলা (Bengali), தமிழ் (Tamil), తెలుగు (Telugu), मराठी (Marathi), and অসমীয়া (Assamese).
+  - **Delhi & Noida Cohorts**: Real-world cohorts spanning Safdarjung Enclave, Karol Bagh, Noida Sec 62, Sec 18, and Greater Noida Kasna.
+  - **Comprehensive 25-Hospital Teleconsultation Network**: Direct tele-triage referral directory covering top apex institutes (AIIMS New Delhi, PGIMER, CMC Vellore, KEM Mumbai, GMCH, NIMS) and premier Delhi/Noida centers (Safdarjung, RML, Sir Ganga Ram, Max Saket, Apollo, Fortis Noida, Jaypee, Kailash, Yatharth, Sharda, GIMS, District Hospital Sec 39).
+- **Dynamic Multimodal Diagnosability & Clinical Calibration**:
+  - Real-time diagnostic calculation strictly driven by the active patient's live telemetry (Pain VAS, morning stiffness minutes, BlazePose sagittal knee extension deficit, walking velocity, cadence, and KL radiographic grade).
+  - Interactive **Live Diagnostic Parameter Calibration Sandbox** allowing clinicians to test risk sensitivity with real-time radial risk meter and radar chart recalculation.
 - **Frontend**: React 18 + Vite + Tailwind CSS (`frontend/`)
   - Optical webcam live feed with sagittal HUD reticle & 8-second standardized walking test
-  - File upload workflow (`.mp4`, `.mov`, `.avi`, `.mkv`, `.webm`) and bundled clinical sample clips
+  - Video upload pipeline (`.mp4`, `.mov`, `.avi`, `.mkv`, `.webm`) and bundled clinical sample clips
   - Dual-tier triage (*Screen Negative / Low Risk* vs *Screen Positive / Suspected OA*) + 4-tier severity matrix
-  - KOOS-NER clinical survey with regional tea plantation loading factors
+  - KOOS-India clinical survey with agrarian, manual loading, and urban sedentary risk weighting
   - Module 03: Radiographic Staging with Grad-CAM articular joint space attention heatmaps
   - Multimodal diagnostic summary report, clinical referral dossier, and role-based screener switcher
 - **Backend**: FastAPI + SQLite (`backend/`)
   - Movement baseline inference using MediaPipe BlazePose + scikit-learn Random Forest
   - Kellgren-Lawrence (KL Grade 0–4) radiograph prediction with Grad-CAM heatmap generation
-  - Unified 40-point questionnaire scoring engine
-  - Persistent SQLite screening database (`screenings`, `patients`, `sessions`, `devices`)
+  - Unified 40-point questionnaire scoring engine with occupational load factoring
+  - Persistent SQLite screening database (`screenings`, `patients` with `state`/`district`/`abha_id`, `sessions`, `devices`)
   - Google OAuth Authorization Code flow with PKCE
 
 ---
