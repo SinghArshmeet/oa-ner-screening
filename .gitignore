@@ -30,4 +30,5 @@ test_codec.mp4
 artifacts/*
 !artifacts/movement_baseline.joblib
 !artifacts/movement_baseline.report.json
+!artifacts/knee_bone_density_model.joblib
 
