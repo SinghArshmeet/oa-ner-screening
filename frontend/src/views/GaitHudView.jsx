@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { analyzeVideoFile, analyzeXrayImage } from '../utils/api';
 import { useCamera } from '../utils/useCamera';
 
-export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenTeleconsult, camera: externalCamera }) {
+export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenTeleconsult, camera: externalCamera, xrayData: propXrayData, onXrayAnalyzed, onNavigate }) {
   const localCamera = useCamera();
   const camera = externalCamera || localCamera;
 
@@ -14,7 +14,8 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
   const [analysisError, setAnalysisError] = useState('');
 
   // X-Ray Upload & Staging state (Direct access in Gait suite)
-  const [xrayData, setXrayData] = useState(null);
+  const [localXrayData, setLocalXrayData] = useState(null);
+  const xrayData = propXrayData || localXrayData;
   const [xrayLoading, setXrayLoading] = useState(false);
   const xrayInputRef = useRef(null);
 
@@ -26,7 +27,8 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
     try {
       const res = await analyzeXrayImage(file);
       if (res.status === 'success' || res.kl_grade !== undefined) {
-        setXrayData(res);
+        setLocalXrayData(res);
+        if (onXrayAnalyzed) onXrayAnalyzed(res);
       }
     } catch (err) {
       setAnalysisError(err.message || 'X-Ray analysis could not be processed.');
@@ -916,6 +918,16 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
           </div>
 
           <div className="flex items-center gap-xs shrink-0 w-full sm:w-auto justify-end">
+            {onNavigate && (
+              <button
+                onClick={() => onNavigate('report')}
+                className="px-md py-1.5 rounded-lg bg-tertiary hover:bg-tertiary-container text-on-tertiary font-label-sm text-xs font-bold shadow-xs transition flex items-center gap-1"
+                type="button"
+              >
+                <span>View in Final Report</span>
+                <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
+              </button>
+            )}
             <button
               onClick={() => xrayInputRef.current?.click()}
               className="px-sm py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-xs font-semibold border border-outline-variant/30 flex items-center gap-1"
@@ -925,7 +937,10 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
               Change Image
             </button>
             <button
-              onClick={() => setXrayData(null)}
+              onClick={() => {
+                setLocalXrayData(null);
+                if (onXrayAnalyzed) onXrayAnalyzed(null);
+              }}
               className="p-1.5 rounded-lg text-secondary hover:text-error hover:bg-error/10 transition"
               title="Dismiss X-ray card"
               type="button"

@@ -1,10 +1,11 @@
 import React, { useState, useRef } from 'react';
 import { analyzeXrayImage } from '../utils/api';
 
-export default function DiagnosticReportView({ activePatient, surveyResult, gaitResult, onOpenTeleconsult }) {
+export default function DiagnosticReportView({ activePatient, surveyResult, gaitResult, xrayData: propXrayData, onXrayAnalyzed, onOpenTeleconsult }) {
   const [signedOff, setSignedOff] = useState(false);
   const [showPrintModal, setShowPrintModal] = useState(false);
-  const [xrayData, setXrayData] = useState(null);
+  const [localXrayData, setLocalXrayData] = useState(null);
+  const xrayData = propXrayData || localXrayData;
   const [xrayLoading, setXrayLoading] = useState(false);
   const [xrayError, setXrayError] = useState('');
   const xrayInputRef = useRef(null);
@@ -17,7 +18,8 @@ export default function DiagnosticReportView({ activePatient, surveyResult, gait
     try {
       const res = await analyzeXrayImage(file);
       if (res.status === 'success' || res.kl_grade !== undefined) {
-        setXrayData(res);
+        setLocalXrayData(res);
+        if (onXrayAnalyzed) onXrayAnalyzed(res);
       }
     } catch (err) {
       setXrayError(err.message || 'Radiograph analysis could not be processed.');
@@ -44,12 +46,13 @@ export default function DiagnosticReportView({ activePatient, surveyResult, gait
   const gaitConfidence = gaitResult ? (gaitResult.confidence || 85) / 100 : 0.85;
   const surveyFactor = surveyResult ? (surveyResult.compositeScore ? surveyResult.compositeScore / 40 : (surveyResult.raw_score ? surveyResult.raw_score / 40 : 0.65)) : 0.70;
   
-  // X-ray status: Check if an assessed result exists
-  const isXrayAssessed = Boolean(activePatient?.xrayResult && activePatient?.xrayResult !== 'Not assessed');
-  const xrayFactor = isXrayAssessed ? 0.75 : 0;
+  // X-ray status: Check if an assessed result exists from live scan or patient record
+  const isXrayAssessed = Boolean(xrayData || (activePatient?.xrayResult && activePatient?.xrayResult !== 'Not assessed'));
+  const xrayGradeVal = xrayData?.kl_grade ?? (activePatient?.xrayResult?.includes('KL-3') ? 3 : activePatient?.xrayResult?.includes('KL-2') ? 2 : 0);
+  const xrayFactor = isXrayAssessed ? Math.min(1.0, (xrayGradeVal / 4) * 0.85 + 0.15) : 0;
   
   const combinedRiskIndex = isXrayAssessed
-    ? +( (gaitConfidence * 0.45 + surveyFactor * 0.35 + xrayFactor * 0.20) * 100 ).toFixed(1)
+    ? +( (gaitConfidence * 0.40 + surveyFactor * 0.30 + xrayFactor * 0.30) * 100 ).toFixed(1)
     : +( (gaitConfidence * 0.55 + surveyFactor * 0.45) * 100 ).toFixed(1);
 
   const isHighRisk = combinedRiskIndex >= 70;

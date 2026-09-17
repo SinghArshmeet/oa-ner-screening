@@ -29,6 +29,7 @@ export default function App() {
   // Cross-module diagnostic state
   const [surveyResult, setSurveyResult] = useState(null);
   const [gaitResult, setGaitResult] = useState(null);
+  const [xrayResult, setXrayResult] = useState(null);
 
   // 1. Check for server-side OAuth session on mount or return from Google redirect
   useEffect(() => {
@@ -86,6 +87,7 @@ export default function App() {
     if (!activePatient?.dbId) {
       setSurveyResult(null);
       setGaitResult(null);
+      setXrayResult(null);
       return;
     }
 
@@ -248,6 +250,7 @@ export default function App() {
             onNavigate={setActiveTab}
             surveyResult={surveyResult}
             gaitResult={gaitResult}
+            xrayResult={xrayResult}
             onOpenTeleconsult={() => setShowTeleconsult(true)}
             camera={camera}
           />
@@ -257,6 +260,9 @@ export default function App() {
           <GaitHudView
             activePatient={activePatient}
             onAnalysisComplete={handleGaitComplete}
+            xrayData={xrayResult}
+            onXrayAnalyzed={setXrayResult}
+            onNavigate={setActiveTab}
             onOpenTeleconsult={() => setShowTeleconsult(true)}
             camera={camera}
           />
@@ -275,6 +281,8 @@ export default function App() {
             activePatient={activePatient}
             surveyResult={surveyResult}
             gaitResult={gaitResult}
+            xrayData={xrayResult}
+            onXrayAnalyzed={setXrayResult}
             onOpenTeleconsult={() => setShowTeleconsult(true)}
           />
         )}
