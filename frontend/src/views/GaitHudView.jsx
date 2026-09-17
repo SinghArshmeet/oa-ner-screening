@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { analyzeVideoFile } from '../utils/api';
+import { analyzeVideoFile, analyzeXrayImage } from '../utils/api';
 import { useCamera } from '../utils/useCamera';
 
 export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenTeleconsult, camera: externalCamera }) {
@@ -12,6 +12,29 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
   const [analyzing, setAnalyzing] = useState(false);
   const [gaitAnalysis, setGaitAnalysis] = useState(null);
   const [analysisError, setAnalysisError] = useState('');
+
+  // X-Ray Upload & Staging state (Direct access in Gait suite)
+  const [xrayData, setXrayData] = useState(null);
+  const [xrayLoading, setXrayLoading] = useState(false);
+  const xrayInputRef = useRef(null);
+
+  const handleXrayUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setXrayLoading(true);
+    setAnalysisError('');
+    try {
+      const res = await analyzeXrayImage(file);
+      if (res.status === 'success' || res.kl_grade !== undefined) {
+        setXrayData(res);
+      }
+    } catch (err) {
+      setAnalysisError(err.message || 'X-Ray analysis could not be processed.');
+    } finally {
+      setXrayLoading(false);
+      e.target.value = '';
+    }
+  };
 
   // Live video telemetry
   const [videoResolution, setVideoResolution] = useState({ width: 1280, height: 720 });
@@ -820,6 +843,27 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
             <span className="material-symbols-outlined text-[18px]">upload_file</span>
             Upload Walk Video
           </button>
+
+          {/* Direct X-Ray Upload Button in Gait Area */}
+          <input
+            type="file"
+            ref={xrayInputRef}
+            onChange={handleXrayUpload}
+            accept="image/png,image/jpeg,image/jpg"
+            className="hidden"
+          />
+          <button
+            onClick={() => xrayInputRef.current?.click()}
+            disabled={xrayLoading}
+            className="px-md py-2.5 rounded-lg bg-tertiary-container/30 hover:bg-tertiary-container/60 text-tertiary-fixed font-label-md text-xs font-bold transition flex items-center gap-1.5 border border-tertiary/40 shadow-xs"
+            type="button"
+            title="Upload knee radiograph image to generate KL Grade and Grad-CAM attention heatmap"
+          >
+            <span className={`material-symbols-outlined text-[18px] ${xrayLoading ? 'animate-spin' : 'text-tertiary-fixed'}`}>
+              {xrayLoading ? 'refresh' : 'radiology'}
+            </span>
+            {xrayLoading ? 'Processing X-Ray...' : xrayData ? `X-Ray: KL ${xrayData.kl_grade} Loaded` : '📷 Upload Knee X-Ray'}
+          </button>
         </div>
 
         <button
@@ -834,6 +878,63 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
           {analyzing ? 'Processing MediaPipe AI...' : camera.sourceMode === 'upload' ? '⚡ Analyze Uploaded Video' : '⚡ Analyze Walk (Edge AI)'}
         </button>
       </div>
+
+      {/* Direct X-Ray Grad-CAM Assessment Card inside Gait HUD */}
+      {xrayData && (
+        <div className="bg-surface-container-lowest p-card-padding rounded-xl shadow-md border border-tertiary/30 animate-fade-in flex flex-col md:flex-row items-start md:items-center justify-between gap-md">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-md grow">
+            {xrayData.gradcam_base64 && (
+              <div className="relative w-36 h-28 rounded-lg overflow-hidden bg-black/80 shrink-0 border border-white/10">
+                <img
+                  src={`data:image/jpeg;base64,${xrayData.gradcam_base64}`}
+                  alt="Grad-CAM Articular Joint Space ROI"
+                  className="w-full h-full object-contain"
+                />
+                <span className="absolute bottom-1 left-1 px-1 rounded bg-black/80 text-[9px] font-data-mono text-tertiary font-bold">
+                  Grad-CAM ROI
+                </span>
+              </div>
+            )}
+            <div>
+              <div className="flex flex-wrap items-center gap-xs mb-1">
+                <span className={`px-2 py-0.5 rounded-full font-data-mono text-[10px] font-bold ${
+                  xrayData.kl_grade >= 3 ? 'bg-error-container text-on-error-container' : xrayData.kl_grade >= 2 ? 'bg-amber-100 text-amber-900' : 'bg-emerald-100 text-emerald-900'
+                }`}>
+                  RADIOGRAPHIC KL GRADE {xrayData.kl_grade}
+                </span>
+                <span className="font-label-sm text-xs text-on-surface font-bold">
+                  {xrayData.label}
+                </span>
+                <span className="font-data-mono text-xs text-secondary">
+                  Confidence: {xrayData.confidence}%
+                </span>
+              </div>
+              <p className="font-body-sm text-xs text-on-surface-variant max-w-2xl">
+                {xrayData.findings}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-xs shrink-0 w-full sm:w-auto justify-end">
+            <button
+              onClick={() => xrayInputRef.current?.click()}
+              className="px-sm py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-xs font-semibold border border-outline-variant/30 flex items-center gap-1"
+              type="button"
+            >
+              <span className="material-symbols-outlined text-[15px]">upload_file</span>
+              Change Image
+            </button>
+            <button
+              onClick={() => setXrayData(null)}
+              className="p-1.5 rounded-lg text-secondary hover:text-error hover:bg-error/10 transition"
+              title="Dismiss X-ray card"
+              type="button"
+            >
+              <span className="material-symbols-outlined text-[16px]">close</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Analysis Result Banner */}
       {gaitAnalysis && (
