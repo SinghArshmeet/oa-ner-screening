@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import CameraViewport from '../components/CameraViewport';
+import { getPatientClinicalProfile } from '../utils/clinicalProfiles';
+import { isSupabaseConfigured } from '../utils/supabase';
 
 export default function OverviewView({
   activePatient,
@@ -10,9 +12,16 @@ export default function OverviewView({
   onOpenTeleconsult,
   camera
 }) {
-  const [painValue, setPainValue] = useState(surveyResult?.pain ?? 7);
-  const [stiffnessValue, setStiffnessValue] = useState(surveyResult?.stiffness ?? 35);
+  const profile = getPatientClinicalProfile(activePatient);
+
+  const [painValue, setPainValue] = useState(surveyResult?.pain ?? profile.survey.painVAS);
+  const [stiffnessValue, setStiffnessValue] = useState(surveyResult?.stiffness ?? profile.survey.stiffnessMins);
   const [activeCamSource, setActiveCamSource] = useState('webcam');
+
+  useEffect(() => {
+    setPainValue(surveyResult?.pain ?? profile.survey.painVAS);
+    setStiffnessValue(surveyResult?.stiffness ?? profile.survey.stiffnessMins);
+  }, [activePatient, surveyResult, profile.survey.painVAS, profile.survey.stiffnessMins]);
 
   return (
     <div className="flex flex-col w-full gap-lg animate-fade-in">
@@ -29,45 +38,55 @@ export default function OverviewView({
                   Standard Frontline Triage Session
                 </h2>
                 <span className="px-xs py-2xs rounded bg-surface-container-high text-primary font-data-mono text-data-mono font-bold">
-                  ICMR-NAT-OA-09
+                  {profile.sessionCode}
                 </span>
               </div>
               <p className="font-body-sm text-body-sm text-on-surface-variant">
-                Screening Station: {activePatient?.region || 'CHC Ludhiana West, Punjab'} · Patient: {activePatient?.name || 'Gurpreet Singh'} ({activePatient?.age || 58}y {activePatient?.gender || 'M'}, ID: #{activePatient?.id || 'IND-OA-2025-0892'})
+                Screening Station: {profile.stationName} · Patient: {activePatient?.name || 'Rajesh Khurana'} ({activePatient?.age || 61}y {activePatient?.gender || 'Male'}, ID: #{activePatient?.id || 'IND-OA-2025-0101'})
               </p>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-xs">
-            <span className="px-sm py-xs rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm font-semibold flex items-center gap-2xs">
-              <span className="material-symbols-outlined text-[16px] text-tertiary">cloud_sync</span>
-              Sync Node: Active (LAN)
-            </span>
+            {isSupabaseConfigured ? (
+              <span className="px-sm py-xs rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 font-label-sm text-label-sm font-semibold flex items-center gap-2xs">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                Supabase Cloud: Synced
+              </span>
+            ) : (
+              <span className="px-sm py-xs rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm font-semibold flex items-center gap-2xs">
+                <span className="material-symbols-outlined text-[16px] text-tertiary">cloud_sync</span>
+                Sync Node: Active (LAN)
+              </span>
+            )}
             <span className="px-sm py-xs rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-semibold flex items-center gap-2xs">
               <span className="w-2 h-2 rounded-full bg-error animate-ping"></span>
-              Stage 3 Gait Req.
+              {profile.triageStage}
             </span>
           </div>
         </div>
 
         {/* 4-Step SOP Flow */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-sm pt-md">
-          {/* Step 1 */}
+          {/* Step 1 · Vitals & BMI */}
           <div className="p-sm rounded-lg bg-surface-container-low flex items-center gap-sm border border-outline-variant/20">
             <div className="w-7 h-7 rounded-full bg-tertiary text-on-tertiary flex items-center justify-center font-bold font-data-mono text-[12px] shrink-0">
               ✓
             </div>
             <div className="min-w-0">
-              <p className="font-label-sm text-[10px] text-on-surface-variant uppercase font-semibold">
-                Step 1 · Vitals
-              </p>
-              <p className="font-body-sm text-[12px] text-tertiary font-bold truncate">
-                BMI 27.4 · Complete
+              <div className="flex items-center justify-between gap-1">
+                <p className="font-label-sm text-[10px] text-on-surface-variant uppercase font-semibold">
+                  Step 1 · Vitals
+                </p>
+                <span className="text-[10px] font-data-mono text-tertiary font-bold">{profile.vitals.bp}</span>
+              </div>
+              <p className="font-body-sm text-[12px] text-tertiary font-bold truncate" title={`${profile.vitals.heightCm}cm, ${profile.vitals.weightKg}kg`}>
+                BMI {profile.vitals.bmi} · {profile.vitals.bmiStatus.split('(')[0].trim()}
               </p>
             </div>
           </div>
 
-          {/* Step 2 */}
+          {/* Step 2 · KOOS Survey */}
           <button
             onClick={() => onNavigate('survey')}
             className="p-sm rounded-lg bg-surface-container-low hover:bg-surface-container flex items-center gap-sm border border-outline-variant/20 text-left transition cursor-pointer"
@@ -81,13 +100,13 @@ export default function OverviewView({
                 Step 2 · KOOS Survey
               </p>
               <p className="font-body-sm text-[12px] text-tertiary font-bold truncate">
-                {surveyResult ? `${surveyResult.raw_score}/40 (${surveyResult.category.toUpperCase()})` : '24/40 (Mod. Risk)'}
+                {surveyResult ? `${surveyResult.raw_score}/40 (${surveyResult.category.toUpperCase()})` : `${profile.survey.score}/40 (${profile.survey.category})`}
               </p>
             </div>
             <span className="material-symbols-outlined text-[15px] text-on-surface-variant">arrow_forward</span>
           </button>
 
-          {/* Step 3 */}
+          {/* Step 3 · Gait HUD */}
           <button
             onClick={() => onNavigate('gait')}
             className="p-sm rounded-lg bg-primary text-on-primary shadow-sm flex items-center gap-sm text-left transition hover:bg-primary-container cursor-pointer"
@@ -101,11 +120,11 @@ export default function OverviewView({
                 Step 3 · Gait HUD
               </p>
               <p className="font-headline-sm text-[12px] font-bold truncate">
-                8s Walk Capture
+                {gaitResult ? (gaitResult.kneeAngleAsymmetry || gaitResult.risk) : profile.gait.deficit || '8s Walk Capture'}
               </p>
             </div>
             <span className="px-1.5 py-0.5 rounded bg-on-primary/20 text-on-primary font-data-mono text-[9px] font-bold">
-              LAUNCH
+              {profile.gait.tested ? 'READY' : 'LAUNCH'}
             </span>
           </button>
 
@@ -129,7 +148,7 @@ export default function OverviewView({
                 Step 4 · X-Ray & Triage
               </p>
               <p className="font-body-sm text-[12px] text-on-surface font-bold truncate">
-                {xrayResult ? `KL-${xrayResult.kl_grade} (Grad-CAM Ready)` : 'Upload & Grad-CAM'}
+                {xrayResult ? `KL-${xrayResult.kl_grade} (Grad-CAM Ready)` : profile.xray.klGrade}
               </p>
             </div>
             <span className={`material-symbols-outlined text-[15px] ${xrayResult ? 'text-emerald-600' : 'text-tertiary'}`}>
@@ -212,35 +231,33 @@ export default function OverviewView({
               {/* Occupational Hazards */}
               <div>
                 <span className="font-label-sm text-[11px] text-on-surface font-semibold block mb-2xs uppercase tracking-wide">
-                  NER Occupational Hazards (Tea & Agro Sector)
+                  Identified Biomechanical Risk Exposures ({activePatient?.occupation || 'Occupational Profile'})
                 </span>
                 <div className="flex flex-wrap gap-2xs">
-                  <span className="px-xs py-1 rounded-full bg-error-container text-on-error-container font-label-sm text-[11px] font-semibold flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[13px]">terrain</span>
-                    Tea Plucking (&gt;8h/d)
-                  </span>
-                  <span className="px-xs py-1 rounded-full bg-error-container text-on-error-container font-label-sm text-[11px] font-semibold flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[13px]">airline_seat_recline_extra</span>
-                    Deep Squatting (&gt;4h)
-                  </span>
-                  <span className="px-xs py-1 rounded-full bg-surface-container-high text-on-surface font-label-sm text-[11px] flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[13px]">backpack</span>
-                    Heavy Basket (&gt;15kg)
-                  </span>
-                  <span className="px-xs py-1 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-[11px]">
-                    Hilly Incline
-                  </span>
+                  {profile.survey.hazards.map((h, idx) => (
+                    <span
+                      key={idx}
+                      className={`px-xs py-1 rounded-full font-label-sm text-[11px] font-semibold flex items-center gap-1 ${
+                        h.severity === 'high'
+                          ? 'bg-error-container text-on-error-container'
+                          : 'bg-surface-container-high text-on-surface'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-[13px]">{h.icon}</span>
+                      {h.label}
+                    </span>
+                  ))}
                 </div>
               </div>
 
-              {/* Cumulative WOMAC */}
+              {/* Cumulative KOOS-India Assessment */}
               <div className="pt-2xs flex items-center justify-between p-sm rounded-lg bg-surface-container">
                 <div>
                   <span className="font-label-sm text-[10px] text-on-surface-variant uppercase font-semibold block">
                     Cumulative Risk Assessment
                   </span>
                   <span className="font-headline-sm text-headline-sm text-on-surface font-bold">
-                    24 / 40 (WOMAC)
+                    {surveyResult ? `${surveyResult.raw_score} / 40 (KOOS-India)` : `${profile.survey.score} / 40 (KOOS-India)`}
                   </span>
                 </div>
                 <button

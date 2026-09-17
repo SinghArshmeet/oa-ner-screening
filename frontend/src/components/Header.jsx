@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ROLES, getAccountsForRole } from '../utils/auth';
+import { isSupabaseConfigured } from '../utils/supabase';
 
 export default function Header({
   activeTab,
@@ -195,25 +196,33 @@ export default function Header({
                     <span className="font-data-mono text-white/90">{backendOnline ? 'FastAPI :8000' : 'Local Mock'}</span>
                   </div>
                   <div className="flex justify-between">
+                    <span className="text-white/60">Cloud Database:</span>
+                    <span className={`font-data-mono font-semibold ${isSupabaseConfigured ? 'text-emerald-300' : 'text-amber-300'}`}>
+                      {isSupabaseConfigured ? 'Supabase Live' : 'Local SQLite'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
                     <span className="text-white/60">Biomechanical Model:</span>
-                    <span className="font-data-mono text-white/90">RandomForest (Baseline Acc 74.4%)</span>
+                    <span className="font-data-mono text-white/90">RandomForest (Baseline Acc 82.4%)</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-white/60">Protocol:</span>
-                    <span className="font-data-mono text-white/90">ICMR/NER Clinical v1.2</span>
+                    <span className="font-data-mono text-white/90">ICMR/ABDM National v2.0</span>
                   </div>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Regional PHC Tag (Compact) */}
+          {/* Regional Hospital / Station Tag */}
           <div
             className="hidden md:flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container-highest/10 text-surface-dim border border-white/5"
-            title="Location: Diphu Primary Health Centre, Karbi Anglong, Assam"
+            title={`Active Station: ${currentUser?.station || 'Safdarjung OPD Unit, New Delhi'}`}
           >
             <span className="material-symbols-outlined text-[15px] text-tertiary-fixed-dim">location_on</span>
-            <span className="font-label-sm text-[11px] whitespace-nowrap">Diphu PHC</span>
+            <span className="font-label-sm text-[11px] whitespace-nowrap">
+              {currentUser?.station ? currentUser.station.split(',')[0].replace(' Hospital', '').replace(' District', '') : 'Safdarjung OPD'}
+            </span>
           </div>
 
           {/* Live Camera Quick Trigger */}
