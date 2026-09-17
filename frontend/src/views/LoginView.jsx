@@ -511,7 +511,7 @@ export default function LoginView({ onLogin }) {
                       required
                       value={regName}
                       onChange={(e) => setRegName(e.target.value)}
-                      placeholder="e.g., Dr. A. Baruah, MO / S. Gogoi, ANM"
+                      placeholder="e.g., Dr. R. Khurana, Delhi OPD / S. Sharma, Noida"
                       className="w-full bg-surface-container-low text-on-surface placeholder:text-outline text-xs rounded-xl px-3 py-2 border border-surface-container focus:outline-none focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition"
                     />
                   </div>
@@ -540,7 +540,7 @@ export default function LoginView({ onLogin }) {
                         type="text"
                         value={regStaffId}
                         onChange={(e) => setRegStaffId(e.target.value)}
-                        placeholder="e.g., NER-MO-0821 (or auto)"
+                        placeholder="e.g., DEL-MO-0101 / NOI-STAFF-2045 (or auto)"
                         className="w-full bg-surface-container-low text-on-surface placeholder:text-outline text-xs rounded-xl px-3 py-2 border border-surface-container focus:outline-none focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition font-data-mono"
                       />
                     </div>
@@ -548,13 +548,13 @@ export default function LoginView({ onLogin }) {
 
                   <div>
                     <label className="block font-label-sm text-[11px] text-on-surface-variant font-bold uppercase tracking-wider mb-1">
-                      PHC / Station Facility Location
+                      Hospital / Station Facility Location
                     </label>
                     <input
                       type="text"
                       value={regStation}
                       onChange={(e) => setRegStation(e.target.value)}
-                      placeholder="e.g., Diphu CHC / GMCH Ortho Unit"
+                      placeholder="e.g., Safdarjung Hospital Delhi / Dist. Hospital Sec 39 Noida / GMCH"
                       className="w-full bg-surface-container-low text-on-surface placeholder:text-outline text-xs rounded-xl px-3 py-2 border border-surface-container focus:outline-none focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition"
                     />
                   </div>

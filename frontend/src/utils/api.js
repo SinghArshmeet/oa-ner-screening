@@ -2,8 +2,103 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 export const mockPatients = [
   {
-    id: 'IND-OA-2025-0892',
+    id: 'IND-OA-2025-0101',
     dbId: 1,
+    name: 'Rajesh Khurana',
+    age: 61,
+    gender: 'Male',
+    occupation: 'Desk Executive / Sedentary Urban Worker',
+    state: 'Delhi NCR',
+    region: 'Safdarjung Enclave, South Delhi',
+    abhaId: '91-1120-8849-0123',
+    sopStatus: 'Stage 3 Req.',
+    surveyCompleted: true,
+    surveyScore: '28/40 (High Burden)',
+    gaitTested: true,
+    gaitRisk: 'High (Antalgic Lag +14.6°)',
+    combinedRisk: 'high',
+    consent: true,
+    enrolledDate: '2025-02-18'
+  },
+  {
+    id: 'IND-OA-2025-0102',
+    dbId: 2,
+    name: 'Sunita Sharma',
+    age: 52,
+    gender: 'Female',
+    occupation: 'Desk Executive / Sedentary Urban Worker',
+    state: 'Uttar Pradesh',
+    region: 'Sector 62, Noida, Gautam Buddha Nagar',
+    abhaId: '91-8843-1029-7712',
+    sopStatus: 'Complete',
+    surveyCompleted: true,
+    surveyScore: '24/40 (Moderate Burden)',
+    gaitTested: true,
+    gaitRisk: 'Moderate (0.91 m/s, +8.4°)',
+    combinedRisk: 'moderate',
+    consent: true,
+    enrolledDate: '2025-02-18'
+  },
+  {
+    id: 'IND-OA-2025-0103',
+    dbId: 3,
+    name: 'Vikramaditya Bhati',
+    age: 64,
+    gender: 'Male',
+    occupation: 'Paddy / Wheat Agro-Cultivator (Squatting & Heavy Lift)',
+    state: 'Uttar Pradesh',
+    region: 'Kasna, Greater Noida, Gautam Buddha Nagar',
+    abhaId: '91-9034-6612-8823',
+    sopStatus: 'Stage 3 Req.',
+    surveyCompleted: true,
+    surveyScore: '32/40 (Severe Burden)',
+    gaitTested: true,
+    gaitRisk: 'High (1.35m Asymmetry +16.8°)',
+    combinedRisk: 'high',
+    consent: true,
+    enrolledDate: '2025-02-17'
+  },
+  {
+    id: 'IND-OA-2025-0104',
+    dbId: 4,
+    name: 'Meenakshi Verma',
+    age: 56,
+    gender: 'Female',
+    occupation: 'General Rural / Semi-Urban Resident',
+    state: 'Delhi NCR',
+    region: 'Karol Bagh / Central Delhi',
+    abhaId: '91-2290-7711-4450',
+    sopStatus: 'Complete',
+    surveyCompleted: true,
+    surveyScore: '26/40 (Moderate-High)',
+    gaitTested: true,
+    gaitRisk: 'Moderate (0.94 m/s, +9.2°)',
+    combinedRisk: 'moderate',
+    consent: true,
+    enrolledDate: '2025-02-17'
+  },
+  {
+    id: 'IND-OA-2025-0105',
+    dbId: 5,
+    name: 'Amit Tyagi',
+    age: 37,
+    gender: 'Male',
+    occupation: 'Construction Worker / Heavy Manual Labor',
+    state: 'Uttar Pradesh',
+    region: 'Sector 18, Noida, Gautam Buddha Nagar',
+    abhaId: '91-7719-2045-6610',
+    sopStatus: 'Complete',
+    surveyCompleted: true,
+    surveyScore: '16/40 (Early Strain)',
+    gaitTested: true,
+    gaitRisk: 'Low Risk (Symmetric 1.18 m/s)',
+    combinedRisk: 'low',
+    consent: true,
+    enrolledDate: '2025-02-16'
+  },
+  {
+    id: 'IND-OA-2025-0106',
+    dbId: 6,
     name: 'Gurpreet Singh',
     age: 58,
     gender: 'Male',
@@ -18,11 +113,11 @@ export const mockPatients = [
     gaitRisk: 'High (Antalgic Lag)',
     combinedRisk: 'high',
     consent: true,
-    enrolledDate: '2025-02-18'
+    enrolledDate: '2025-02-16'
   },
   {
-    id: 'IND-OA-2025-0887',
-    dbId: 2,
+    id: 'IND-OA-2025-0107',
+    dbId: 7,
     name: 'Lakshmi Soundararajan',
     age: 54,
     gender: 'Female',
@@ -37,11 +132,11 @@ export const mockPatients = [
     gaitRisk: 'High (1.4m Asymmetry)',
     combinedRisk: 'high',
     consent: true,
-    enrolledDate: '2025-02-17'
+    enrolledDate: '2025-02-15'
   },
   {
-    id: 'IND-OA-2025-0881',
-    dbId: 3,
+    id: 'IND-OA-2025-0108',
+    dbId: 8,
     name: 'Rameshwar Patil',
     age: 49,
     gender: 'Male',
@@ -56,11 +151,11 @@ export const mockPatients = [
     gaitRisk: 'Moderate (0.92 m/s)',
     combinedRisk: 'moderate',
     consent: true,
-    enrolledDate: '2025-02-16'
+    enrolledDate: '2025-02-15'
   },
   {
-    id: 'IND-OA-2025-0879',
-    dbId: 4,
+    id: 'IND-OA-2025-0109',
+    dbId: 9,
     name: 'Pabitra Tanti',
     age: 52,
     gender: 'Female',
@@ -75,7 +170,7 @@ export const mockPatients = [
     gaitRisk: 'Pending',
     combinedRisk: 'low',
     consent: true,
-    enrolledDate: '2025-02-15'
+    enrolledDate: '2025-02-14'
   }
 ];
 

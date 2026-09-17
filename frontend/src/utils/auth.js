@@ -63,6 +63,22 @@ export const DEMO_ACCOUNTS = [
     name: 'M. Kachari, CHW',
     station: 'Bokajan Sub-Centre'
   },
+  {
+    role: 'screener',
+    email: 'screener.delhi@safdarjung.nic.in',
+    staffId: 'DEL-STAFF-1102',
+    password: 'demo123',
+    name: 'P. Verma, GNM',
+    station: 'Safdarjung Hospital OPD Unit, New Delhi'
+  },
+  {
+    role: 'screener',
+    email: 'screener.noida@noida.nic.in',
+    staffId: 'NOI-STAFF-2045',
+    password: 'demo123',
+    name: 'K. Bhati, ANM',
+    station: 'District Hospital Sector 39, Noida'
+  },
 
   // Medical Officers
   {
@@ -89,6 +105,22 @@ export const DEMO_ACCOUNTS = [
     name: 'Dr. A. Deuri, Clinical Evaluator',
     station: 'ICMR-RMRC Tele-Consult Desk'
   },
+  {
+    role: 'officer',
+    email: 'mo.malhotra@aiims.edu',
+    staffId: 'DEL-MO-0108',
+    password: 'demo123',
+    name: 'Dr. S. Malhotra, Joint Specialist',
+    station: 'AIIMS New Delhi Orthopaedics Hub'
+  },
+  {
+    role: 'officer',
+    email: 'mo.shukla@gims.ac.in',
+    staffId: 'NOI-MO-0521',
+    password: 'demo123',
+    name: 'Dr. P. Shukla, Medical Officer',
+    station: 'GIMS Greater Noida Ortho Centre'
+  },
 
   // System Administrators
   {
@@ -98,6 +130,14 @@ export const DEMO_ACCOUNTS = [
     password: 'admin123',
     name: 'Eng. K. Das, IT',
     station: 'ICMR-RMRC Hub, Diphu'
+  },
+  {
+    role: 'admin',
+    email: 'admin.delhincr@icmr.gov.in',
+    staffId: 'NCR-ADM-002',
+    password: 'admin123',
+    name: 'Eng. V. Singhal, Tele-Mesh Engineer',
+    station: 'ICMR Delhi-NCR Telemetry Node'
   },
   {
     role: 'admin',

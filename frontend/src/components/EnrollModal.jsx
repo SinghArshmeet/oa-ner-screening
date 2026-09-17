@@ -67,7 +67,57 @@ export default function EnrollModal({ isOpen, onClose, onEnroll }) {
 
   const PRESETS = [
     {
-      label: '🌾 Punjab Agro-Cultivator (58M)',
+      label: '🏙️ Delhi Executive (61M, Safdarjung)',
+      name: 'Rajesh Khurana',
+      age: '61',
+      gender: 'Male',
+      occupation: 'Desk Executive / Sedentary Urban Worker',
+      state: 'Delhi NCR',
+      region: 'Safdarjung Enclave OPD, South Delhi',
+      abhaId: '91-1120-8849-0123'
+    },
+    {
+      label: '🏢 Noida IT Lead (52F, Sec 62)',
+      name: 'Sunita Sharma',
+      age: '52',
+      gender: 'Female',
+      occupation: 'Desk Executive / Sedentary Urban Worker',
+      state: 'Uttar Pradesh',
+      region: 'Sector 62 Health Center, Noida',
+      abhaId: '91-8843-1029-7712'
+    },
+    {
+      label: '🚜 Gr. Noida Cultivator (64M, Kasna)',
+      name: 'Vikramaditya Bhati',
+      age: '64',
+      gender: 'Male',
+      occupation: 'Paddy / Wheat Agro-Cultivator (Squatting & Heavy Lift)',
+      state: 'Uttar Pradesh',
+      region: 'CHC Kasna, Greater Noida',
+      abhaId: '91-9034-6612-8823'
+    },
+    {
+      label: '🏫 Delhi Teacher (56F, Karol Bagh)',
+      name: 'Meenakshi Verma',
+      age: '56',
+      gender: 'Female',
+      occupation: 'General Rural / Semi-Urban Resident',
+      state: 'Delhi NCR',
+      region: 'Karol Bagh Health Post, Central Delhi',
+      abhaId: '91-2290-7711-4450'
+    },
+    {
+      label: '🛵 Noida Delivery Partner (37M)',
+      name: 'Amit Tyagi',
+      age: '37',
+      gender: 'Male',
+      occupation: 'Construction Worker / Heavy Manual Labor',
+      state: 'Uttar Pradesh',
+      region: 'District Hospital Sector 39, Noida',
+      abhaId: '91-7719-2045-6610'
+    },
+    {
+      label: '🌾 Punjab Cultivator (58M)',
       name: 'Gurpreet Singh',
       age: '58',
       gender: 'Male',
@@ -85,46 +135,6 @@ export default function EnrollModal({ isOpen, onClose, onEnroll }) {
       state: 'Tamil Nadu',
       region: 'PHC Kanchipuram, Tamil Nadu',
       abhaId: '91-3829-1940-5521'
-    },
-    {
-      label: '🏗️ Maharashtra Construction (49M)',
-      name: 'Rameshwar Patil',
-      age: '49',
-      gender: 'Male',
-      occupation: 'Construction Worker / Heavy Manual Labor',
-      state: 'Maharashtra',
-      region: 'Sub-District Hospital Pune, Maharashtra',
-      abhaId: '91-7712-4019-8832'
-    },
-    {
-      label: '🍃 Assam Plantation (52F)',
-      name: 'Pabitra Tanti',
-      age: '52',
-      gender: 'Female',
-      occupation: 'Tea Plantation / Mountain Slope Worker',
-      state: 'Assam',
-      region: 'Diphu CHC, Karbi Anglong, Assam',
-      abhaId: '91-6204-5519-7430'
-    },
-    {
-      label: '💻 Delhi Executive (38M)',
-      name: 'Aarav Sharma',
-      age: '38',
-      gender: 'Male',
-      occupation: 'Desk Executive / Sedentary Urban Worker',
-      state: 'Delhi NCR',
-      region: 'Safdarjung OPD Clinic, New Delhi',
-      abhaId: '91-1029-4482-9901'
-    },
-    {
-      label: '👵 Kerala Senior Resident (67F)',
-      name: 'Mary Varghese',
-      age: '67',
-      gender: 'Female',
-      occupation: 'Senior Citizen / Retired Resident',
-      state: 'Kerala',
-      region: 'Taluk Hospital Kottayam, Kerala',
-      abhaId: '91-5581-2290-6714'
     }
   ];
 
