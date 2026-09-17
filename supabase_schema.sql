@@ -20,13 +20,11 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Allow public read of profiles"
-    ON public.profiles FOR SELECT
-    USING (true);
+DROP POLICY IF EXISTS "Allow public read of profiles" ON public.profiles;
+CREATE POLICY "Allow public read of profiles" ON public.profiles FOR SELECT USING (true);
 
-CREATE POLICY "Allow users to update their own profile"
-    ON public.profiles FOR UPDATE
-    USING (auth.uid() = id);
+DROP POLICY IF EXISTS "Allow users to update their own profile" ON public.profiles;
+CREATE POLICY "Allow users to update their own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
 
 -- 2. PATIENTS TABLE (Pan-India Cohort with ABHA ID)
 CREATE TABLE IF NOT EXISTS public.patients (
@@ -53,17 +51,14 @@ CREATE INDEX IF NOT EXISTS idx_patients_state ON public.patients(state);
 
 ALTER TABLE public.patients ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Allow read on patients"
-    ON public.patients FOR SELECT
-    USING (true);
+DROP POLICY IF EXISTS "Allow read on patients" ON public.patients;
+CREATE POLICY "Allow read on patients" ON public.patients FOR SELECT USING (true);
 
-CREATE POLICY "Allow insert on patients"
-    ON public.patients FOR INSERT
-    WITH CHECK (true);
+DROP POLICY IF EXISTS "Allow insert on patients" ON public.patients;
+CREATE POLICY "Allow insert on patients" ON public.patients FOR INSERT WITH CHECK (true);
 
-CREATE POLICY "Allow update on patients"
-    ON public.patients FOR UPDATE
-    USING (true);
+DROP POLICY IF EXISTS "Allow update on patients" ON public.patients;
+CREATE POLICY "Allow update on patients" ON public.patients FOR UPDATE USING (true);
 
 -- 3. QUESTIONNAIRES TABLE (KOOS-India Surveys)
 CREATE TABLE IF NOT EXISTS public.questionnaires (
@@ -85,13 +80,11 @@ CREATE INDEX IF NOT EXISTS idx_questionnaires_patient ON public.questionnaires(p
 
 ALTER TABLE public.questionnaires ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Allow all read on questionnaires"
-    ON public.questionnaires FOR SELECT
-    USING (true);
+DROP POLICY IF EXISTS "Allow all read on questionnaires" ON public.questionnaires;
+CREATE POLICY "Allow all read on questionnaires" ON public.questionnaires FOR SELECT USING (true);
 
-CREATE POLICY "Allow all insert on questionnaires"
-    ON public.questionnaires FOR INSERT
-    WITH CHECK (true);
+DROP POLICY IF EXISTS "Allow all insert on questionnaires" ON public.questionnaires;
+CREATE POLICY "Allow all insert on questionnaires" ON public.questionnaires FOR INSERT WITH CHECK (true);
 
 -- 4. SCREENINGS TABLE (Multimodal Fusion, Gait & X-Ray AI)
 CREATE TABLE IF NOT EXISTS public.screenings (
@@ -129,13 +122,11 @@ CREATE INDEX IF NOT EXISTS idx_screenings_created ON public.screenings(created_a
 
 ALTER TABLE public.screenings ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Allow all read on screenings"
-    ON public.screenings FOR SELECT
-    USING (true);
+DROP POLICY IF EXISTS "Allow all read on screenings" ON public.screenings;
+CREATE POLICY "Allow all read on screenings" ON public.screenings FOR SELECT USING (true);
 
-CREATE POLICY "Allow all insert on screenings"
-    ON public.screenings FOR INSERT
-    WITH CHECK (true);
+DROP POLICY IF EXISTS "Allow all insert on screenings" ON public.screenings;
+CREATE POLICY "Allow all insert on screenings" ON public.screenings FOR INSERT WITH CHECK (true);
 
 -- 5. TELECONSULT REFERRALS TABLE (25-Hospital Tele-Triage Queue)
 CREATE TABLE IF NOT EXISTS public.teleconsult_referrals (
@@ -157,17 +148,14 @@ CREATE INDEX IF NOT EXISTS idx_referrals_status ON public.teleconsult_referrals(
 
 ALTER TABLE public.teleconsult_referrals ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Allow all read on referrals"
-    ON public.teleconsult_referrals FOR SELECT
-    USING (true);
+DROP POLICY IF EXISTS "Allow all read on referrals" ON public.teleconsult_referrals;
+CREATE POLICY "Allow all read on referrals" ON public.teleconsult_referrals FOR SELECT USING (true);
 
-CREATE POLICY "Allow all insert on referrals"
-    ON public.teleconsult_referrals FOR INSERT
-    WITH CHECK (true);
+DROP POLICY IF EXISTS "Allow all insert on referrals" ON public.teleconsult_referrals;
+CREATE POLICY "Allow all insert on referrals" ON public.teleconsult_referrals FOR INSERT WITH CHECK (true);
 
-CREATE POLICY "Allow all update on referrals"
-    ON public.teleconsult_referrals FOR UPDATE
-    USING (true);
+DROP POLICY IF EXISTS "Allow all update on referrals" ON public.teleconsult_referrals;
+CREATE POLICY "Allow all update on referrals" ON public.teleconsult_referrals FOR UPDATE USING (true);
 
 -- 6. STORAGE BUCKETS (Knee X-Rays, Grad-CAM, Gait Videos, Dossiers)
 INSERT INTO storage.buckets (id, name, public)
@@ -177,38 +165,6 @@ VALUES
     ('gait-videos', 'gait-videos', true),
     ('referral-dossiers', 'referral-dossiers', true)
 ON CONFLICT (id) DO NOTHING;
-
-CREATE POLICY "Public Access for knee-xrays"
-    ON storage.objects FOR SELECT
-    USING (bucket_id = 'knee-xrays');
-
-CREATE POLICY "Allow Uploads for knee-xrays"
-    ON storage.objects FOR INSERT
-    WITH CHECK (bucket_id = 'knee-xrays');
-
-CREATE POLICY "Public Access for gradcam-overlays"
-    ON storage.objects FOR SELECT
-    USING (bucket_id = 'gradcam-overlays');
-
-CREATE POLICY "Allow Uploads for gradcam-overlays"
-    ON storage.objects FOR INSERT
-    WITH CHECK (bucket_id = 'gradcam-overlays');
-
-CREATE POLICY "Public Access for gait-videos"
-    ON storage.objects FOR SELECT
-    USING (bucket_id = 'gait-videos');
-
-CREATE POLICY "Allow Uploads for gait-videos"
-    ON storage.objects FOR INSERT
-    WITH CHECK (bucket_id = 'gait-videos');
-
-CREATE POLICY "Public Access for referral-dossiers"
-    ON storage.objects FOR SELECT
-    USING (bucket_id = 'referral-dossiers');
-
-CREATE POLICY "Allow Uploads for referral-dossiers"
-    ON storage.objects FOR INSERT
-    WITH CHECK (bucket_id = 'referral-dossiers');
 
 -- 7. SEED INITIAL SAMPLE DATA (Delhi & Noida Patients)
 INSERT INTO public.patients (patient_id_code, name, age, gender, occupation, state, district, locality, abha_id, consent)
