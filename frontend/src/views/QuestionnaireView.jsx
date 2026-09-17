@@ -67,7 +67,7 @@ export default function QuestionnaireView({ activePatient, onSurveySubmitted, on
   };
 
   const compositeScore = calculateCompositeScore();
-  const riskTier = compositeScore >= 25 ? 'High Risk' : compositeScore >= 14 ? 'Moderate Risk' : 'Low Risk';
+  const riskTier = compositeScore >= 25 ? 'High Risk' : compositeScore > 20 ? 'Moderate Risk' : 'Low Risk';
 
   const handleSubmit = async () => {
     setIsSaving(true);
@@ -420,20 +420,20 @@ export default function QuestionnaireView({ activePatient, onSurveySubmitted, on
               </span>
               <div className="flex items-baseline gap-1 my-xs">
                 <span className={`font-display-lg text-[44px] font-extrabold ${
-                  compositeScore >= 25 ? 'text-error' : compositeScore >= 14 ? 'text-amber-600' : 'text-primary'
+                  compositeScore >= 25 ? 'text-red-600' : compositeScore > 20 ? 'text-amber-500' : 'text-emerald-600'
                 }`}>
                   {compositeScore}
                 </span>
                 <span className="text-secondary font-headline-sm">/ 40</span>
               </div>
-              <div className={`inline-flex items-center gap-1 px-md py-1 rounded-full text-xs font-bold uppercase tracking-wide ${
+              <div className={`inline-flex items-center gap-1 px-md py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${
                 compositeScore >= 25
-                  ? 'bg-error-container text-on-error-container'
-                  : compositeScore >= 14
-                  ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                  : 'bg-tertiary-fixed text-on-tertiary-fixed'
+                  ? 'bg-red-50 text-red-700 border-red-200'
+                  : compositeScore > 20
+                  ? 'bg-amber-50 text-amber-800 border-amber-300'
+                  : 'bg-emerald-50 text-emerald-700 border-emerald-200'
               }`}>
-                <span className={`w-2 h-2 rounded-full ${compositeScore >= 25 ? 'bg-error' : 'bg-amber-500'}`}></span>
+                <span className={`w-2 h-2 rounded-full ${compositeScore >= 25 ? 'bg-red-600' : compositeScore > 20 ? 'bg-amber-500' : 'bg-emerald-600'}`}></span>
                 {riskTier}
               </div>
             </div>
