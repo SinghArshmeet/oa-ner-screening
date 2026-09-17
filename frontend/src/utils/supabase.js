@@ -181,3 +181,26 @@ export async function createReferralInSupabase(referral) {
     return null;
   }
 }
+
+/**
+ * Fetch the latest screening record for a patient from Supabase
+ */
+export async function fetchLatestScreeningFromSupabase(patientId) {
+  if (!isSupabaseConfigured || !patientId) return null;
+  try {
+    const { data, error } = await supabase
+      .from('screenings')
+      .select('*')
+      .eq('patient_id', patientId)
+      .order('id', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data;
+  } catch (err) {
+    console.error('Supabase fetchLatestScreening error:', err);
+    return null;
+  }
+}
+
