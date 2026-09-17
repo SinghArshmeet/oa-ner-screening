@@ -67,31 +67,39 @@ export default function Header({
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-inverse-surface text-surface shadow-[0_2px_12px_rgba(0,0,0,0.18)]">
       <div className="h-header-height w-full px-3 sm:px-6 lg:px-8 flex items-center justify-between gap-2 border-b border-white/10">
-        {/* Brand Identity & Mobile Menu Toggle */}
+        {/* Brand Identity & Main Menu Navigation Button */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          {/* Main Navigation Hamburger / Menu Button */}
+          {/* Main Navigation Menu Button */}
           <div className="relative" ref={mobileMenuRef}>
             <button
               onClick={() => setShowMobileMenu(!showMobileMenu)}
               aria-label="Toggle Application Menu"
               aria-expanded={showMobileMenu}
               type="button"
-              className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-surface-container-lowest transition-colors flex items-center justify-center"
-              title="Navigation Menu"
+              className={`px-3 py-1.5 rounded-xl border transition-all flex items-center gap-2 font-medium text-xs ${
+                showMobileMenu
+                  ? 'bg-primary-container text-white border-white/30 shadow-md ring-2 ring-primary/40'
+                  : 'bg-white/10 hover:bg-white/20 text-surface-container-lowest border-white/15 hover:border-white/30 shadow-xs'
+              }`}
+              title="Click to open OrthoNex navigation menu"
             >
-              <span className="material-symbols-outlined text-[20px]">
+              <span className="material-symbols-outlined text-[18px]">
                 {showMobileMenu ? 'close' : 'menu'}
               </span>
+              <span className="font-semibold tracking-wide">Menu</span>
             </button>
 
             {/* Quick Navigation Dropdown Modal */}
             {showMobileMenu && (
-              <div className="absolute left-0 mt-2 w-64 p-2 rounded-xl bg-inverse-surface border border-white/15 shadow-2xl z-50 text-left text-xs backdrop-blur-md animate-in fade-in zoom-in-95 duration-150">
-                <div className="px-2 py-1.5 border-b border-white/10 mb-1 flex items-center justify-between">
-                  <span className="font-bold text-surface-container-lowest text-[11px] uppercase tracking-wider">Clinical Modules</span>
-                  <span className="text-[10px] text-tertiary font-data-mono">Triage Phase 2</span>
+              <div className="absolute left-0 mt-2 w-72 p-2.5 rounded-2xl bg-[#0f172a] border border-white/20 shadow-2xl z-50 text-left text-xs backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150">
+                <div className="px-2.5 py-2 border-b border-white/10 mb-1.5 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                    <span className="font-bold text-white text-[11px] uppercase tracking-wider">OrthoNex Modules</span>
+                  </div>
+                  <span className="text-[10px] text-cyan-300 font-data-mono">Triage Phase 2</span>
                 </div>
-                <div className="space-y-0.5">
+                <div className="space-y-1">
                   {navTabs.map((tab) => {
                     const isActive = activeTab === tab.id;
                     return (
@@ -101,17 +109,21 @@ export default function Header({
                           setActiveTab(tab.id);
                           setShowMobileMenu(false);
                         }}
-                        className={`w-full px-2.5 py-2 rounded-lg flex items-center gap-2.5 transition-all text-left ${
+                        className={`w-full px-3 py-2.5 rounded-xl flex items-center gap-3 transition-all text-left ${
                           isActive
-                            ? 'bg-primary-container text-on-primary-container font-bold shadow-xs'
-                            : 'text-surface-dim hover:text-white hover:bg-white/10'
+                            ? 'bg-cyan-600 text-white font-bold shadow-md ring-1 ring-cyan-400'
+                            : 'text-slate-300 hover:text-white hover:bg-white/10'
                         }`}
                         type="button"
                       >
-                        <span className="material-symbols-outlined text-[18px]">{tab.icon}</span>
+                        <span className={`material-symbols-outlined text-[20px] ${isActive ? 'text-white' : 'text-cyan-400'}`}>{tab.icon}</span>
                         <div className="flex flex-col">
-                          <span className="text-xs">{tab.fullTitle}</span>
+                          <span className="text-xs font-semibold">{tab.label}</span>
+                          <span className="text-[10px] text-slate-400 font-normal">{tab.fullTitle}</span>
                         </div>
+                        {isActive && (
+                          <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white"></span>
+                        )}
                       </button>
                     );
                   })}
@@ -141,29 +153,7 @@ export default function Header({
           </div>
         </div>
 
-        {/* Global Desktop Navigation Tabs */}
-        <nav className="hidden lg:flex items-center gap-1 px-1.5 py-1 rounded-xl bg-surface-container-highest/10 border border-white/5">
-          {navTabs.map((tab) => {
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                title={tab.fullTitle}
-                aria-label={tab.fullTitle}
-                className={`px-3 py-1.5 font-label-md text-xs font-medium rounded-lg transition-all flex items-center gap-1.5 ${
-                  isActive
-                    ? 'bg-primary-container text-on-primary-container font-semibold shadow-sm ring-1 ring-white/20'
-                    : 'text-surface-dim hover:text-surface-container-lowest hover:bg-white/5'
-                }`}
-                type="button"
-              >
-                <span className="material-symbols-outlined text-[15px]">{tab.icon}</span>
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </nav>
+
 
         {/* Status Actions & Clinician Profile */}
         <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
