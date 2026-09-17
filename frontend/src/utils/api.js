@@ -316,6 +316,7 @@ export async function analyzeXrayImage(file) {
           confidence: 86.4,
           probabilities: { KL0: 0.05, KL1: 0.15, KL2: 0.65, KL3: 0.12, KL4: 0.03 },
           findings: 'Definite anterior/lateral osteophytes with possible mild joint space narrowing.',
+          preview_url: reader.result,
           gradcam_base64: base64Jpeg,
           recommendation: 'Orthopedic consultation & weight-bearing radiograph protocol recommended.',
           is_simulated: true,

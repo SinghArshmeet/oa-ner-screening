@@ -339,16 +339,36 @@ export default function DiagnosticReportView({ activePatient, surveyResult, gait
             </p>
 
             {xrayData && xrayData.gradcam_base64 && (
-              <div className="mb-sm p-2 rounded-lg bg-surface-container-high/40 border border-surface-container flex flex-col gap-1.5">
+              <div className="mb-sm p-2.5 rounded-lg bg-surface-container-high/40 border border-surface-container flex flex-col gap-2">
                 <div className="flex items-center justify-between text-[11px] font-bold text-on-surface">
-                  <span>Grad-CAM Attention Map</span>
+                  <span className="flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[15px] text-tertiary">heat_map</span>
+                    Grad-CAM Joint Space Heatmap
+                  </span>
                   <span className="font-data-mono text-[10px] text-tertiary">Confidence: {xrayData.confidence}%</span>
                 </div>
-                <img
-                  src={`data:image/jpeg;base64,${xrayData.gradcam_base64}`}
-                  alt="Grad-CAM Articular Joint Space ROI"
-                  className="w-full h-36 object-contain rounded bg-black/80"
-                />
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] text-on-surface-variant font-medium">Input Radiograph</span>
+                    <div className="w-full h-32 rounded bg-black/90 flex items-center justify-center overflow-hidden border border-white/10">
+                      {xrayData.preview_url ? (
+                        <img src={xrayData.preview_url} alt="Original Radiograph" className="w-full h-full object-contain" />
+                      ) : (
+                        <span className="material-symbols-outlined text-white/40 text-[28px]">radiology</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] text-tertiary font-bold">Articular Attention Map</span>
+                    <div className="w-full h-32 rounded bg-black/90 flex items-center justify-center overflow-hidden border border-tertiary/40">
+                      <img
+                        src={`data:image/jpeg;base64,${xrayData.gradcam_base64}`}
+                        alt="Grad-CAM Articular Joint Space ROI"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 

@@ -215,9 +215,42 @@
     .drawer-closed { transform: translateX(100%); }
     .drawer-transition { transition: transform 0.3s ease-in-out; }
 
-    /* Progress bar */
-    @keyframes progress-fill { from { width: 0; } }
-    .progress-bar { animation: progress-fill 1s ease-out forwards; }
+    /* Print Styles for Clinical Dossier */
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-size: 11pt;
+      }
+      header, footer, nav, .print\:hidden, button, input[type="range"] {
+        display: none !important;
+      }
+      main {
+        padding: 0 !important;
+        max-width: 100% !important;
+      }
+      .bg-inverse-surface {
+        background: #f1f5f9 !important;
+        color: #0f172a !important;
+        border: 1px solid #cbd5e1 !important;
+      }
+      .text-surface-container-lowest {
+        color: #0f172a !important;
+      }
+      .text-surface-dim {
+        color: #475569 !important;
+      }
+      .shadow-sm, .shadow-md, .shadow-2xl, .shadow-lg {
+        box-shadow: none !important;
+      }
+      .border, .border-b, .border-t, .border-l-4 {
+        border-color: #cbd5e1 !important;
+      }
+      @page {
+        margin: 1.2cm;
+        size: A4 portrait;
+      }
+    }
   </style>
 </head>
 <body>

@@ -6,6 +6,7 @@ export default function OverviewView({
   onNavigate,
   surveyResult,
   gaitResult,
+  xrayResult,
   onOpenTeleconsult,
   camera
 }) {
@@ -111,21 +112,29 @@ export default function OverviewView({
           {/* Step 4: X-Ray & Decision Staging */}
           <button
             onClick={() => onNavigate('report')}
-            className="p-sm rounded-lg bg-surface-container-low hover:bg-surface-container flex items-center gap-sm border border-tertiary/40 text-left transition cursor-pointer"
+            className={`p-sm rounded-lg flex items-center gap-sm text-left transition cursor-pointer border ${
+              xrayResult
+                ? 'bg-surface-container-low hover:bg-surface-container border-emerald-500/40'
+                : 'bg-surface-container-low hover:bg-surface-container border-tertiary/40'
+            }`}
             type="button"
           >
-            <div className="w-7 h-7 rounded-full bg-tertiary-container text-on-tertiary flex items-center justify-center font-bold font-data-mono text-[12px] shrink-0">
-              4
+            <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold font-data-mono text-[12px] shrink-0 ${
+              xrayResult ? 'bg-emerald-600 text-white' : 'bg-tertiary-container text-on-tertiary'
+            }`}>
+              {xrayResult ? '✓' : '4'}
             </div>
             <div className="min-w-0 grow">
               <p className="font-label-sm text-[10px] text-tertiary uppercase font-semibold">
                 Step 4 · X-Ray & Triage
               </p>
               <p className="font-body-sm text-[12px] text-on-surface font-bold truncate">
-                Upload & Grad-CAM
+                {xrayResult ? `KL-${xrayResult.kl_grade} (Grad-CAM Ready)` : 'Upload & Grad-CAM'}
               </p>
             </div>
-            <span className="material-symbols-outlined text-[15px] text-tertiary">radiology</span>
+            <span className={`material-symbols-outlined text-[15px] ${xrayResult ? 'text-emerald-600' : 'text-tertiary'}`}>
+              radiology
+            </span>
           </button>
         </div>
       </section>
