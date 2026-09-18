@@ -92,6 +92,22 @@ export async function insertPatientToSupabase(patient) {
 export async function saveScreeningToSupabase(screening) {
   if (!isSupabaseConfigured) return null;
   try {
+    let baseGaitMetrics = {};
+    if (screening.gait_metrics && typeof screening.gait_metrics === 'object') {
+      baseGaitMetrics = screening.gait_metrics;
+    } else if (screening.gait_metrics_json) {
+      try {
+        baseGaitMetrics = typeof screening.gait_metrics_json === 'string' ? JSON.parse(screening.gait_metrics_json) : screening.gait_metrics_json;
+      } catch {}
+    }
+
+    const enrichedGaitMetrics = {
+      ...(typeof baseGaitMetrics === 'object' && baseGaitMetrics !== null ? baseGaitMetrics : {}),
+      ...(screening.vitals ? { vitals: screening.vitals } : {}),
+      ...(screening.clinical_symptoms ? { clinical_symptoms: screening.clinical_symptoms } : {}),
+      ...(screening.clinical_prediction ? { clinical_prediction: screening.clinical_prediction } : {}),
+    };
+
     const payload = {
       patient_id: screening.patient_id || screening.patientDbId || null,
       status: screening.status || 'completed',
@@ -102,7 +118,7 @@ export async function saveScreeningToSupabase(screening) {
       sagittal_deficit_deg: screening.sagittalDeficit || screening.sagittal_deficit_deg || null,
       walking_velocity: screening.walkingVelocity || screening.walking_velocity || null,
       cadence: screening.cadence != null ? Number(screening.cadence) : null,
-      gait_metrics: screening.gait_metrics || (screening.gait_metrics_json ? JSON.parse(screening.gait_metrics_json) : null),
+      gait_metrics: enrichedGaitMetrics,
       video_url: screening.videoUrl || screening.video_url || null,
       xray_grade: screening.xray_grade || null,
       xray_confidence: screening.xray_confidence != null ? Number(screening.xray_confidence) : null,
@@ -110,7 +126,7 @@ export async function saveScreeningToSupabase(screening) {
       gradcam_image_url: screening.gradcamImageUrl || screening.gradcam_image_url || null,
       radiological_findings: screening.radiologicalFindings || screening.radiological_findings || null,
       combined_result: screening.combined_result || screening.combined_risk || null,
-      composite_risk_score: screening.compositeRiskScore || screening.composite_risk_score || null,
+      composite_risk_score: screening.compositeRiskScore || screening.composite_risk_score || (screening.clinical_prediction?.oa_pain_probability != null ? Math.round(screening.clinical_prediction.oa_pain_probability * 100) : null),
       recommendation: screening.recommendation || 'Standard clinical review protocol',
       data_source: screening.data_source || 'supabase_cloud',
     };

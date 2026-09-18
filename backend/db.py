@@ -115,6 +115,10 @@ def init_db() -> None:
         "xray_grade": "TEXT",
         "data_source": "TEXT",
         "simulation_status": "TEXT",
+        "clinical_risk_category": "TEXT",
+        "clinical_probability": "REAL",
+        "vitals_json": "TEXT",
+        "clinical_metrics_json": "TEXT",
     }
     for col, col_type in new_screening_cols.items():
         if col not in screening_columns:

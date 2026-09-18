@@ -527,15 +527,36 @@ async def upload_media(file: UploadFile = File(...), _: dict[str, object] = Depe
 def save_screening(payload: ScreeningCreate, _: dict[str, object] = Depends(require_authenticated_user)) -> dict[str, object]:
     conn = get_connection()
     _patient_exists(conn, payload.patient_id)
-    gait_metrics_str = json.dumps(payload.gait_metrics) if payload.gait_metrics else None
+    
+    gait_metrics_dict = dict(payload.gait_metrics or {})
+    if payload.clinical_prediction and "clinical_prediction" not in gait_metrics_dict:
+        gait_metrics_dict["clinical_prediction"] = payload.clinical_prediction
+    if payload.vitals and "vitals" not in gait_metrics_dict:
+        gait_metrics_dict["vitals"] = payload.vitals
+    if payload.clinical_symptoms and "clinical_symptoms" not in gait_metrics_dict:
+        gait_metrics_dict["clinical_symptoms"] = payload.clinical_symptoms
+
+    gait_metrics_str = json.dumps(gait_metrics_dict) if gait_metrics_dict else None
+    vitals_str = json.dumps(payload.vitals) if payload.vitals else None
+    clinical_metrics_str = json.dumps(payload.clinical_symptoms) if payload.clinical_symptoms else None
+    
+    clinical_risk_cat = payload.clinical_risk_category
+    if not clinical_risk_cat and payload.clinical_prediction and isinstance(payload.clinical_prediction, dict):
+        clinical_risk_cat = payload.clinical_prediction.get("risk_category")
+        
+    clinical_prob = payload.clinical_probability
+    if clinical_prob is None and payload.clinical_prediction and isinstance(payload.clinical_prediction, dict):
+        clinical_prob = payload.clinical_prediction.get("oa_pain_probability")
+
     cursor = conn.execute(
         """
         INSERT INTO screenings (
             patient_id, status, questionnaire_score, questionnaire_category,
             movement_category, movement_confidence, gait_metrics_json,
             xray_grade, combined_result, recommendation, data_source,
-            simulation_status, movement_result, questionnaire_result
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            simulation_status, movement_result, questionnaire_result,
+            clinical_risk_category, clinical_probability, vitals_json, clinical_metrics_json
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             payload.patient_id,
@@ -551,7 +572,11 @@ def save_screening(payload: ScreeningCreate, _: dict[str, object] = Depends(requ
             payload.data_source,
             payload.simulation_status,
             payload.movement_result,
-            payload.questionnaire_result
+            payload.questionnaire_result,
+            clinical_risk_cat,
+            clinical_prob,
+            vitals_str,
+            clinical_metrics_str
         )
     )
     conn.commit()
@@ -575,6 +600,16 @@ def list_screenings(_: dict[str, object] = Depends(require_authenticated_user)) 
                 d["gait_metrics"] = json.loads(d["gait_metrics_json"])
             except Exception:
                 d["gait_metrics"] = None
+        if d.get("vitals_json"):
+            try:
+                d["vitals"] = json.loads(d["vitals_json"])
+            except Exception:
+                d["vitals"] = None
+        if d.get("clinical_metrics_json"):
+            try:
+                d["clinical_symptoms"] = json.loads(d["clinical_metrics_json"])
+            except Exception:
+                d["clinical_symptoms"] = None
         result.append(d)
     return result
 
@@ -595,6 +630,16 @@ def get_latest_screening(patient_id: int, _: dict[str, object] = Depends(require
             d["gait_metrics"] = json.loads(d["gait_metrics_json"])
         except Exception:
             d["gait_metrics"] = None
+    if d.get("vitals_json"):
+        try:
+            d["vitals"] = json.loads(d["vitals_json"])
+        except Exception:
+            d["vitals"] = None
+    if d.get("clinical_metrics_json"):
+        try:
+            d["clinical_symptoms"] = json.loads(d["clinical_metrics_json"])
+        except Exception:
+            d["clinical_symptoms"] = None
     return d
 
 

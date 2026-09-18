@@ -158,6 +158,9 @@ export default function App() {
           movement_category: res.risk?.includes('High') ? 'high' : res.risk?.includes('Low') ? 'low' : 'moderate',
           movement_confidence: (res.confidence || 85) / 100,
           gait_metrics_json: JSON.stringify(res),
+          vitals: surveyResult?.vitals || null,
+          clinical_symptoms: surveyResult?.clinical_symptoms || null,
+          clinical_prediction: surveyResult?.clinical_prediction || null,
           xray_grade: 'Not assessed',
           data_source: res.sourceType || 'live_test',
           simulation_status: currentUser?.isDemo ? 'offline_simulation' : 'real_assessment'
@@ -182,8 +185,11 @@ export default function App() {
           movement_category: gaitResult?.risk?.includes('High') ? 'high' : 'moderate',
           movement_confidence: (gaitResult?.confidence || 85) / 100,
           gait_metrics_json: gaitResult ? JSON.stringify(gaitResult) : null,
+          vitals: res.vitals || null,
+          clinical_symptoms: res.clinical_symptoms || null,
+          clinical_prediction: res.clinical_prediction || null,
           xray_grade: 'Not assessed',
-          data_source: 'questionnaire_v2',
+          data_source: 'clinical_triage_v2',
           simulation_status: currentUser?.isDemo ? 'offline_simulation' : 'real_assessment'
         });
       } catch (err) {

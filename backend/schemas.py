@@ -60,6 +60,11 @@ class ScreeningCreate(BaseModel):
     movement_category: str | None = Field(default=None, max_length=60)
     movement_confidence: float | None = Field(default=None, ge=0.0, le=1.0)
     gait_metrics: dict | None = None
+    vitals: dict | None = None
+    clinical_symptoms: dict | None = None
+    clinical_prediction: dict | None = None
+    clinical_risk_category: str | None = Field(default=None, max_length=60)
+    clinical_probability: float | None = Field(default=None, ge=0.0, le=1.0)
     xray_grade: str | None = Field(default=None, max_length=60)
     combined_result: str | None = Field(default=None, max_length=100)
     recommendation: str | None = Field(default=None, max_length=2_000)
