@@ -947,14 +947,23 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
           <button
             onClick={() => xrayInputRef.current?.click()}
             disabled={xrayLoading}
-            className="px-md py-2.5 rounded-lg bg-tertiary-container/30 hover:bg-tertiary-container/60 text-tertiary-fixed font-label-md text-xs font-bold transition flex items-center gap-1.5 border border-tertiary/40 shadow-xs"
+            className={`px-md py-2.5 rounded-lg font-label-md text-xs font-bold transition flex items-center gap-2 shadow-xs active:scale-95 ${
+              xrayData
+                ? 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/40'
+                : 'bg-gradient-to-r from-primary/20 via-primary/10 to-tertiary-container/30 hover:from-primary/30 hover:to-tertiary-container/50 text-on-surface border-2 border-primary/50 hover:border-primary shadow-sm'
+            }`}
             type="button"
             title="Upload knee radiograph image to generate KL Grade and Grad-CAM attention heatmap"
           >
-            <span className={`material-symbols-outlined text-[18px] ${xrayLoading ? 'animate-spin' : 'text-tertiary-fixed'}`}>
+            <span className={`material-symbols-outlined text-[18px] ${xrayLoading ? 'animate-spin text-primary' : xrayData ? 'text-emerald-400' : 'text-primary'}`}>
               {xrayLoading ? 'refresh' : 'radiology'}
             </span>
-            {xrayLoading ? 'Processing X-Ray...' : xrayData ? `X-Ray: KL ${xrayData.kl_grade} Loaded` : '📷 Upload Knee X-Ray'}
+            <span>{xrayLoading ? 'Processing X-Ray...' : xrayData ? `X-Ray: KL ${xrayData.kl_grade} Loaded` : 'Upload Knee X-Ray'}</span>
+            {!xrayData && !xrayLoading && (
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-primary text-on-primary tracking-wide">
+                AI
+              </span>
+            )}
           </button>
         </div>
 

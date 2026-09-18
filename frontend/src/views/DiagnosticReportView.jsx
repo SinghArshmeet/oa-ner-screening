@@ -16,6 +16,7 @@ export default function DiagnosticReportView({
   const xrayData = propXrayData || localXrayData;
   const [xrayLoading, setXrayLoading] = useState(false);
   const [xrayError, setXrayError] = useState('');
+  const [isDraggingXray, setIsDraggingXray] = useState(false);
   const xrayInputRef = useRef(null);
 
   // Role Permissions:
@@ -199,8 +200,7 @@ export default function DiagnosticReportView({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handleXrayUpload = async (e) => {
-    const file = e.target.files?.[0];
+  const processXrayFile = async (file) => {
     if (!file) return;
     setXrayLoading(true);
     setXrayError('');
@@ -216,8 +216,22 @@ export default function DiagnosticReportView({
       setXrayError(err.message || 'Radiograph analysis could not be processed.');
     } finally {
       setXrayLoading(false);
-      e.target.value = '';
+      if (xrayInputRef.current) {
+        xrayInputRef.current.value = '';
+      }
     }
+  };
+
+  const handleXrayUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (file) processXrayFile(file);
+  };
+
+  const handleXrayDrop = (e) => {
+    e.preventDefault();
+    setIsDraggingXray(false);
+    const file = e.dataTransfer?.files?.[0];
+    if (file) processXrayFile(file);
   };
 
   const handleLoadSampleXray = async () => {
@@ -716,10 +730,17 @@ export default function DiagnosticReportView({
         </div>
 
         {/* Module 3: X-Ray */}
-        <div className="bg-surface-container-lowest p-card-padding rounded-xl shadow-sm border border-surface-container flex flex-col justify-between">
+        <div
+          className={`p-card-padding rounded-xl border flex flex-col justify-between transition-all duration-200 ${
+            xrayData
+              ? 'bg-surface-container-lowest border-surface-container shadow-sm'
+              : 'bg-surface-container-lowest border-primary/50 ring-2 ring-primary/20 shadow-md'
+          }`}
+        >
           <div>
             <div className="flex items-center justify-between pb-xs border-b border-surface-container mb-xs">
-              <span className="font-label-sm text-[11px] uppercase font-semibold text-secondary">
+              <span className="font-label-sm text-[11px] uppercase font-semibold text-secondary flex items-center gap-1.5">
+                <span className={`w-2 h-2 rounded-full ${xrayData ? 'bg-emerald-500' : 'bg-primary animate-pulse'}`}></span>
                 Module 03 · Radiographic Staging
               </span>
               <span
@@ -730,12 +751,13 @@ export default function DiagnosticReportView({
                       : currentKlGrade >= 2
                       ? 'bg-amber-100 text-amber-900'
                       : 'bg-emerald-100 text-emerald-900'
-                    : 'bg-surface-container-high text-on-surface'
+                    : 'bg-primary/15 text-primary border border-primary/30'
                 }`}
               >
-                {currentKlGrade !== null ? `KL GRADE ${currentKlGrade}` : 'NOT ASSESSED'}
+                {currentKlGrade !== null ? `KL GRADE ${currentKlGrade}` : 'AWAITING RADIOGRAPH'}
               </span>
             </div>
+
             <h3 className="font-headline-sm text-on-surface font-bold mb-1">
               {currentKlGrade !== null
                 ? (currentKlGrade === 4
@@ -753,145 +775,259 @@ export default function DiagnosticReportView({
               {xrayData
                 ? xrayData.findings
                 : currentKlGrade !== null
-                ? `Radiological staging recorded as KL-${currentKlGrade}.`
-                : 'Frontline optical and survey triage complete. Weight-bearing radiograph can be uploaded for instant KL-grade & Grad-CAM analysis.'}
+                ? `Radiological staging recorded as KL-${currentKlGrade}. Upload a new radiograph below for live ResNet-18 & Grad-CAM verification.`
+                : 'Weight-bearing knee radiograph can be uploaded for instant deep-learning KL-grade & Grad-CAM heatmap analysis.'}
             </p>
 
-            {xrayData && xrayData.gradcam_base64 && (
-              <div className="mb-sm p-2.5 rounded-lg bg-surface-container-high/40 border border-surface-container flex flex-col gap-2">
-                <div className="flex items-center justify-between text-[11px] font-bold text-on-surface">
-                  <span className="flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[15px] text-tertiary">heat_map</span>
-                    Grad-CAM Joint Space Heatmap
-                  </span>
-                  <span className="font-data-mono text-[10px] text-tertiary">Confidence: {xrayData.confidence}%</span>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[10px] text-on-surface-variant font-medium">Input Radiograph</span>
-                    <div className="w-full h-32 rounded bg-black/90 flex items-center justify-center overflow-hidden border border-white/10">
-                      {xrayData.preview_url ? (
-                        <img src={xrayData.preview_url} alt="Original Radiograph" className="w-full h-full object-contain" />
-                      ) : (
-                        <span className="material-symbols-outlined text-white/40 text-[28px]">radiology</span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[10px] text-tertiary font-bold">Articular Attention Map</span>
-                    <div className="w-full h-32 rounded bg-black/90 flex items-center justify-center overflow-hidden border border-tertiary/40">
-                      <img
-                        src={`data:image/jpeg;base64,${xrayData.gradcam_base64}`}
-                        alt="Grad-CAM Articular Joint Space ROI"
-                        className="w-full h-full object-contain"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {xrayData.probabilities && (
-                  <div className="mt-2 pt-2 border-t border-surface-container/60 flex flex-col gap-1.5">
-                    <div className="flex items-center justify-between text-[10px] font-semibold text-secondary">
-                      <span>KL Probability Distribution</span>
-                      <span className="text-tertiary font-bold">ResNet-18 (5-Class)</span>
-                    </div>
-                    <div className="grid grid-cols-5 gap-1 text-center">
-                      {Object.entries(xrayData.probabilities).map(([gradeKey, probVal]) => {
-                        const pct = Math.round(probVal * 100);
-                        const isPred = xrayData.kl_grade === parseInt(gradeKey.replace('KL', ''), 10);
-                        return (
-                          <div
-                            key={gradeKey}
-                            className={`p-1 rounded flex flex-col items-center transition-all ${
-                              isPred
-                                ? 'bg-primary/20 border border-primary/40 shadow-xs'
-                                : 'bg-surface-container-high/40'
-                            }`}
-                          >
-                            <span className={`text-[9px] font-data-mono font-bold ${isPred ? 'text-primary' : 'text-secondary'}`}>
-                              {gradeKey}
-                            </span>
-                            <div className="w-full bg-surface-container-highest/40 h-1 rounded-full my-0.5 overflow-hidden">
-                              <div
-                                className={`h-full rounded-full ${isPred ? 'bg-primary' : 'bg-secondary/60'}`}
-                                style={{ width: `${pct}%` }}
-                              ></div>
-                            </div>
-                            <span className="text-[9px] font-data-mono font-medium text-on-surface">{pct}%</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
+            {/* Error Banner */}
             {xrayError && (
-              <div className="mb-xs p-2 rounded bg-error-container text-on-error-container text-[11px] font-medium flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[14px]">error</span>
+              <div className="mb-sm p-2 rounded-lg bg-error-container text-on-error-container text-[11px] font-medium flex items-center gap-1.5 border border-error/30 animate-fade-in">
+                <span className="material-symbols-outlined text-[15px]">error</span>
                 <span>{xrayError}</span>
               </div>
             )}
 
-            <div className="space-y-xs text-xs mb-sm">
-              <div className="flex justify-between py-1 border-b border-surface-container">
-                <span className="text-secondary">Joint Space Width</span>
-                <span className="font-data-mono font-bold text-on-surface">
-                  {currentKlGrade !== null
-                    ? currentKlGrade >= 3
-                      ? 'Marked Narrowing'
-                      : currentKlGrade >= 2
-                      ? 'Mild Reduction'
-                      : 'Preserved'
-                    : 'Pending Referral'}
-                </span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-surface-container">
-                <span className="text-secondary">Osteophyte Likelihood</span>
-                <span className="font-data-mono font-bold text-secondary">
-                  {currentKlGrade !== null
-                    ? currentKlGrade >= 3
-                      ? 'Definite / Moderate'
-                      : currentKlGrade >= 2
-                      ? 'Definite / Minimal'
-                      : 'Absent / Doubtful'
-                    : 'Pending Referral'}
-                </span>
-              </div>
-            </div>
+            {/* Hidden File Input */}
+            <input
+              type="file"
+              ref={xrayInputRef}
+              onChange={handleXrayUpload}
+              accept="image/png,image/jpeg,image/jpg"
+              className="hidden"
+            />
 
-            <div className="pt-xs flex flex-col sm:flex-row gap-2">
-              <input
-                type="file"
-                ref={xrayInputRef}
-                onChange={handleXrayUpload}
-                accept="image/png,image/jpeg,image/jpg"
-                className="hidden"
-              />
-              <button
-                onClick={() => xrayInputRef.current?.click()}
-                disabled={xrayLoading}
-                className="flex-1 py-1.5 px-sm rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-xs font-semibold border border-outline-variant/30 flex items-center justify-center gap-1.5 transition"
-                type="button"
-              >
-                <span className={`material-symbols-outlined text-[16px] ${xrayLoading ? 'animate-spin' : 'text-primary'}`}>
-                  {xrayLoading ? 'refresh' : 'upload_file'}
-                </span>
-                <span>{xrayLoading ? 'Analyzing...' : xrayData ? 'Re-upload' : 'Upload X-Ray'}</span>
-              </button>
+            {/* State A: X-Ray Analyzed -> Show Heatmap, Joint Width, Probabilities & Highlighted Re-upload Controls */}
+            {xrayData ? (
+              <>
+                {xrayData.gradcam_base64 && (
+                  <div className="mb-sm p-2.5 rounded-lg bg-surface-container-high/40 border border-surface-container flex flex-col gap-2">
+                    <div className="flex items-center justify-between text-[11px] font-bold text-on-surface">
+                      <span className="flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[15px] text-tertiary">heat_map</span>
+                        Grad-CAM Joint Space Heatmap
+                      </span>
+                      <span className="font-data-mono text-[10px] text-tertiary">Confidence: {xrayData.confidence}%</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] text-on-surface-variant font-medium">Input Radiograph</span>
+                        <div className="w-full h-32 rounded bg-black/90 flex items-center justify-center overflow-hidden border border-white/10">
+                          {xrayData.preview_url ? (
+                            <img src={xrayData.preview_url} alt="Original Radiograph" className="w-full h-full object-contain" />
+                          ) : (
+                            <span className="material-symbols-outlined text-white/40 text-[28px]">radiology</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] text-tertiary font-bold">Articular Attention Map</span>
+                        <div className="w-full h-32 rounded bg-black/90 flex items-center justify-center overflow-hidden border border-tertiary/40">
+                          <img
+                            src={`data:image/jpeg;base64,${xrayData.gradcam_base64}`}
+                            alt="Grad-CAM Articular Joint Space ROI"
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                      </div>
+                    </div>
 
-              <button
-                onClick={handleLoadSampleXray}
-                disabled={xrayLoading}
-                className="py-1.5 px-3 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary font-label-sm text-xs font-semibold border border-primary/30 flex items-center justify-center gap-1.5 transition active:scale-95 shadow-xs"
-                type="button"
-                title="Instantly test the real PyTorch ResNet-18 model & Grad-CAM with a clinical knee radiograph"
-              >
-                <span className="material-symbols-outlined text-[16px]">science</span>
-                <span>Try Clinical Sample</span>
-              </button>
-            </div>
+                    {xrayData.probabilities && (
+                      <div className="mt-2 pt-2 border-t border-surface-container/60 flex flex-col gap-1.5">
+                        <div className="flex items-center justify-between text-[10px] font-semibold text-secondary">
+                          <span>KL Probability Distribution</span>
+                          <span className="text-tertiary font-bold">ResNet-18 (5-Class)</span>
+                        </div>
+                        <div className="grid grid-cols-5 gap-1 text-center">
+                          {Object.entries(xrayData.probabilities).map(([gradeKey, probVal]) => {
+                            const pct = Math.round(probVal * 100);
+                            const isPred = xrayData.kl_grade === parseInt(gradeKey.replace('KL', ''), 10);
+                            return (
+                              <div
+                                key={gradeKey}
+                                className={`p-1 rounded flex flex-col items-center transition-all ${
+                                  isPred
+                                    ? 'bg-primary/20 border border-primary/40 shadow-xs'
+                                    : 'bg-surface-container-high/40'
+                                }`}
+                              >
+                                <span className={`text-[9px] font-data-mono font-bold ${isPred ? 'text-primary' : 'text-secondary'}`}>
+                                  {gradeKey}
+                                </span>
+                                <div className="w-full bg-surface-container-highest/40 h-1 rounded-full my-0.5 overflow-hidden">
+                                  <div
+                                    className={`h-full rounded-full ${isPred ? 'bg-primary' : 'bg-secondary/60'}`}
+                                    style={{ width: `${pct}%` }}
+                                  ></div>
+                                </div>
+                                <span className="text-[9px] font-data-mono font-medium text-on-surface">{pct}%</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="space-y-xs text-xs mb-sm">
+                  <div className="flex justify-between py-1 border-b border-surface-container">
+                    <span className="text-secondary">Joint Space Width</span>
+                    <span className="font-data-mono font-bold text-on-surface">
+                      {currentKlGrade !== null
+                        ? currentKlGrade >= 3
+                          ? 'Marked Narrowing'
+                          : currentKlGrade >= 2
+                          ? 'Mild Reduction'
+                          : 'Preserved'
+                        : 'Pending Referral'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-surface-container">
+                    <span className="text-secondary">Osteophyte Likelihood</span>
+                    <span className="font-data-mono font-bold text-secondary">
+                      {currentKlGrade !== null
+                        ? currentKlGrade >= 3
+                          ? 'Definite / Moderate'
+                          : currentKlGrade >= 2
+                          ? 'Definite / Minimal'
+                          : 'Absent / Doubtful'
+                        : 'Pending Referral'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Highlighted Radiograph Bar (Re-upload / replace controls) */}
+                <div className="p-2.5 rounded-xl bg-gradient-to-r from-primary/10 via-surface-container-high/40 to-surface-container border border-primary/30 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 shadow-xs">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-on-surface">
+                    <span className="material-symbols-outlined text-[18px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
+                      verified
+                    </span>
+                    <span className="text-[11px] font-bold">Radiograph Staged</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => xrayInputRef.current?.click()}
+                      disabled={xrayLoading}
+                      className="flex-1 sm:flex-initial py-1.5 px-3 rounded-lg bg-primary hover:bg-primary/90 text-on-primary font-label-sm text-xs font-bold shadow-xs transition flex items-center justify-center gap-1 active:scale-95"
+                      type="button"
+                    >
+                      <span className={`material-symbols-outlined text-[15px] ${xrayLoading ? 'animate-spin' : ''}`}>
+                        {xrayLoading ? 'refresh' : 'upload_file'}
+                      </span>
+                      <span>{xrayLoading ? 'Analyzing...' : 'Upload New X-Ray'}</span>
+                    </button>
+                    <button
+                      onClick={handleLoadSampleXray}
+                      disabled={xrayLoading}
+                      className="py-1.5 px-2.5 rounded-lg bg-surface-container-highest hover:bg-surface-variant text-on-surface text-xs font-medium border border-outline-variant/40 transition flex items-center justify-center gap-1 active:scale-95"
+                      type="button"
+                      title="Reload clinical sample knee radiograph"
+                    >
+                      <span className="material-symbols-outlined text-[15px] text-primary">science</span>
+                      <span className="hidden sm:inline">Sample</span>
+                    </button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              /* State B: NO X-Ray Uploaded -> Dedicated Highlighted Dropzone Box */
+              <div className="flex flex-col gap-3">
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsDraggingXray(true);
+                  }}
+                  onDragLeave={() => setIsDraggingXray(false)}
+                  onDrop={handleXrayDrop}
+                  onClick={() => xrayInputRef.current?.click()}
+                  className={`relative overflow-hidden rounded-xl border-2 border-dashed p-4 text-center cursor-pointer transition-all duration-200 group ${
+                    isDraggingXray
+                      ? 'border-primary bg-primary/20 ring-4 ring-primary/25 scale-[1.01]'
+                      : 'border-primary/60 hover:border-primary bg-gradient-to-b from-primary/10 via-primary/[0.04] to-transparent hover:bg-primary/[0.08] shadow-sm hover:shadow-md'
+                  }`}
+                >
+                  {/* Glowing Top Badge */}
+                  <div className="flex justify-center mb-2">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tracking-wider uppercase bg-primary text-on-primary shadow-xs">
+                      <span className="material-symbols-outlined text-[13px] animate-pulse">radiology</span>
+                      <span>AI Radiograph Upload</span>
+                    </span>
+                  </div>
+
+                  {/* Highlighted Icon Target */}
+                  <div className="w-12 h-12 mx-auto rounded-full bg-primary/15 text-primary flex items-center justify-center group-hover:scale-110 group-hover:bg-primary group-hover:text-on-primary transition-all duration-200 mb-2 shadow-xs">
+                    <span className={`material-symbols-outlined text-[26px] ${xrayLoading ? 'animate-spin' : ''}`}>
+                      {xrayLoading ? 'refresh' : 'add_photo_alternate'}
+                    </span>
+                  </div>
+
+                  <div className="font-headline-sm text-sm font-bold text-on-surface mb-0.5">
+                    {xrayLoading ? 'Processing Radiograph with ResNet-18...' : 'Click or Drag Knee Radiograph Here'}
+                  </div>
+                  <p className="text-[11px] text-secondary mb-3 max-w-xs mx-auto">
+                    Instant automated Kellgren-Lawrence (0-4) grading, joint space narrowing & Grad-CAM heatmap.
+                  </p>
+
+                  {/* Prominent Action Buttons */}
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-1" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      disabled={xrayLoading}
+                      onClick={() => xrayInputRef.current?.click()}
+                      className="w-full sm:w-auto py-2 px-4 rounded-lg bg-primary hover:bg-primary/90 text-on-primary font-label-md text-xs font-bold shadow-md hover:shadow-lg active:scale-95 transition flex items-center justify-center gap-1.5"
+                    >
+                      <span className={`material-symbols-outlined text-[16px] ${xrayLoading ? 'animate-spin' : ''}`}>
+                        {xrayLoading ? 'refresh' : 'upload_file'}
+                      </span>
+                      <span>{xrayLoading ? 'Analyzing...' : 'Select X-Ray Image'}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={xrayLoading}
+                      onClick={handleLoadSampleXray}
+                      className="w-full sm:w-auto py-2 px-3 rounded-lg bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-md text-xs font-semibold border border-primary/30 hover:border-primary active:scale-95 transition flex items-center justify-center gap-1.5 shadow-xs"
+                      title="Instantly test the real PyTorch ResNet-18 model & Grad-CAM with a clinical knee radiograph"
+                    >
+                      <span className="material-symbols-outlined text-[16px] text-primary">science</span>
+                      <span>Try Clinical Sample</span>
+                    </button>
+                  </div>
+
+                  <div className="mt-2.5 text-[10px] text-outline font-medium">
+                    Supports DICOM export · PNG · JPG (Weight-Bearing Knee AP)
+                  </div>
+                </div>
+
+                {/* Historical baseline metrics */}
+                <div className="space-y-xs text-xs">
+                  <div className="flex justify-between py-1 border-b border-surface-container">
+                    <span className="text-secondary">Joint Space Width</span>
+                    <span className="font-data-mono font-bold text-on-surface">
+                      {currentKlGrade !== null
+                        ? currentKlGrade >= 3
+                          ? 'Marked Narrowing'
+                          : currentKlGrade >= 2
+                          ? 'Mild Reduction'
+                          : 'Preserved'
+                        : 'Pending Referral'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-surface-container">
+                    <span className="text-secondary">Osteophyte Likelihood</span>
+                    <span className="font-data-mono font-bold text-secondary">
+                      {currentKlGrade !== null
+                        ? currentKlGrade >= 3
+                          ? 'Definite / Moderate'
+                          : currentKlGrade >= 2
+                          ? 'Definite / Minimal'
+                          : 'Absent / Doubtful'
+                        : 'Pending Referral'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
