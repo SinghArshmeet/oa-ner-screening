@@ -20,7 +20,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
 from .db import get_connection, init_db
-from .schemas import AnalysisRequest, ClinicalPredictRequest, DeviceConfig, PatientCreate, QuestionnairePayload, ScreeningCreate
+from .schemas import AnalysisRequest, ClinicalPredictRequest, DeviceConfig, PatientCreate, PatientVitalsUpdate, QuestionnairePayload, ScreeningCreate
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SRC_DIR = PROJECT_ROOT / "src"
@@ -302,10 +302,15 @@ def logout(response: Response, oa_session: str | None = Cookie(default=None)) ->
 def create_patient(payload: PatientCreate, _: dict[str, object] = Depends(require_authenticated_user)) -> dict[str, object]:
     if not payload.consent:
         raise HTTPException(status_code=422, detail="Recorded consent is required before creating a patient record.")
+    
+    bmi = payload.bmi
+    if bmi is None and payload.height_cm and payload.weight_kg and payload.height_cm > 0:
+        bmi = round(payload.weight_kg / ((payload.height_cm / 100.0) ** 2), 1)
+
     conn = get_connection()
     cursor = conn.execute(
-        "INSERT INTO patients (name, age, gender, occupation, region, state, district, abha_id, consent) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        (payload.name.strip(), payload.age, payload.gender, payload.occupation, payload.region, payload.state, payload.district, payload.abha_id, int(payload.consent))
+        "INSERT INTO patients (name, age, gender, occupation, region, state, district, abha_id, height_cm, weight_kg, bmi, consent) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (payload.name.strip(), payload.age, payload.gender, payload.occupation, payload.region, payload.state, payload.district, payload.abha_id, payload.height_cm, payload.weight_kg, bmi, int(payload.consent))
     )
     conn.commit()
     patient_id = cursor.lastrowid
@@ -320,6 +325,9 @@ def create_patient(payload: PatientCreate, _: dict[str, object] = Depends(requir
         "state": payload.state,
         "district": payload.district,
         "abha_id": payload.abha_id,
+        "height_cm": payload.height_cm,
+        "weight_kg": payload.weight_kg,
+        "bmi": bmi,
         "consent": payload.consent,
         "message": "Patient registered successfully"
     }
@@ -328,9 +336,51 @@ def create_patient(payload: PatientCreate, _: dict[str, object] = Depends(requir
 @app.get("/api/patients")
 def list_patients(_: dict[str, object] = Depends(require_authenticated_user)) -> list[dict[str, object]]:
     conn = get_connection()
-    rows = conn.execute("SELECT id, name, age, gender, occupation, region, state, district, abha_id, consent, created_at FROM patients ORDER BY id DESC").fetchall()
+    rows = conn.execute(
+        "SELECT id, name, age, gender, occupation, region, state, district, abha_id, height_cm, weight_kg, bmi, consent, created_at FROM patients ORDER BY id DESC"
+    ).fetchall()
     conn.close()
     return [dict(row) for row in rows]
+
+
+@app.patch("/api/patients/{patient_id}/vitals")
+def update_patient_vitals(
+    patient_id: int,
+    payload: PatientVitalsUpdate,
+    _: dict[str, object] = Depends(require_authenticated_user)
+) -> dict[str, object]:
+    conn = get_connection()
+    _patient_exists(conn, patient_id)
+
+    bmi = payload.bmi
+    if bmi is None and payload.height_cm and payload.weight_kg and payload.height_cm > 0:
+        bmi = round(payload.weight_kg / ((payload.height_cm / 100.0) ** 2), 1)
+
+    updates = []
+    values = []
+    if payload.height_cm is not None:
+        updates.append("height_cm = ?")
+        values.append(payload.height_cm)
+    if payload.weight_kg is not None:
+        updates.append("weight_kg = ?")
+        values.append(payload.weight_kg)
+    if bmi is not None:
+        updates.append("bmi = ?")
+        values.append(bmi)
+
+    if updates:
+        values.append(patient_id)
+        conn.execute(f"UPDATE patients SET {', '.join(updates)} WHERE id = ?", tuple(values))
+        conn.commit()
+    conn.close()
+    return {
+        "status": "success",
+        "patient_id": patient_id,
+        "height_cm": payload.height_cm,
+        "weight_kg": payload.weight_kg,
+        "bmi": bmi,
+        "message": "Patient vitals updated successfully"
+    }
 
 
 @app.post("/api/questionnaire")

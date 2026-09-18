@@ -814,7 +814,7 @@ export default function LoginView({ onLogin }) {
                     </h3>
                   </div>
                   <p className="font-body-sm text-secondary text-xs leading-relaxed">
-                    MediaPipe 33-point sagittal skeleton capture at 30 FPS. Measures antalgic lag and knee ROM asymmetry in 8-second walking trials.
+                    High-precision 33-point sagittal skeleton capture at 30 FPS. Measures antalgic lag and knee ROM asymmetry in 8-second walking trials.
                   </p>
                 </div>
 
@@ -853,37 +853,6 @@ export default function LoginView({ onLogin }) {
                     Instant 1-click clinical dossier transfer to orthopedic specialist faculties at AIIMS New Delhi, PGIMER Chandigarh, CMC Vellore, KEM Mumbai, and GMCH Guwahati.
                   </p>
                 </div>
-              </div>
-            </div>
-
-            {/* Edge AI & Offline Diagnostics Status Card */}
-            <div className="p-md rounded-xl bg-inverse-surface text-surface border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-md">
-              <div className="flex items-center gap-sm">
-                <div className="w-10 h-10 rounded-xl bg-tertiary-container/30 border border-tertiary-fixed-dim/40 flex items-center justify-center text-tertiary-fixed shrink-0">
-                  <span className="material-symbols-outlined text-[22px]">memory</span>
-                </div>
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <h4 className="font-headline-sm text-xs font-bold text-surface-container-lowest uppercase tracking-wider">
-                      Multimodal Cloud + Edge Engine
-                    </h4>
-                    <span className="px-1.5 py-0.5 rounded bg-emerald-900/60 text-emerald-300 font-data-mono text-[9px] font-bold border border-emerald-500/40">
-                      OFFLINE ACTIVE
-                    </span>
-                  </div>
-                  <p className="font-body-sm text-surface-dim text-[11px] mt-0.5">
-                    FastAPI AI inference on Render + Supabase Cloud PostgreSQL with automatic offline edge simulation.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex sm:flex-col items-end gap-xs text-right shrink-0">
-                <span className="font-data-mono text-tertiary-fixed text-[11px] font-semibold">
-                  MediaPipe Pose v2.4
-                </span>
-                <span className="font-data-mono text-surface-dim text-[10px]">
-                  Mesh Bus: 192.168.1.105
-                </span>
               </div>
             </div>
           </section>

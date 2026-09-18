@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import CameraViewport from '../components/CameraViewport';
 import { getPatientClinicalProfile } from '../utils/clinicalProfiles';
 import { isSupabaseConfigured } from '../utils/supabase';
-import { predictClinicalRisk } from '../utils/api';
+import { predictClinicalRisk, updatePatientVitals } from '../utils/api';
 
 export default function OverviewView({
   activePatient,
@@ -14,7 +14,7 @@ export default function OverviewView({
   onOpenTeleconsult,
   camera
 }) {
-  const profile = getPatientClinicalProfile(activePatient);
+  const profile = useMemo(() => getPatientClinicalProfile(activePatient), [activePatient?.id, activePatient?.dbId]);
 
   // Active evaluation step (1 to 4)
   const [activeStep, setActiveStep] = useState(gaitResult ? 4 : 1);
@@ -61,15 +61,16 @@ export default function OverviewView({
   // Step 3: Optical Camera source state
   const [activeCamSource, setActiveCamSource] = useState(camera?.sourceMode || 'webcam');
 
-  // Sync profile when patient or surveyResult changes
+  // Sync profile ONLY when active patient changes (prevent resetting sliders/inputs on re-render)
+  const activePatientId = activePatient?.id || activePatient?.dbId;
   useEffect(() => {
-    setPainValue(surveyResult?.pain ?? profile.survey.painVAS);
-    setStiffnessValue(surveyResult?.stiffness ?? profile.survey.stiffnessMins);
-    setHeightCm(profile.vitals?.heightCm || 170);
-    setWeightKg(profile.vitals?.weightKg || 75);
+    setPainValue(surveyResult?.pain ?? profile.survey?.painVAS ?? 6);
+    setStiffnessValue(surveyResult?.stiffness ?? profile.survey?.stiffnessMins ?? 30);
+    setHeightCm(activePatient?.height_cm || activePatient?.heightCm || profile.vitals?.heightCm || 168);
+    setWeightKg(activePatient?.weight_kg || activePatient?.weightKg || profile.vitals?.weightKg || 70);
     setBloodPressure(profile.vitals?.bp || '130/85');
     setAffectedJoint(profile.vitals?.affectedJoint || 'Right Knee (Medial Compartment)');
-  }, [activePatient, surveyResult, profile]);
+  }, [activePatientId]);
 
   // Real-time clinical prediction query against OAI NIH clinical model
   useEffect(() => {
@@ -168,6 +169,26 @@ export default function OverviewView({
 
     markStepComplete(2);
     setActiveStep(3);
+  };
+
+  // Handle saving Step 1 Patient Vitals to backend
+  const handleConfirmStep1 = async () => {
+    markStepComplete(1);
+    setActiveStep(2);
+    const patientId = activePatient?.dbId || activePatient?.id;
+    if (patientId) {
+      try {
+        await updatePatientVitals(patientId, {
+          height_cm: Number(heightCm) || 165,
+          weight_kg: Number(weightKg) || 68,
+          bmi: parseFloat(computedBmi) || 24.8,
+          blood_pressure: bloodPressure,
+          affected_joint: affectedJoint
+        });
+      } catch (err) {
+        console.warn('Vitals auto-sync notice:', err);
+      }
+    }
   };
 
   const markStepComplete = (stepNum) => {
@@ -478,11 +499,8 @@ export default function OverviewView({
                   </span>
                   <button
                     type="button"
-                    onClick={() => {
-                      markStepComplete(1);
-                      setActiveStep(2);
-                    }}
-                    className="px-md py-2 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-bold text-xs transition shadow-md flex items-center gap-1.5"
+                    onClick={handleConfirmStep1}
+                    className="px-md py-2 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-bold text-xs transition shadow-md flex items-center gap-1.5 cursor-pointer"
                   >
                     Confirm Vitals & Proceed to Step 2 →
                   </button>
@@ -907,7 +925,7 @@ export default function OverviewView({
                     Ready for 8-Second Standardized Walking Test
                   </h4>
                   <p className="text-xs text-on-surface-variant max-w-md mt-1">
-                    Instruct patient to walk 4–6 paces along the marked line. MediaPipe BlazePose will extract sagittal knee extension deficit, gait cadence, and velocity.
+                    Instruct patient to walk 4–6 paces along the marked line. Optical tracking will extract sagittal knee extension deficit, gait cadence, and velocity.
                   </p>
                 </div>
 

@@ -26,6 +26,12 @@ def init_db() -> None:
             gender TEXT,
             occupation TEXT,
             region TEXT,
+            state TEXT,
+            district TEXT,
+            abha_id TEXT,
+            height_cm REAL,
+            weight_kg REAL,
+            bmi REAL,
             consent INTEGER NOT NULL DEFAULT 0 CHECK(consent IN (0, 1)),
             created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
         );
@@ -99,6 +105,9 @@ def init_db() -> None:
         "state": "TEXT",
         "district": "TEXT",
         "abha_id": "TEXT",
+        "height_cm": "REAL",
+        "weight_kg": "REAL",
+        "bmi": "REAL",
     }
     for col, col_type in new_patient_cols.items():
         if col not in patient_columns:

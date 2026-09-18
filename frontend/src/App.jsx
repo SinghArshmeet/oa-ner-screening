@@ -233,6 +233,7 @@ export default function App() {
         backendOnline={backendOnline}
         camera={camera}
         currentUser={currentUser}
+        activePatient={activePatient}
         onSwitchAccount={handleSwitchAccount}
         onLogout={handleLogout}
       />

@@ -58,6 +58,8 @@ export default function EnrollModal({ isOpen, onClose, onEnroll }) {
     occupation: 'Paddy / Wheat Agro-Cultivator (Squatting & Heavy Lift)',
     state: 'Punjab',
     region: 'CHC Ludhiana West, Punjab',
+    height_cm: '165',
+    weight_kg: '68',
     abhaId: '',
     consent: true
   });
@@ -147,6 +149,8 @@ export default function EnrollModal({ isOpen, onClose, onEnroll }) {
       occupation: p.occupation,
       state: p.state,
       region: p.region,
+      height_cm: p.height_cm || (p.gender === 'Male' ? '172' : '158'),
+      weight_kg: p.weight_kg || (p.gender === 'Male' ? '74' : '62'),
       abhaId: p.abhaId
     }));
   };
@@ -158,6 +162,10 @@ export default function EnrollModal({ isOpen, onClose, onEnroll }) {
     setFormData((prev) => ({ ...prev, abhaId: `91-${part1}-${part2}-${part3}` }));
   };
 
+  const heightNum = Number(formData.height_cm) || 165;
+  const weightNum = Number(formData.weight_kg) || 68;
+  const liveBmi = (weightNum / Math.pow(heightNum / 100, 2)).toFixed(1);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name || !formData.age) return;
@@ -165,6 +173,9 @@ export default function EnrollModal({ isOpen, onClose, onEnroll }) {
     await onEnroll({
       ...formData,
       age: parseInt(formData.age, 10),
+      height_cm: heightNum,
+      weight_kg: weightNum,
+      bmi: parseFloat(liveBmi),
       id: `IND-OA-2025-${Math.floor(1000 + Math.random() * 9000)}`
     });
     setIsSubmitting(false);
@@ -266,6 +277,48 @@ export default function EnrollModal({ isOpen, onClose, onEnroll }) {
                 <option value="Male">Male</option>
                 <option value="Other">Other</option>
               </select>
+            </div>
+          </div>
+
+          {/* Anthropometrics: Height, Weight & Live BMI */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-md p-3 rounded-xl bg-surface-container-low border border-outline-variant/30">
+            <div>
+              <label className="font-label-sm text-[11px] text-on-surface-variant uppercase font-semibold block mb-1">
+                Height (cm) *
+              </label>
+              <input
+                type="number"
+                min="100"
+                max="220"
+                required
+                value={formData.height_cm}
+                onChange={(e) => setFormData({ ...formData, height_cm: e.target.value })}
+                placeholder="165"
+                className="w-full px-md py-1.5 text-body-md text-on-surface bg-surface-container border border-outline-variant/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary font-data-mono"
+              />
+            </div>
+            <div>
+              <label className="font-label-sm text-[11px] text-on-surface-variant uppercase font-semibold block mb-1">
+                Weight (kg) *
+              </label>
+              <input
+                type="number"
+                min="30"
+                max="180"
+                required
+                value={formData.weight_kg}
+                onChange={(e) => setFormData({ ...formData, weight_kg: e.target.value })}
+                placeholder="68"
+                className="w-full px-md py-1.5 text-body-md text-on-surface bg-surface-container border border-outline-variant/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary font-data-mono"
+              />
+            </div>
+            <div className="flex flex-col justify-center px-2 py-1 rounded-lg bg-surface-container/60 border border-outline-variant/20">
+              <span className="text-[10px] uppercase font-semibold text-secondary">
+                Calculated BMI
+              </span>
+              <span className="text-base font-bold font-data-metric text-primary">
+                {liveBmi} <span className="text-[11px] font-normal text-secondary">kg/m²</span>
+              </span>
             </div>
           </div>
 

@@ -875,7 +875,7 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
               <span className={`material-symbols-outlined text-[18px] ${analyzing ? 'animate-spin' : ''}`}>
                 {analyzing ? 'refresh' : 'bolt'}
               </span>
-              {analyzing ? 'Processing MediaPipe AI...' : 'Analyze Uploaded Video'}
+              {analyzing ? 'Processing Gait AI...' : 'Analyze Uploaded Video'}
             </button>
           </div>
         </div>
@@ -894,7 +894,7 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
               <span className={`material-symbols-outlined text-[20px] ${analyzing ? 'animate-spin' : ''}`}>
                 {analyzing ? 'refresh' : 'analytics'}
               </span>
-              {analyzing ? 'Processing MediaPipe AI...' : '⚡ Analyze Uploaded Video'}
+              {analyzing ? 'Processing Gait AI...' : '⚡ Analyze Uploaded Video'}
             </button>
           ) : (
             <button
@@ -967,7 +967,7 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
           <span className={`material-symbols-outlined text-[18px] ${analyzing ? 'animate-spin' : ''}`}>
             {analyzing ? 'refresh' : 'bolt'}
           </span>
-          {analyzing ? 'Processing MediaPipe AI...' : camera.sourceMode === 'upload' ? '⚡ Analyze Uploaded Video' : '⚡ Analyze Walk (Edge AI)'}
+          {analyzing ? 'Processing Gait AI...' : camera.sourceMode === 'upload' ? '⚡ Analyze Uploaded Video' : '⚡ Analyze Walking Trial'}
         </button>
       </div>
 

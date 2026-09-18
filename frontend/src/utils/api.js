@@ -250,6 +250,9 @@ export async function getPatients() {
           gender: p.gender || 'Other',
           occupation: p.occupation || 'Rural Cultivator',
           region: p.region || 'Delhi NCR',
+          height_cm: p.height_cm ?? p.heightCm ?? 168,
+          weight_kg: p.weight_kg ?? p.weightKg ?? 70,
+          bmi: p.bmi ?? (p.height_cm && p.weight_kg ? Number((p.weight_kg / Math.pow(p.height_cm / 100, 2)).toFixed(1)) : 24.8),
           sopStatus: 'Enrolled',
           surveyCompleted: false,
           surveyScore: 'Pending',
@@ -269,10 +272,18 @@ export async function getPatients() {
 }
 
 export async function createPatient(patientData) {
+  // Normalize fields
+  const payload = {
+    ...patientData,
+    height_cm: patientData.height_cm ?? (patientData.height ? Number(patientData.height) : undefined),
+    weight_kg: patientData.weight_kg ?? (patientData.weight ? Number(patientData.weight) : undefined),
+    bmi: patientData.bmi ? Number(patientData.bmi) : undefined
+  };
+
   // 1. Sync to Supabase Cloud if configured
   if (isSupabaseConfigured) {
     try {
-      const supaResult = await insertPatientToSupabase(patientData);
+      const supaResult = await insertPatientToSupabase(payload);
       if (supaResult) {
         return {
           id: supaResult.id,
@@ -281,6 +292,9 @@ export async function createPatient(patientData) {
           gender: supaResult.gender,
           occupation: supaResult.occupation,
           region: supaResult.locality || supaResult.state,
+          height_cm: payload.height_cm,
+          weight_kg: payload.weight_kg,
+          bmi: payload.bmi,
           consent: supaResult.consent,
           message: 'Patient registered in Supabase Cloud'
         };
@@ -296,7 +310,7 @@ export async function createPatient(patientData) {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(patientData),
+      body: JSON.stringify(payload),
       signal: AbortSignal.timeout(2500)
     });
     if (res.ok) return await res.json();
@@ -306,15 +320,41 @@ export async function createPatient(patientData) {
     // Local memory fallback
     return {
       id: Math.floor(100 + Math.random() * 900),
-      name: patientData.name,
-      age: patientData.age,
-      gender: patientData.gender,
-      occupation: patientData.occupation,
-      region: patientData.region || patientData.state,
-      consent: patientData.consent,
+      name: payload.name,
+      age: payload.age,
+      gender: payload.gender,
+      occupation: payload.occupation,
+      region: payload.region || payload.state,
+      height_cm: payload.height_cm,
+      weight_kg: payload.weight_kg,
+      bmi: payload.bmi,
+      consent: payload.consent,
       message: 'Patient registered'
     };
   }
+}
+
+export async function updatePatientVitals(patientId, vitals) {
+  if (!patientId) return null;
+  try {
+    const res = await fetch(`${API_BASE}/api/patients/${patientId}/vitals`, {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        height_cm: vitals.height_cm ?? vitals.heightCm,
+        weight_kg: vitals.weight_kg ?? vitals.weightKg,
+        bmi: vitals.bmi,
+        blood_pressure: vitals.bloodPressure || vitals.bp,
+        affected_joint: vitals.affectedJoint
+      }),
+      signal: AbortSignal.timeout(2500)
+    });
+    if (res.ok) return await res.json();
+  } catch (error) {
+    // Local mock fallback
+  }
+  return { status: 'success', patient_id: patientId, ...vitals };
 }
 
 export function calculateQuestionnaireOffline(payload) {

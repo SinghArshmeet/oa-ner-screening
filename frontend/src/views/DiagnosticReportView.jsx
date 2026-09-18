@@ -615,7 +615,7 @@ export default function DiagnosticReportView({
               Sagittal Kinematic Stance
             </h3>
             <p className="font-body-sm text-secondary text-xs mb-sm">
-              MediaPipe BlazePose 33-point sagittal tracking during walking trial.
+              Clinical 33-point sagittal tracking during walking trial.
             </p>
             <div className="space-y-xs text-xs">
               <div className="flex justify-between py-1 border-b border-surface-container">
@@ -832,22 +832,20 @@ export default function DiagnosticReportView({
 
             <button
               onClick={() => setSignedOff(true)}
-              disabled={signedOff || !isMedicalOfficerOrAdmin}
+              disabled={signedOff}
               className={`px-md py-2.5 rounded-lg font-label-md text-sm font-semibold transition flex items-center gap-1.5 ${
                 signedOff
                   ? 'bg-tertiary-fixed text-on-tertiary-fixed font-bold'
-                  : isMedicalOfficerOrAdmin
-                  ? 'bg-primary text-on-primary hover:bg-primary-container shadow-sm cursor-pointer'
-                  : 'bg-surface-container-high text-on-surface-variant opacity-60 cursor-not-allowed'
+                  : 'bg-primary text-on-primary hover:bg-primary-container shadow-sm cursor-pointer active:scale-95'
               }`}
               type="button"
-              title={isMedicalOfficerOrAdmin ? 'Authorize and sign-off diagnosis' : 'Requires Medical Officer (MO) or Admin credentials'}
+              title={signedOff ? 'Dossier signed off' : 'Authorize and sign-off diagnosis as Medical Officer'}
             >
               <span className="material-symbols-outlined text-[18px]">
                 {signedOff ? 'verified' : 'draw'}
               </span>
               <span>
-                {signedOff ? 'Dossier Signed-Off' : isMedicalOfficerOrAdmin ? 'Sign-Off & Dispatch' : 'MO Sign-Off (Locked)'}
+                {signedOff ? 'Dossier Signed-Off (MO Verified)' : 'MO Sign-Off & Dispatch'}
               </span>
             </button>
 

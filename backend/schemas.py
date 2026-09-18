@@ -17,7 +17,18 @@ class PatientCreate(BaseModel):
     state: str | None = Field(default=None, max_length=120)
     district: str | None = Field(default=None, max_length=120)
     abha_id: str | None = Field(default=None, max_length=60)
+    height_cm: float | None = Field(default=None, ge=50, le=250)
+    weight_kg: float | None = Field(default=None, ge=20, le=300)
+    bmi: float | None = Field(default=None, ge=10, le=80)
     consent: bool = False
+
+
+class PatientVitalsUpdate(BaseModel):
+    height_cm: float | None = Field(default=None, ge=50, le=250)
+    weight_kg: float | None = Field(default=None, ge=20, le=300)
+    bmi: float | None = Field(default=None, ge=10, le=80)
+    blood_pressure: str | None = Field(default=None, max_length=30)
+    affected_joint: str | None = Field(default=None, max_length=120)
 
 
 class QuestionnairePayload(BaseModel):

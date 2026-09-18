@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ROLES, getAccountsForRole } from '../utils/auth';
-import { isSupabaseConfigured } from '../utils/supabase';
 
 export default function Header({
   activeTab,
@@ -9,24 +8,20 @@ export default function Header({
   backendOnline,
   camera,
   currentUser,
+  activePatient,
   onSwitchAccount,
   onLogout
 }) {
-  const [showStatusPopover, setShowStatusPopover] = useState(false);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [showRoleSelector, setShowRoleSelector] = useState(false);
-  const statusPopoverRef = useRef(null);
   const accountMenuRef = useRef(null);
 
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const mobileMenuRef = useRef(null);
 
-  // Close status popover and account menu on click outside or Escape
+  // Close account menu and mobile menu on click outside or Escape
   useEffect(() => {
     function handleClickOutside(event) {
-      if (statusPopoverRef.current && !statusPopoverRef.current.contains(event.target)) {
-        setShowStatusPopover(false);
-      }
       if (accountMenuRef.current && !accountMenuRef.current.contains(event.target)) {
         setShowAccountMenu(false);
         setShowRoleSelector(false);
@@ -38,7 +33,6 @@ export default function Header({
 
     function handleKeyDown(event) {
       if (event.key === 'Escape') {
-        setShowStatusPopover(false);
         setShowAccountMenu(false);
         setShowRoleSelector(false);
         setShowMobileMenu(false);
@@ -158,70 +152,14 @@ export default function Header({
 
         {/* Status Actions & Clinician Profile */}
         <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-          {/* AI Status Pill with Popover for Technical Details */}
-          <div className="relative" ref={statusPopoverRef}>
-            <button
-              onClick={() => setShowStatusPopover(!showStatusPopover)}
-              aria-label="AI screening system status details"
-              aria-expanded={showStatusPopover}
-              type="button"
-              title="Click to view AI system details"
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-highest/10 border border-white/10 hover:bg-white/10 transition-colors"
-            >
-              <span className={`w-2 h-2 rounded-full shrink-0 ${backendOnline ? 'bg-tertiary-fixed-dim animate-pulse' : 'bg-amber-400'}`}></span>
-              <span className="font-data-mono text-[11px] text-tertiary-fixed font-medium whitespace-nowrap">
-                {backendOnline ? 'AI Online' : 'AI Offline'}
-              </span>
-              <span className="material-symbols-outlined text-[13px] text-surface-dim hidden sm:inline">
-                {showStatusPopover ? 'expand_less' : 'expand_more'}
-              </span>
-            </button>
-
-            {/* Technical details popover */}
-            {showStatusPopover && (
-              <div className="absolute right-0 mt-2 w-64 p-3 rounded-xl bg-inverse-surface border border-white/15 shadow-2xl z-50 text-left text-xs backdrop-blur-md animate-in fade-in zoom-in-95 duration-150">
-                <div className="flex items-center justify-between pb-2 border-b border-white/10 mb-2">
-                  <span className="font-semibold text-white">System Status</span>
-                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-data-mono ${backendOnline ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'}`}>
-                    {backendOnline ? 'Operational' : 'Fallback Mode'}
-                  </span>
-                </div>
-                <div className="space-y-1.5 text-surface-dim text-[11px]">
-                  <div className="flex justify-between">
-                    <span className="text-white/60">Inference Core:</span>
-                    <span className="font-data-mono text-white/90">MediaPipe v2.4</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-white/60">Backend Service:</span>
-                    <span className="font-data-mono text-white/90">{backendOnline ? 'FastAPI :8000' : 'Local Mock'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-white/60">Cloud Database:</span>
-                    <span className={`font-data-mono font-semibold ${isSupabaseConfigured ? 'text-emerald-300' : 'text-amber-300'}`}>
-                      {isSupabaseConfigured ? 'Supabase Live' : 'Local SQLite'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-white/60">Biomechanical Model:</span>
-                    <span className="font-data-mono text-white/90">RandomForest (Baseline Acc 82.4%)</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-white/60">Protocol:</span>
-                    <span className="font-data-mono text-white/90">ICMR/ABDM National v2.0</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Regional Hospital / Station Tag */}
+          {/* Active Area / Region Tag */}
           <div
-            className="hidden md:flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container-highest/10 text-surface-dim border border-white/5"
-            title={`Active Station: ${currentUser?.station || 'Safdarjung OPD Unit, New Delhi'}`}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-highest/20 text-surface border border-white/10 shadow-xs"
+            title={`Active Region / Area: ${activePatient?.region || currentUser?.station || 'Delhi NCR'}`}
           >
-            <span className="material-symbols-outlined text-[15px] text-tertiary-fixed-dim">location_on</span>
-            <span className="font-label-sm text-[11px] whitespace-nowrap">
-              {currentUser?.station ? currentUser.station.split(',')[0].replace(' Hospital', '').replace(' District', '') : 'Safdarjung OPD'}
+            <span className="material-symbols-outlined text-[16px] text-tertiary-fixed">location_on</span>
+            <span className="font-label-sm text-[11px] text-surface-container-lowest font-medium whitespace-nowrap">
+              {activePatient?.region || currentUser?.station?.split(',')[0] || 'Delhi NCR'}
             </span>
           </div>
 
