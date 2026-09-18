@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Header from './components/Header';
 import PatientBanner from './components/PatientBanner';
 import TeleconsultDrawer from './components/TeleconsultDrawer';
@@ -16,10 +16,24 @@ import { checkBackendHealth, getPatients, createPatient, saveScreening, getLates
 import { useCamera } from './utils/useCamera';
 import { getStoredUser, logoutUser, fetchServerUserProfile } from './utils/auth';
 
+const VALID_TABS = ['overview', 'survey', 'gait', 'report', 'cohort', 'hardware'];
+
+function getInitialTab() {
+  if (typeof window === 'undefined') return 'overview';
+  const hash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
+  if (VALID_TABS.includes(hash)) return hash;
+  const stored = sessionStorage.getItem('orthonex_active_tab');
+  if (VALID_TABS.includes(stored)) return stored;
+  return 'overview';
+}
+
 export default function App() {
   const [currentUser, setCurrentUser] = useState(() => getStoredUser());
   const camera = useCamera(Boolean(currentUser));
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState(getInitialTab);
+  const scrollPositions = useRef({});
+  const isHandlingPopState = useRef(false);
+
   const [backendOnline, setBackendOnline] = useState(false);
   const [patients, setPatients] = useState([]);
   const [activePatient, setActivePatient] = useState(null);
@@ -53,6 +67,67 @@ export default function App() {
       isMounted = false;
     };
   }, []);
+
+  // 1b. History & Navigation Engine (Prevents back-button loops, persists tab, restores scroll)
+  useEffect(() => {
+    const initial = getInitialTab();
+    const currentState = window.history.state;
+    if (!currentState || !currentState.tab) {
+      window.history.replaceState(
+        { tab: initial, isRoot: true, index: 0 },
+        document.title,
+        window.location.hash || `#${initial}`
+      );
+    }
+    sessionStorage.setItem('orthonex_active_tab', initial);
+
+    const handlePopState = (event) => {
+      const stateTab = event.state?.tab;
+      if (stateTab && VALID_TABS.includes(stateTab)) {
+        isHandlingPopState.current = true;
+        setActiveTab(stateTab);
+        sessionStorage.setItem('orthonex_active_tab', stateTab);
+
+        const targetScroll = scrollPositions.current[stateTab] || 0;
+        requestAnimationFrame(() => {
+          window.scrollTo({ top: targetScroll, behavior: 'instant' });
+          setTimeout(() => {
+            isHandlingPopState.current = false;
+          }, 60);
+        });
+      } else {
+        setActiveTab('overview');
+        sessionStorage.setItem('orthonex_active_tab', 'overview');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+
+  const handleNavigate = (newTab, options = {}) => {
+    if (!VALID_TABS.includes(newTab)) return;
+    if (newTab === activeTab && !options.force) return;
+
+    scrollPositions.current[activeTab] = window.scrollY;
+
+    const currentIndex = window.history.state?.index ?? 0;
+    if (options.replace) {
+      window.history.replaceState({ tab: newTab, index: currentIndex }, document.title, `#${newTab}`);
+    } else {
+      window.history.pushState({ tab: newTab, index: currentIndex + 1 }, document.title, `#${newTab}`);
+    }
+
+    setActiveTab(newTab);
+    sessionStorage.setItem('orthonex_active_tab', newTab);
+
+    const targetScroll = options.scrollToTop ? 0 : (scrollPositions.current[newTab] || 0);
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: targetScroll, behavior: options.smooth ? 'smooth' : 'instant' });
+    });
+  };
 
   // 2. Only initialize protected clinical data and queries when an authenticated session exists
   useEffect(() => {
@@ -229,7 +304,7 @@ export default function App() {
       {/* Top Header */}
       <Header
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={handleNavigate}
         onOpenTeleconsult={() => setShowTeleconsult(true)}
         backendOnline={backendOnline}
         camera={camera}
@@ -251,11 +326,11 @@ export default function App() {
       </div>
 
       {/* Main Workspace Canvas */}
-      <main className="w-full flex-1 max-w-[1600px] mx-auto px-lg py-lg">
+      <main className="w-full flex-1 max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {activeTab === 'overview' && (
           <OverviewView
             activePatient={activePatient}
-            onNavigate={setActiveTab}
+            onNavigate={handleNavigate}
             surveyResult={surveyResult}
             onSurveySubmitted={handleSurveySubmitted}
             gaitResult={gaitResult}
@@ -272,7 +347,7 @@ export default function App() {
             onAnalysisComplete={handleGaitComplete}
             xrayData={xrayResult}
             onXrayAnalyzed={setXrayResult}
-            onNavigate={setActiveTab}
+            onNavigate={handleNavigate}
             onOpenTeleconsult={() => setShowTeleconsult(true)}
             camera={camera}
           />
@@ -283,6 +358,7 @@ export default function App() {
             activePatient={activePatient}
             onSurveySubmitted={handleSurveySubmitted}
             onOpenTeleconsult={() => setShowTeleconsult(true)}
+            onNavigate={handleNavigate}
           />
         )}
 
@@ -294,6 +370,7 @@ export default function App() {
             xrayData={xrayResult}
             onXrayAnalyzed={setXrayResult}
             onOpenTeleconsult={() => setShowTeleconsult(true)}
+            onNavigate={handleNavigate}
             currentUser={currentUser}
           />
         )}
@@ -304,7 +381,7 @@ export default function App() {
             activePatient={activePatient}
             onSelectPatient={(p) => setActivePatient(p)}
             onOpenEnrollModal={() => setShowEnrollModal(true)}
-            onNavigate={setActiveTab}
+            onNavigate={handleNavigate}
             currentUser={currentUser}
           />
         )}
@@ -312,6 +389,7 @@ export default function App() {
         {activeTab === 'hardware' && (
           <HardwareFleetView
             currentUser={currentUser}
+            onNavigate={handleNavigate}
           />
         )}
       </main>

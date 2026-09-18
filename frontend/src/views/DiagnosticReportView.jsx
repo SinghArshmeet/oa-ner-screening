@@ -8,6 +8,7 @@ export default function DiagnosticReportView({
   xrayData: propXrayData,
   onXrayAnalyzed,
   onOpenTeleconsult,
+  onNavigate,
   currentUser
 }) {
   const [signedOff, setSignedOff] = useState(false);
@@ -250,7 +251,23 @@ export default function DiagnosticReportView({
   };
 
   return (
-    <div className="flex flex-col w-full gap-lg animate-fade-in print:p-0">
+    <div className="flex flex-col w-full gap-5 animate-fade-in print:p-0">
+      {/* Top Breadcrumb & Return to Overview */}
+      <div className="flex items-center justify-between print:hidden">
+        <button
+          onClick={() => (onNavigate ? onNavigate('overview') : window.history.back())}
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-secondary hover:text-primary transition-colors py-1 px-2 -ml-2 rounded-lg hover:bg-surface-container"
+          type="button"
+        >
+          <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+          <span>Back to Overview</span>
+        </button>
+
+        <span className="text-[11px] text-secondary font-medium">
+          Dossier ID: <strong className="font-data-mono text-on-surface">{activePatient?.id || 'IND-OA-2025'}</strong>
+        </span>
+      </div>
+
       {/* Patient Context & National ABDM Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-md p-card-padding rounded-xl bg-surface-container-lowest shadow-sm border border-surface-container">
         <div className="flex flex-wrap items-center gap-md">

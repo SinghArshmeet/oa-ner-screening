@@ -16,8 +16,21 @@ export default function OverviewView({
 }) {
   const profile = useMemo(() => getPatientClinicalProfile(activePatient), [activePatient?.id, activePatient?.dbId]);
 
-  // Active evaluation step (1 to 4)
-  const [activeStep, setActiveStep] = useState(gaitResult ? 4 : 1);
+  // Active evaluation step (1 to 4) with state memory
+  const [activeStep, setActiveStep] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('orthonex_overview_step');
+      if (saved && ['1', '2', '3', '4'].includes(saved)) return parseInt(saved, 10);
+    } catch {}
+    return gaitResult ? 4 : 1;
+  });
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('orthonex_overview_step', String(activeStep));
+    } catch {}
+  }, [activeStep]);
+
   const [clinicalPrediction, setClinicalPrediction] = useState(surveyResult?.clinical_prediction || null);
   const [isPredicting, setIsPredicting] = useState(false);
   const [completedSteps, setCompletedSteps] = useState(() => {
