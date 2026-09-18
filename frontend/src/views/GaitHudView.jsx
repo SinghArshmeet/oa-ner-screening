@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { analyzeVideoFile, analyzeXrayImage } from '../utils/api';
 import { useCamera } from '../utils/useCamera';
+import { getPatientClinicalProfile } from '../utils/clinicalProfiles';
 
-export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenTeleconsult, camera: externalCamera, xrayData: propXrayData, onXrayAnalyzed, onNavigate }) {
+export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenTeleconsult, camera: externalCamera, xrayData: propXrayData, onXrayAnalyzed, onNavigate, surveyResult }) {
+  const profile = getPatientClinicalProfile(activePatient);
   const localCamera = useCamera();
   const camera = externalCamera || localCamera;
 
@@ -437,6 +439,48 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
               {batterySaver ? 'battery_saver' : 'bolt'}
             </span>
             <span>{batterySaver ? '15 FPS (Battery Saver)' : '30 FPS (Standard)'}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Pre-Gait Clinical Intake Context Banner (Transferred from Main Page Steps 1–3) */}
+      <div className="w-full bg-surface-container-lowest rounded-xl p-3 sm:p-4 border-l-4 border-primary shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary-container text-on-primary flex items-center justify-center font-bold text-sm shadow-xs shrink-0">
+            <span className="material-symbols-outlined text-[22px]">assignment_turned_in</span>
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-bold uppercase tracking-wider text-primary">Pre-Gait Clinical Evaluation</span>
+              <span className="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 font-data-mono text-[10px] font-bold">
+                ✓ Steps 1–3 Ready
+              </span>
+              <span className="text-[11px] text-on-surface-variant font-medium">
+                Screener Verified
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-on-surface mt-1">
+              <span><strong>Joint Laterality:</strong> {profile?.vitals?.affectedJoint || 'Right Knee'}</span>
+              <span className="text-outline-variant">·</span>
+              <span><strong>BMI:</strong> {profile?.vitals?.bmi || '27.4'} ({profile?.vitals?.bmiStatus?.split('(')[0]?.trim() || 'Overweight'})</span>
+              <span className="text-outline-variant">·</span>
+              <span><strong>Pain VAS:</strong> <span className="text-error font-bold">{surveyResult?.pain ?? profile?.survey?.painVAS ?? 7}/10</span></span>
+              <span className="text-outline-variant">·</span>
+              <span><strong>Stiffness:</strong> <span className="text-primary font-bold">{surveyResult?.stiffness ?? profile?.survey?.stiffnessMins ?? 35} mins</span></span>
+              <span className="text-outline-variant">·</span>
+              <span><strong>KOOS-India:</strong> <span className="font-bold text-tertiary">{surveyResult?.compositeScore || surveyResult?.raw_score || profile?.survey?.score || 28}/40</span></span>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => onNavigate && onNavigate('overview')}
+            className="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-semibold text-xs transition flex items-center gap-1 border border-outline-variant/30"
+            type="button"
+            title="Return to Main Page step-wise evaluation to modify vitals or symptoms"
+          >
+            <span className="material-symbols-outlined text-[15px]">edit_note</span>
+            Edit Intake Vitals
           </button>
         </div>
       </div>

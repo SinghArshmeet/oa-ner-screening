@@ -249,6 +249,7 @@ export default function App() {
             activePatient={activePatient}
             onNavigate={setActiveTab}
             surveyResult={surveyResult}
+            onSurveySubmitted={handleSurveySubmitted}
             gaitResult={gaitResult}
             xrayResult={xrayResult}
             onOpenTeleconsult={() => setShowTeleconsult(true)}
@@ -259,6 +260,7 @@ export default function App() {
         {activeTab === 'gait' && (
           <GaitHudView
             activePatient={activePatient}
+            surveyResult={surveyResult}
             onAnalysisComplete={handleGaitComplete}
             xrayData={xrayResult}
             onXrayAnalyzed={setXrayResult}
