@@ -67,3 +67,18 @@ class ScreeningCreate(BaseModel):
     simulation_status: str | None = Field(default="real", max_length=60)
     movement_result: str | None = Field(default=None, max_length=20_000)
     questionnaire_result: str | None = Field(default=None, max_length=20_000)
+
+
+class ClinicalPredictRequest(BaseModel):
+    age: float = 60.0
+    sex: int = 1  # 1=Male, 2=Female
+    bmi: float = 26.5
+    side: int = 1  # 1=Right, 2=Left
+    bp_sys: float = 130.0
+    bp_dias: float = 85.0
+    pain: float = 5.0  # VAS 0-10
+    stiffness: float = 30.0  # Mins
+    gait_speed: float | None = 0.95  # m/s
+    knee_flexion_deg: float | None = 135.0
+    knee_deficit_deg: float | None = 10.0
+

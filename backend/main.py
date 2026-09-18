@@ -14,12 +14,13 @@ from urllib.parse import quote
 import urllib.request
 
 import httpx
+import joblib
 from fastapi import Cookie, Depends, FastAPI, File, Header, HTTPException, Query, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
 from .db import get_connection, init_db
-from .schemas import AnalysisRequest, DeviceConfig, PatientCreate, QuestionnairePayload, ScreeningCreate
+from .schemas import AnalysisRequest, ClinicalPredictRequest, DeviceConfig, PatientCreate, QuestionnairePayload, ScreeningCreate
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SRC_DIR = PROJECT_ROOT / "src"
@@ -31,6 +32,7 @@ from oa_screening.xray_model import XRayModelSpec
 
 MODEL_PATH = PROJECT_ROOT / "artifacts" / "movement_baseline.joblib"
 XRAY_MODEL_PATH = PROJECT_ROOT / "artifacts" / "xray_checkpoint.pth"
+CLINICAL_MODEL_PATH = PROJECT_ROOT / "artifacts" / "clinical_biomechanical_oa_model.joblib"
 
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
@@ -177,6 +179,7 @@ def health() -> dict[str, object]:
         "status": "ok",
         "message": "OA screening backend ready",
         "model_loaded": MODEL_PATH.exists(),
+        "clinical_model_loaded": CLINICAL_MODEL_PATH.exists(),
         "xray_model_loaded": XRAY_MODEL_PATH.exists(),
         "google_auth_configured": bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
     }
@@ -389,6 +392,68 @@ async def analyze_movement_video(file: UploadFile = File(...), _: dict[str, obje
         "is_simulated": False,
         "data_source": "backend_model"
     }
+
+
+@app.post("/api/clinical/predict")
+def predict_clinical_oa_risk(payload: ClinicalPredictRequest, _: dict[str, object] = Depends(require_authenticated_user)) -> dict[str, object]:
+    if not CLINICAL_MODEL_PATH.exists():
+        raise HTTPException(status_code=503, detail="Clinical biomechanical OA model is not available.")
+    
+    try:
+        bundle = joblib.load(CLINICAL_MODEL_PATH)
+        pipeline = bundle["pipeline"]
+        feature_names = bundle["feature_names"]
+        
+        koos_pain = max(0.0, min(100.0, 100.0 - (payload.pain * 10.0)))
+        womac_pain = max(0.0, min(20.0, payload.pain * 2.0))
+        womac_stiffness = max(0.0, min(8.0, (payload.stiffness / 60.0) * 8.0))
+        womac_function = max(0.0, min(68.0, womac_pain * 3.4))
+        womac_total = womac_pain + womac_stiffness + womac_function
+        
+        data_dict = {
+            "side": float(payload.side),
+            "age": float(payload.age),
+            "sex": float(payload.sex),
+            "bmi": float(payload.bmi),
+            "bp_sys": float(payload.bp_sys),
+            "bp_dias": float(payload.bp_dias),
+            "koos_pain": koos_pain,
+            "womac_pain": womac_pain,
+            "womac_stiffness": womac_stiffness,
+            "womac_function": womac_function,
+            "womac_total": womac_total,
+            "gait_speed_20m": float(payload.gait_speed or 0.95),
+            "walk_time_400m": 320.0 if (payload.gait_speed or 0.95) < 1.0 else 260.0,
+            "knee_flexion_deg": float(payload.knee_flexion_deg or 135.0),
+            "knee_alignment_deg": 2.0,
+            "knee_deficit_deg": float(payload.knee_deficit_deg or 10.0),
+            "knee_force_max": 120.0 if payload.age > 65 else 160.0,
+        }
+        
+        X_input = [[data_dict.get(col, 0.0) for col in feature_names]]
+        probs = pipeline.predict_proba(X_input)[0]
+        pred_idx = int(pipeline.predict(X_input)[0])
+        
+        prob_oa_pain = float(probs[1])
+        risk_category = "high" if prob_oa_pain >= 0.65 else "moderate" if prob_oa_pain >= 0.35 else "low"
+        
+        return {
+            "status": "success",
+            "predicted_class": bundle["class_names"][pred_idx],
+            "oa_pain_probability": round(prob_oa_pain, 4),
+            "risk_category": risk_category,
+            "model_accuracy": bundle["metrics"]["accuracy"],
+            "model_roc_auc": bundle["metrics"]["roc_auc"],
+            "cohort": bundle.get("provenance", "OAI Cohort"),
+            "contributing_factors": [
+                f"Pain VAS: {payload.pain}/10 (KOOS Pain: {round(koos_pain, 1)})",
+                f"Morning Stiffness: {payload.stiffness} mins",
+                f"Gait Velocity: {payload.gait_speed or 0.95} m/s",
+                f"BMI: {payload.bmi} kg/m²"
+            ]
+        }
+    except Exception as error:
+        raise HTTPException(status_code=500, detail=f"Inference error: {error}") from error
 
 
 @app.post("/api/movement/analyze")
