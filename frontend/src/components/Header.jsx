@@ -148,30 +148,6 @@ export default function Header({
           </div>
         </div>
 
-        {/* Center: Desktop Navigation Bar */}
-        <nav className="hidden md:flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/10" aria-label="Primary Navigation">
-          {navTabs.map((tab) => {
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                type="button"
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  isActive
-                    ? 'bg-primary text-white shadow-sm ring-1 ring-white/20'
-                    : 'text-surface-dim hover:text-white hover:bg-white/10'
-                }`}
-                title={tab.fullTitle}
-              >
-                <span className={`material-symbols-outlined text-[16px] ${isActive ? 'text-white' : 'text-surface-dim/80'}`}>
-                  {tab.icon}
-                </span>
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </nav>
 
         {/* Status Actions & Clinician Profile */}
         <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
@@ -419,28 +395,6 @@ export default function Header({
         </div>
       </div>
 
-      {/* Mobile/Tablet Horizontal Scroll Nav (Shortened labels) */}
-      <div className="xl:hidden w-full bg-inverse-surface/95 border-t border-white/10 px-3 sm:px-4 py-1.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-        {navTabs.map((tab) => {
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              title={tab.fullTitle}
-              aria-label={tab.fullTitle}
-              className={`px-3 py-1 text-xs whitespace-nowrap rounded-lg transition-all ${
-                isActive
-                  ? 'bg-primary-container text-on-primary-container font-semibold shadow-sm'
-                  : 'text-surface-dim hover:text-white hover:bg-white/5'
-              }`}
-              type="button"
-            >
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
     </header>
   );
 }
