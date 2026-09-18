@@ -31,6 +31,8 @@ artifacts/*
 !artifacts/movement_baseline.joblib
 !artifacts/movement_baseline.report.json
 !artifacts/knee_bone_density_model.joblib
+!artifacts/clinical_biomechanical_oa_model.joblib
+!artifacts/clinical_biomechanical_oa_model.report.json
 
 PROJECT_LINKS_AND_INFO.txt
 
