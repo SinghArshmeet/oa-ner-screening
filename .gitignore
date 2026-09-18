@@ -33,7 +33,10 @@ artifacts/*
 !artifacts/knee_bone_density_model.joblib
 !artifacts/clinical_biomechanical_oa_model.joblib
 !artifacts/clinical_biomechanical_oa_model.report.json
-!artifacts/OA_MODELS_BENCHMARKS_AND_METRICS.xlsx
+
+# Local revision & expo files (kept local only)
+EXPO_PROJECT_OVERVIEW.*
+OA_MODELS_BENCHMARKS_AND_METRICS.xlsx
 
 PROJECT_LINKS_AND_INFO.txt
 
