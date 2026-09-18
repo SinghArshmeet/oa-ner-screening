@@ -117,7 +117,10 @@ export default function App() {
       }
       return;
     }
-    if (newTab === activeTab && !options.force) return;
+    if (newTab === activeTab && !options.force) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
 
     scrollPositions.current[activeTab] = window.scrollY;
 

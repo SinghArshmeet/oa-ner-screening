@@ -134,25 +134,35 @@ export default function Header({
             )}
           </div>
 
-          <div className="w-8 h-8 rounded-xl bg-black/30 border border-white/15 p-1 flex items-center justify-center shadow-xs overflow-hidden shrink-0">
-            <img src="/logo.png" alt="OrthoNex Logo" className="w-full h-full object-contain" />
-          </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-1.5">
-              <span className="font-headline-sm text-surface-container-lowest font-extrabold tracking-tight text-sm sm:text-base">
-                OrthoNex
-              </span>
-              <span
-                className="px-1.5 py-0.2 rounded bg-primary-container/70 text-on-primary font-data-mono text-[9px] uppercase font-semibold tracking-wide"
-                title="Indian Council of Medical Research · National Musculoskeletal Screening Initiative"
-              >
-                ICMR
+          <button
+            onClick={() => {
+              setActiveTab('overview');
+              setShowMobileMenu(false);
+            }}
+            type="button"
+            className="flex items-center gap-2 sm:gap-2.5 text-left group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl transition-all hover:opacity-95 active:scale-[0.98] cursor-pointer"
+            title="Return to OrthoNex Main Page"
+          >
+            <div className="w-8 h-8 rounded-xl bg-black/30 border border-white/15 p-1 flex items-center justify-center shadow-xs overflow-hidden shrink-0 group-hover:border-white/40 group-hover:scale-105 transition-all">
+              <img src="/logo.png" alt="OrthoNex Logo" className="w-full h-full object-contain" />
+            </div>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1.5">
+                <span className="font-headline-sm text-surface-container-lowest font-extrabold tracking-tight text-sm sm:text-base group-hover:text-cyan-200 transition-colors">
+                  OrthoNex
+                </span>
+                <span
+                  className="px-1.5 py-0.2 rounded bg-primary-container/70 text-on-primary font-data-mono text-[9px] uppercase font-semibold tracking-wide"
+                  title="Indian Council of Medical Research · National Musculoskeletal Screening Initiative"
+                >
+                  ICMR
+                </span>
+              </div>
+              <span className="font-label-sm text-surface-dim/70 text-[10px] font-normal hidden lg:inline group-hover:text-surface-dim transition-colors">
+                AI Musculoskeletal Triage
               </span>
             </div>
-            <span className="font-label-sm text-surface-dim/70 text-[10px] font-normal hidden lg:inline">
-              AI Musculoskeletal Triage
-            </span>
-          </div>
+          </button>
         </div>
 
 
