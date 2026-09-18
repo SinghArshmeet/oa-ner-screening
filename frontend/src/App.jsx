@@ -84,10 +84,10 @@ export default function App() {
 
   // 3. Auto-load latest persisted screening whenever the active patient changes
   useEffect(() => {
+    setXrayResult(null);
     if (!activePatient?.dbId) {
       setSurveyResult(null);
       setGaitResult(null);
-      setXrayResult(null);
       return;
     }
 
@@ -216,6 +216,7 @@ export default function App() {
     setActivePatient(null);
     setSurveyResult(null);
     setGaitResult(null);
+    setXrayResult(null);
   };
 
   // Route protection: If unauthenticated, render clinical login portal

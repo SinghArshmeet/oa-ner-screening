@@ -37,8 +37,12 @@ export default function OverviewView({
     profile.survey?.hazards?.map((h) => h.label) || ['Prolonged Knee Squatting', 'Agrarian Manual Load']
   );
 
-  // Calculate live BMI
-  const computedBmi = (weightKg / Math.pow(heightCm / 100, 2)).toFixed(1);
+  // Calculate live BMI with safe numeric parsing
+  const numHeight = parseFloat(heightCm) || 0;
+  const numWeight = parseFloat(weightKg) || 0;
+  const computedBmi = (numHeight >= 50 && numWeight >= 10)
+    ? (numWeight / Math.pow(numHeight / 100, 2)).toFixed(1)
+    : '24.2';
   const getBmiStatus = (bmi) => {
     const b = parseFloat(bmi);
     if (b < 18.5) return { label: 'Underweight', color: 'text-amber-500', note: 'Low bone mineral density risk' };

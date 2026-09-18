@@ -203,17 +203,39 @@ export default function DiagnosticReportView({
     if (!file) return;
     setXrayLoading(true);
     setXrayError('');
+    const previewUrl = URL.createObjectURL(file);
     try {
       const res = await analyzeXrayImage(file);
       if (res.status === 'success' || res.kl_grade !== undefined) {
-        setLocalXrayData(res);
-        if (onXrayAnalyzed) onXrayAnalyzed(res);
+        const enriched = { ...res, preview_url: previewUrl };
+        setLocalXrayData(enriched);
+        if (onXrayAnalyzed) onXrayAnalyzed(enriched);
       }
     } catch (err) {
       setXrayError(err.message || 'Radiograph analysis could not be processed.');
     } finally {
       setXrayLoading(false);
       e.target.value = '';
+    }
+  };
+
+  const handleLoadSampleXray = async () => {
+    setXrayLoading(true);
+    setXrayError('');
+    try {
+      const response = await fetch('/sample_knee_xray.png');
+      const blob = await response.blob();
+      const sampleFile = new File([blob], 'sample_knee_xray.png', { type: 'image/png' });
+      const res = await analyzeXrayImage(sampleFile);
+      if (res.status === 'success' || res.kl_grade !== undefined) {
+        const enriched = { ...res, preview_url: '/sample_knee_xray.png' };
+        setLocalXrayData(enriched);
+        if (onXrayAnalyzed) onXrayAnalyzed(enriched);
+      }
+    } catch (err) {
+      setXrayError(err.message || 'Could not load clinical sample radiograph.');
+    } finally {
+      setXrayLoading(false);
     }
   };
 
@@ -749,6 +771,49 @@ export default function DiagnosticReportView({
                     </div>
                   </div>
                 </div>
+
+                {xrayData.probabilities && (
+                  <div className="mt-2 pt-2 border-t border-surface-container/60 flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between text-[10px] font-semibold text-secondary">
+                      <span>KL Probability Distribution</span>
+                      <span className="text-tertiary font-bold">ResNet-18 (5-Class)</span>
+                    </div>
+                    <div className="grid grid-cols-5 gap-1 text-center">
+                      {Object.entries(xrayData.probabilities).map(([gradeKey, probVal]) => {
+                        const pct = Math.round(probVal * 100);
+                        const isPred = xrayData.kl_grade === parseInt(gradeKey.replace('KL', ''), 10);
+                        return (
+                          <div
+                            key={gradeKey}
+                            className={`p-1 rounded flex flex-col items-center transition-all ${
+                              isPred
+                                ? 'bg-primary/20 border border-primary/40 shadow-xs'
+                                : 'bg-surface-container-high/40'
+                            }`}
+                          >
+                            <span className={`text-[9px] font-data-mono font-bold ${isPred ? 'text-primary' : 'text-secondary'}`}>
+                              {gradeKey}
+                            </span>
+                            <div className="w-full bg-surface-container-highest/40 h-1 rounded-full my-0.5 overflow-hidden">
+                              <div
+                                className={`h-full rounded-full ${isPred ? 'bg-primary' : 'bg-secondary/60'}`}
+                                style={{ width: `${pct}%` }}
+                              ></div>
+                            </div>
+                            <span className="text-[9px] font-data-mono font-medium text-on-surface">{pct}%</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {xrayError && (
+              <div className="mb-xs p-2 rounded bg-error-container text-on-error-container text-[11px] font-medium flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[14px]">error</span>
+                <span>{xrayError}</span>
               </div>
             )}
 
@@ -779,7 +844,7 @@ export default function DiagnosticReportView({
               </div>
             </div>
 
-            <div className="pt-xs">
+            <div className="pt-xs flex flex-col sm:flex-row gap-2">
               <input
                 type="file"
                 ref={xrayInputRef}
@@ -790,13 +855,24 @@ export default function DiagnosticReportView({
               <button
                 onClick={() => xrayInputRef.current?.click()}
                 disabled={xrayLoading}
-                className="w-full py-1.5 px-sm rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-xs font-semibold border border-outline-variant/30 flex items-center justify-center gap-1.5 transition"
+                className="flex-1 py-1.5 px-sm rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-xs font-semibold border border-outline-variant/30 flex items-center justify-center gap-1.5 transition"
                 type="button"
               >
                 <span className={`material-symbols-outlined text-[16px] ${xrayLoading ? 'animate-spin' : 'text-primary'}`}>
                   {xrayLoading ? 'refresh' : 'upload_file'}
                 </span>
-                <span>{xrayLoading ? 'Analyzing Radiograph...' : xrayData ? 'Re-upload Radiograph' : 'Upload Knee X-Ray (Grad-CAM)'}</span>
+                <span>{xrayLoading ? 'Analyzing...' : xrayData ? 'Re-upload' : 'Upload X-Ray'}</span>
+              </button>
+
+              <button
+                onClick={handleLoadSampleXray}
+                disabled={xrayLoading}
+                className="py-1.5 px-3 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary font-label-sm text-xs font-semibold border border-primary/30 flex items-center justify-center gap-1.5 transition active:scale-95 shadow-xs"
+                type="button"
+                title="Instantly test the real PyTorch ResNet-18 model & Grad-CAM with a clinical knee radiograph"
+              >
+                <span className="material-symbols-outlined text-[16px]">science</span>
+                <span>Try Clinical Sample</span>
               </button>
             </div>
           </div>
