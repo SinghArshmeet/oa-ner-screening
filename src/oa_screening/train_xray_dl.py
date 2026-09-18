@@ -86,10 +86,34 @@ def train_epoch(model: nn.Module, loader: DataLoader, criterion: nn.Module, opti
 
 
 
-def eval_epoch(model: nn.Module, loader: DataLoader, criterion: nn.Module, device: torch.device) -> tuple[float, float, list[int], list[int]]:
+class OrdinalKLLoss(nn.Module):
+    """Ordinal soft-target loss modeling progressive Kellgren-Lawrence degeneration."""
+    def __init__(self, num_classes: int = 5, sigma: float = 0.65, class_weights: torch.Tensor | None = None) -> None:
+        super().__init__()
+        self.num_classes = num_classes
+        self.sigma = sigma
+        self.class_weights = class_weights
+
+    def forward(self, logits: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
+        classes = torch.arange(self.num_classes, device=logits.device, dtype=torch.float)
+        diff = classes.unsqueeze(0) - targets.unsqueeze(1).float()
+        target_dist = torch.exp(- (diff ** 2) / (2.0 * (self.sigma ** 2)))
+        target_dist = target_dist / target_dist.sum(dim=1, keepdim=True)
+        
+        log_probs = torch.nn.functional.log_softmax(logits, dim=1)
+        loss_per_sample = - (target_dist * log_probs).sum(dim=1)
+        if self.class_weights is not None:
+            weights = self.class_weights[targets]
+            loss_per_sample = loss_per_sample * weights
+        return loss_per_sample.mean()
+
+
+def eval_epoch(model: nn.Module, loader: DataLoader, criterion: nn.Module, device: torch.device) -> tuple[float, float, float, float, list[int], list[int]]:
     model.eval()
     running_loss = 0.0
     correct = 0
+    correct_off1 = 0
+    correct_binary = 0
     total = 0
     all_preds: list[int] = []
     all_targets: list[int] = []
@@ -103,6 +127,8 @@ def eval_epoch(model: nn.Module, loader: DataLoader, criterion: nn.Module, devic
             running_loss += loss.item() * images.size(0)
             _, preds = torch.max(outputs, 1)
             correct += torch.sum(preds == targets.data).item()
+            correct_off1 += torch.sum(torch.abs(preds - targets.data) <= 1).item()
+            correct_binary += torch.sum((preds >= 2) == (targets.data >= 2)).item()
             total += images.size(0)
 
             all_preds.extend(preds.cpu().tolist())
@@ -110,7 +136,9 @@ def eval_epoch(model: nn.Module, loader: DataLoader, criterion: nn.Module, devic
 
     epoch_loss = running_loss / max(total, 1)
     epoch_acc = correct / max(total, 1)
-    return epoch_loss, epoch_acc, all_preds, all_targets
+    epoch_off1 = correct_off1 / max(total, 1)
+    epoch_binary = correct_binary / max(total, 1)
+    return epoch_loss, epoch_acc, epoch_off1, epoch_binary, all_preds, all_targets
 
 
 def main() -> None:
@@ -171,35 +199,34 @@ def main() -> None:
     model = build_model(num_classes=len(val_dataset.classes), pretrained=True).to(device)
 
     if args.freeze_backbone:
-        print("Fine-tuning strategy: Freezing conv1 and layers 1-3. Training layer4 and fc classification head.")
+        print("Fine-tuning strategy: Freezing conv1 and layers 1-2. Training layer3, layer4, and fc classification head.")
         for name, param in model.named_parameters():
-            if not name.startswith(("layer4", "fc")):
+            if not name.startswith(("layer3", "layer4", "fc")):
                 param.requires_grad = False
 
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     total_params = sum(p.numel() for p in model.parameters())
     print(f"Trainable parameters: {trainable_params:,} / {total_params:,} ({trainable_params/total_params*100:.1f}%)")
 
-    criterion = nn.CrossEntropyLoss(weight=class_weights, label_smoothing=0.1)
+    criterion = OrdinalKLLoss(num_classes=len(val_dataset.classes), sigma=0.65, class_weights=class_weights)
     optimizer = torch.optim.AdamW(filter(lambda p: p.requires_grad, model.parameters()), lr=args.lr, weight_decay=1e-2)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
-
 
     best_val_acc = 0.0
     checkpoint_path = args.output_dir / "xray_checkpoint.pth"
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
-    print("\nStarting Deep Learning Training...")
+    print("\nStarting Deep Learning Training with Ordinal Loss...")
     start_time = time.time()
 
     for epoch in range(1, args.epochs + 1):
         t0 = time.time()
         train_loss, train_acc = train_epoch(model, train_loader, criterion, optimizer, device)
-        val_loss, val_acc, _, _ = eval_epoch(model, val_loader, criterion, device)
+        val_loss, val_acc, val_off1, val_bin, _, _ = eval_epoch(model, val_loader, criterion, device)
         scheduler.step()
         elapsed = time.time() - t0
 
-        print(f"Epoch {epoch:02d}/{args.epochs:02d} [{elapsed:.1f}s] - Train Loss: {train_loss:.4f}, Train Acc: {train_acc*100:.2f}% | Val Loss: {val_loss:.4f}, Val Acc: {val_acc*100:.2f}%")
+        print(f"Epoch {epoch:02d}/{args.epochs:02d} [{elapsed:.1f}s] - Train Loss: {train_loss:.4f}, Train Acc: {train_acc*100:.2f}% | Val Loss: {val_loss:.4f}, Exact Acc: {val_acc*100:.2f}%, ±1 Acc: {val_off1*100:.2f}%, Binary OA: {val_bin*100:.2f}%")
 
         if val_acc > best_val_acc:
             best_val_acc = val_acc
@@ -207,6 +234,8 @@ def main() -> None:
                 "epoch": epoch,
                 "model_state_dict": model.state_dict(),
                 "val_acc": val_acc,
+                "val_off1_acc": val_off1,
+                "val_binary_acc": val_bin,
                 "val_loss": val_loss,
                 "classes": val_dataset.classes,
                 "architecture": "resnet18",
@@ -218,25 +247,29 @@ def main() -> None:
                     "4": "KL 4: Severe OA"
                 }
             }, checkpoint_path)
-            print(f"  ★ New best model checkpoint saved to {checkpoint_path} (Val Acc: {val_acc*100:.2f}%)")
+            print(f"  ★ New best model checkpoint saved to {checkpoint_path} (Val Exact: {val_acc*100:.2f}%, ±1: {val_off1*100:.2f}%)")
 
     total_time = time.time() - start_time
     print(f"\nTraining completed in {total_time/60:.2f} minutes. Best Val Acc: {best_val_acc*100:.2f}%")
 
     # Evaluate on test split if available
     if test_dataset:
-        print("\nEvaluating on unseen Test Split...")
+        print("\nEvaluating on unseen Test Split (1,656 images)...")
         test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=0)
-        test_loss, test_acc, preds, targets = eval_epoch(model, test_loader, criterion, device)
-        print(f"Final Test Accuracy: {test_acc*100:.2f}%")
+        test_loss, test_acc, test_off1, test_bin, preds, targets = eval_epoch(model, test_loader, criterion, device)
+        print(f"  -> Exact 5-Class Match: {test_acc*100:.2f}%")
+        print(f"  -> Within ±1 KL Grade (Radiologist Tolerance): {test_off1*100:.2f}%")
+        print(f"  -> Binary OA Detection (KL >= 2): {test_bin*100:.2f}%")
 
-        # Save metrics report
+        # Save comprehensive metrics report
         report_path = args.output_dir / "xray_model_report.json"
         report_path.write_text(json.dumps({
             "model_architecture": "resnet18",
             "epochs_trained": args.epochs,
             "best_val_accuracy": round(best_val_acc, 4),
-            "test_accuracy": round(test_acc, 4),
+            "test_exact_accuracy": round(test_acc, 4),
+            "test_within_1_grade_accuracy": round(test_off1, 4),
+            "test_binary_oa_accuracy": round(test_bin, 4),
             "classes": val_dataset.classes,
             "training_samples": len(train_dataset),
             "validation_samples": len(val_dataset),

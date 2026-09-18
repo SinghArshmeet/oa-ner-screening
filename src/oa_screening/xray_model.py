@@ -142,9 +142,17 @@ class XRayModelSpec:
                 ])
                 tensor = preprocess(pil_img).unsqueeze(0)
 
-                # Forward pass
+                # Forward pass with Test-Time Augmentation (TTA: original + horizontal flip)
                 outputs = model(tensor)
-                probs = F.softmax(outputs, dim=1)[0]
+                probs_orig = F.softmax(outputs, dim=1)[0]
+
+                # TTA: mirrored radiograph evaluates bilateral knee symmetry
+                with torch.no_grad():
+                    tensor_flipped = torch.flip(tensor, dims=[3])
+                    outputs_flipped = model(tensor_flipped)
+                    probs_flipped = F.softmax(outputs_flipped, dim=1)[0]
+
+                probs = (probs_orig + probs_flipped) / 2.0
                 pred_grade = int(torch.argmax(probs).item())
                 conf = float(probs[pred_grade].item())
 
