@@ -62,33 +62,37 @@ export default function Header({
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-inverse-surface text-surface shadow-[0_2px_12px_rgba(0,0,0,0.18)]">
       <div className="h-header-height w-full px-3 sm:px-6 lg:px-8 flex items-center justify-between gap-2 border-b border-white/10">
-        {/* Brand Identity & Mobile Menu */}
+        {/* Brand Identity & Main Menu Navigation Button */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          {/* Mobile-Only Menu Button */}
-          <div className="relative md:hidden" ref={mobileMenuRef}>
+          {/* Main Navigation Menu Button (Always Available) */}
+          <div className="relative" ref={mobileMenuRef}>
             <button
               onClick={() => setShowMobileMenu(!showMobileMenu)}
-              aria-label="Toggle Navigation Menu"
+              aria-label="Toggle Application Menu"
               aria-expanded={showMobileMenu}
               type="button"
-              className={`p-2 rounded-xl border transition-all flex items-center gap-1 font-medium text-xs ${
+              className={`px-3 py-1.5 rounded-xl border transition-all flex items-center gap-1.5 font-semibold text-xs ${
                 showMobileMenu
-                  ? 'bg-primary text-white border-white/30 shadow-sm'
-                  : 'bg-white/10 hover:bg-white/20 text-white border-white/15'
+                  ? 'bg-primary text-white border-white/30 shadow-md ring-2 ring-primary/40'
+                  : 'bg-white/10 hover:bg-white/20 text-surface-container-lowest border-white/15 hover:border-white/30 shadow-xs'
               }`}
-              title="Toggle navigation tabs"
+              title="Click to open OrthoNex navigation menu"
             >
               <span className="material-symbols-outlined text-[18px]">
                 {showMobileMenu ? 'close' : 'menu'}
               </span>
+              <span className="tracking-wide">Menu</span>
             </button>
 
-            {/* Mobile Dropdown Menu */}
+            {/* Quick Navigation Dropdown Modal */}
             {showMobileMenu && (
-              <div className="absolute left-0 mt-2 w-64 p-2 rounded-2xl bg-[#0f172a] border border-white/20 shadow-2xl z-50 text-left text-xs backdrop-blur-2xl animate-in fade-in duration-150">
-                <div className="px-2.5 py-2 border-b border-white/10 mb-1 flex items-center justify-between">
-                  <span className="font-bold text-white text-[11px] uppercase tracking-wider">Clinical Modules</span>
-                  <span className="text-[10px] text-cyan-300 font-data-mono">v3.4</span>
+              <div className="absolute left-0 mt-2 w-72 p-2.5 rounded-2xl bg-[#0f172a] border border-white/20 shadow-2xl z-50 text-left text-xs backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150">
+                <div className="px-2.5 py-2 border-b border-white/10 mb-1.5 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                    <span className="font-bold text-white text-[11px] uppercase tracking-wider">OrthoNex Modules</span>
+                  </div>
+                  <span className="text-[10px] text-cyan-300 font-data-mono">Triage Phase 2</span>
                 </div>
                 <div className="space-y-1">
                   {navTabs.map((tab) => {
@@ -100,16 +104,21 @@ export default function Header({
                           setActiveTab(tab.id);
                           setShowMobileMenu(false);
                         }}
-                        className={`w-full px-3 py-2 rounded-xl flex items-center gap-2.5 transition-all text-left ${
+                        className={`w-full px-3 py-2.5 rounded-xl flex items-center gap-3 transition-all text-left ${
                           isActive
-                            ? 'bg-primary text-white font-bold shadow-sm'
+                            ? 'bg-cyan-600 text-white font-bold shadow-md ring-1 ring-cyan-400'
                             : 'text-slate-300 hover:text-white hover:bg-white/10'
                         }`}
                         type="button"
                       >
-                        <span className="material-symbols-outlined text-[18px]">{tab.icon}</span>
-                        <span className="text-xs font-semibold">{tab.label}</span>
-                        {isActive && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white"></span>}
+                        <span className={`material-symbols-outlined text-[20px] ${isActive ? 'text-white' : 'text-cyan-400'}`}>{tab.icon}</span>
+                        <div className="flex flex-col">
+                          <span className="text-xs font-semibold">{tab.label}</span>
+                          <span className="text-[10px] text-slate-400 font-normal">{tab.fullTitle}</span>
+                        </div>
+                        {isActive && (
+                          <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white"></span>
+                        )}
                       </button>
                     );
                   })}
