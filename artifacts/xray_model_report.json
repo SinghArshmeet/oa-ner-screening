@@ -1,10 +1,10 @@
 {
   "model_architecture": "resnet18",
-  "epochs_trained": 3,
-  "best_val_accuracy": 0.4564,
-  "test_exact_accuracy": 0.4746,
-  "test_within_1_grade_accuracy": 0.8829,
-  "test_binary_oa_accuracy": 0.7639,
+  "epochs_trained": 4,
+  "best_val_accuracy": 0.6077,
+  "test_exact_accuracy": 0.6467,
+  "test_within_1_grade_accuracy": 0.9197,
+  "test_binary_oa_accuracy": 0.8351,
   "classes": [
     "0",
     "1",
@@ -12,7 +12,7 @@
     "3",
     "4"
   ],
-  "training_samples": 1373,
+  "training_samples": 5778,
   "validation_samples": 826,
   "test_samples": 1656
 }

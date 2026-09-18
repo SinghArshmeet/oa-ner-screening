@@ -145,10 +145,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Train ResNet-18 on Knee X-Ray dataset for KL grading.")
     parser.add_argument("--data-dir", type=Path, default=DEFAULT_DATA_DIR, help="Path to Dataset/xray directory")
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR, help="Path to save artifacts")
-    parser.add_argument("--epochs", type=int, default=5, help="Number of training epochs")
+    parser.add_argument("--epochs", type=int, default=4, help="Number of training epochs")
     parser.add_argument("--batch-size", type=int, default=32, help="Batch size for training")
     parser.add_argument("--lr", type=float, default=2e-4, help="Initial learning rate")
-    parser.add_argument("--freeze-backbone", action="store_true", default=True, help="Freeze early conv layers and fine-tune layer4 + fc")
+    parser.add_argument("--sigma", type=float, default=0.52, help="Gaussian soft-target spread for OrdinalKLLoss")
+    parser.add_argument("--freeze-backbone", action="store_true", default=True, help="Freeze early conv layers and fine-tune layer3, layer4 + fc")
     parser.add_argument("--max-samples-per-class", type=int, default=0, help="Optional cap on training samples per class (0 for all)")
     args = parser.parse_args()
 
@@ -184,7 +185,7 @@ def main() -> None:
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=0)
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=0)
 
-    # Class imbalance compensation
+    # Balanced square-root class weighting
     class_counts = [0] * len(val_dataset.classes)
     raw_samples = train_dataset.dataset.samples if isinstance(train_dataset, torch.utils.data.Subset) else train_dataset.samples
     subset_indices = set(train_dataset.indices) if isinstance(train_dataset, torch.utils.data.Subset) else None
@@ -192,9 +193,10 @@ def main() -> None:
         if subset_indices is None or idx in subset_indices:
             class_counts[label] += 1
     total_samples = sum(class_counts)
-    class_weights = torch.tensor([total_samples / max(c, 1) for c in class_counts], dtype=torch.float).to(device)
+    class_weights = torch.tensor([(total_samples / max(c, 1)) ** 0.5 for c in class_counts], dtype=torch.float).to(device)
     class_weights = class_weights / class_weights.sum() * len(class_counts)
     print(f"Class counts: {class_counts}")
+    print(f"Computed square-root class weights: {[round(w, 3) for w in class_weights.tolist()]}")
 
     model = build_model(num_classes=len(val_dataset.classes), pretrained=True).to(device)
 
@@ -208,7 +210,7 @@ def main() -> None:
     total_params = sum(p.numel() for p in model.parameters())
     print(f"Trainable parameters: {trainable_params:,} / {total_params:,} ({trainable_params/total_params*100:.1f}%)")
 
-    criterion = OrdinalKLLoss(num_classes=len(val_dataset.classes), sigma=0.65, class_weights=class_weights)
+    criterion = OrdinalKLLoss(num_classes=len(val_dataset.classes), sigma=args.sigma, class_weights=class_weights)
     optimizer = torch.optim.AdamW(filter(lambda p: p.requires_grad, model.parameters()), lr=args.lr, weight_decay=1e-2)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
 
