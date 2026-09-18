@@ -24,14 +24,24 @@ National clinical frontline musculoskeletal and Knee Osteoarthritis (OA) tele-sc
   - Real-time diagnostic calculation strictly driven by the active patient's live telemetry (Pain VAS, morning stiffness minutes, BlazePose sagittal knee extension deficit, walking velocity, cadence, and KL radiographic grade).
   - Interactive **Live Diagnostic Parameter Calibration Sandbox** allowing clinicians to test risk sensitivity with real-time radial risk meter and radar chart recalculation.
 - **Frontend**: React 18 + Vite + Tailwind CSS (`frontend/`)
+  - **4-Stage Frontline Clinical Stepper & Triage Workflow**:
+    - *Stage 1*: Patient Intake, Vitals, BMI & Mechanical Compressive Joint Stress
+    - *Stage 2*: Rapid Clinical Scoring & KOOS-India Index (VAS Pain 0-10, Morning Stiffness 0-90m, Functional Checks)
+    - *Stage 3*: Optical Camera Calibration & Space Check (90° lateral perspective, 2.5m runway, 420 lux lighting)
+    - *Stage 4*: Standardized 8s Gait Recording Studio & Handover Launchpad
   - Optical webcam live feed with sagittal HUD reticle & 8-second standardized walking test
+  - Persistent Pre-Gait Clinical Intake Banner in Gait Suite with instant edit return
   - Video upload pipeline (`.mp4`, `.mov`, `.avi`, `.mkv`, `.webm`) and bundled clinical sample clips
   - Dual-tier triage (*Screen Negative / Low Risk* vs *Screen Positive / Suspected OA*) + 4-tier severity matrix
   - KOOS-India clinical survey with agrarian, manual loading, and urban sedentary risk weighting
   - Module 03: Radiographic Staging with Grad-CAM articular joint space attention heatmaps
   - Multimodal diagnostic summary report, clinical referral dossier, and role-based screener switcher
-- **Backend**: FastAPI + SQLite (`backend/`)
-  - Movement baseline inference using MediaPipe BlazePose + scikit-learn Random Forest
+- **Backend & Machine Learning**: FastAPI + SQLite (`backend/`, `src/oa_screening/`)
+  - **Clinical & Biomechanical Knee Osteoarthritis Model** (`artifacts/clinical_biomechanical_oa_model.joblib`):
+    - Grounded in the NIH Osteoarthritis Initiative (OAI) longitudinal cohort, *PLOS ONE* (pone.0325678, 2025).
+    - Evaluated across **9,580 patient knee cases** with **82.69% Accuracy** and **0.8708 ROC-AUC**.
+    - Integrates KOOS/WOMAC pain, stiffness, gait speed (velocity), knee flexion angle, and extension deficit.
+  - Movement baseline inference using MediaPipe BlazePose (33 3D skeletal landmarks) + Random Forest
   - Kellgren-Lawrence (KL Grade 0–4) radiograph prediction with Grad-CAM heatmap generation
   - Unified 40-point questionnaire scoring engine with occupational load factoring
   - Persistent SQLite screening database (`screenings`, `patients` with `state`/`district`/`abha_id`, `sessions`, `devices`)
