@@ -14,23 +14,23 @@ import HardwareFleetView from './views/HardwareFleetView';
 import LoginView from './views/LoginView';
 import { checkBackendHealth, getPatients, createPatient, saveScreening, getLatestScreening } from './utils/api';
 import { useCamera } from './utils/useCamera';
-import { getStoredUser, logoutUser, fetchServerUserProfile } from './utils/auth';
+import { getStoredUser, logoutUser, fetchServerUserProfile, getRoleConfig, isTabAllowedForRole } from './utils/auth';
 
 const VALID_TABS = ['overview', 'survey', 'gait', 'report', 'cohort', 'hardware'];
 
-function getInitialTab() {
+function getInitialTab(roleId = 'screener') {
   if (typeof window === 'undefined') return 'overview';
   const hash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
-  if (VALID_TABS.includes(hash)) return hash;
+  if (VALID_TABS.includes(hash) && isTabAllowedForRole(roleId, hash)) return hash;
   const stored = sessionStorage.getItem('orthonex_active_tab');
-  if (VALID_TABS.includes(stored)) return stored;
-  return 'overview';
+  if (VALID_TABS.includes(stored) && isTabAllowedForRole(roleId, stored)) return stored;
+  return getRoleConfig(roleId).defaultTab;
 }
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(() => getStoredUser());
   const camera = useCamera(Boolean(currentUser));
-  const [activeTab, setActiveTab] = useState(getInitialTab);
+  const [activeTab, setActiveTab] = useState(() => getInitialTab(currentUser?.roleId || 'screener'));
   const scrollPositions = useRef({});
   const isHandlingPopState = useRef(false);
 
@@ -109,6 +109,14 @@ export default function App() {
 
   const handleNavigate = (newTab, options = {}) => {
     if (!VALID_TABS.includes(newTab)) return;
+    const currentRoleId = currentUser?.roleId || 'screener';
+    if (!isTabAllowedForRole(currentRoleId, newTab)) {
+      const defaultTab = getRoleConfig(currentRoleId).defaultTab;
+      if (activeTab !== defaultTab) {
+        handleNavigate(defaultTab, { replace: true });
+      }
+      return;
+    }
     if (newTab === activeTab && !options.force) return;
 
     scrollPositions.current[activeTab] = window.scrollY;
@@ -129,6 +137,16 @@ export default function App() {
     });
   };
 
+  // 1c. Role Route Guard: Auto-redirect if current role does not have access to activeTab
+  useEffect(() => {
+    if (!currentUser) return;
+    const currentRoleId = currentUser?.roleId || 'screener';
+    if (!isTabAllowedForRole(currentRoleId, activeTab)) {
+      const targetTab = getRoleConfig(currentRoleId).defaultTab;
+      handleNavigate(targetTab, { replace: true });
+    }
+  }, [currentUser?.roleId, activeTab]);
+
   // 2. Only initialize protected clinical data and queries when an authenticated session exists
   useEffect(() => {
     if (!currentUser) return;
@@ -138,7 +156,7 @@ export default function App() {
       const health = await checkBackendHealth();
       if (isMounted) setBackendOnline(health.status === 'ok');
 
-      const pts = await getPatients();
+      const pts = await getPatients(currentUser);
       if (isMounted) {
         if (pts && pts.length > 0) {
           setPatients(pts);
@@ -279,6 +297,11 @@ export default function App() {
 
   const handleSwitchAccount = (newAccount) => {
     setCurrentUser(newAccount);
+    const newRoleId = newAccount?.roleId || 'screener';
+    if (!isTabAllowedForRole(newRoleId, activeTab)) {
+      const defaultTab = getRoleConfig(newRoleId).defaultTab;
+      handleNavigate(defaultTab, { replace: true });
+    }
   };
 
   const handleLogout = () => {
@@ -322,6 +345,7 @@ export default function App() {
           onOpenEnrollModal={() => setShowEnrollModal(true)}
           surveyResult={surveyResult}
           gaitResult={gaitResult}
+          currentUser={currentUser}
         />
       </div>
 
@@ -337,6 +361,7 @@ export default function App() {
             xrayResult={xrayResult}
             onOpenTeleconsult={() => setShowTeleconsult(true)}
             camera={camera}
+            currentUser={currentUser}
           />
         )}
 

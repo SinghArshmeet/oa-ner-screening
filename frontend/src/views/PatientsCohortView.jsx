@@ -1,14 +1,22 @@
 import React, { useState } from 'react';
+import { getRoleConfig } from '../utils/auth';
 
 export default function PatientsCohortView({
   patients,
   activePatient,
   onSelectPatient,
   onOpenEnrollModal,
-  onNavigate
+  onNavigate,
+  currentUser
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('all');
+
+  const roleId = currentUser?.roleId || 'screener';
+  const roleConfig = getRoleConfig(roleId);
+  const isScreener = roleId === 'screener';
+  const isOfficer = roleId === 'officer';
+  const isAdmin = roleId === 'admin';
 
   const filteredPatients = patients.filter((p) => {
     const matchesSearch =
@@ -31,15 +39,21 @@ export default function PatientsCohortView({
         <div>
           <div className="flex items-center gap-xs mb-1">
             <span className="px-xs py-2xs rounded bg-surface-container-high text-primary font-data-mono text-[11px] font-bold uppercase">
-              NATIONAL ABDM REGISTRY
+              {roleConfig.rosterTitle}
             </span>
-            <span className="font-label-sm text-secondary text-xs">· Pan-India Health Centers & Clinics</span>
+            <span className="font-label-sm text-secondary text-xs">
+              · {currentUser?.station || 'Assam Frontline Health Network'}
+            </span>
           </div>
           <h1 className="font-headline-lg text-headline-lg text-on-surface font-bold">
-            National Patient Cohort & Triage Roster
+            {isScreener
+              ? 'Station Triage & Screening Queue'
+              : isOfficer
+              ? 'Clinical Review & Specialist Referral Roster'
+              : 'ABDM Telemetry & Node Audit Registry'}
           </h1>
           <p className="font-body-md text-secondary text-sm">
-            Active ABDM registry of agricultural cultivators, weavers, manual laborers, and residents screened across Indian States and UTs.
+            {roleConfig.rosterSubtitle}
           </p>
         </div>
 
@@ -192,6 +206,30 @@ export default function PatientsCohortView({
                       {patient.region}
                     </span>
                   </div>
+                  {isScreener && (
+                    <div className="flex justify-between">
+                      <span className="text-secondary">Station Queue</span>
+                      <span className="font-medium text-cyan-700 truncate max-w-[160px]">
+                        {patient.assignedStation || 'Diphu PHC'}
+                      </span>
+                    </div>
+                  )}
+                  {isOfficer && (
+                    <div className="flex justify-between">
+                      <span className="text-secondary">Referral / Care</span>
+                      <span className="font-medium text-primary truncate max-w-[160px]">
+                        {patient.sopStatus || 'Clinical Review Req.'}
+                      </span>
+                    </div>
+                  )}
+                  {isAdmin && (
+                    <div className="flex justify-between">
+                      <span className="text-secondary">Edge Mesh State</span>
+                      <span className="font-data-mono text-[11px] text-emerald-600 truncate max-w-[160px]">
+                        {patient.meshSyncStatus || 'Synchronized'}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-secondary">Survey Result</span>
                     <span className="font-data-mono font-semibold text-primary">
@@ -201,7 +239,7 @@ export default function PatientsCohortView({
                 </div>
               </div>
 
-              {/* Action Buttons */}
+              {/* Role-Specific Action Buttons */}
               <div className="flex items-center gap-xs pt-xs border-t border-surface-container">
                 <button
                   onClick={() => onSelectPatient(patient)}
@@ -212,19 +250,46 @@ export default function PatientsCohortView({
                   }`}
                   type="button"
                 >
-                  {isActive ? 'Current Session' : 'Load Patient'}
+                  {isActive
+                    ? 'Active Session'
+                    : isScreener
+                    ? 'Load for Triage'
+                    : isOfficer
+                    ? 'Review Patient'
+                    : 'Audit Record'}
                 </button>
-                <button
-                  onClick={() => {
-                    onSelectPatient(patient);
-                    onNavigate('report');
-                  }}
-                  className="px-2.5 py-1.5 rounded-lg bg-surface-container-high hover:bg-surface-variant text-on-surface text-xs font-semibold transition"
-                  type="button"
-                  title="View Screening Report"
-                >
-                  <span className="material-symbols-outlined text-[16px]">visibility</span>
-                </button>
+
+                {isScreener && (
+                  <button
+                    onClick={() => {
+                      onSelectPatient(patient);
+                      onNavigate(patient.surveyCompleted ? 'gait' : 'survey');
+                    }}
+                    className="px-2.5 py-1.5 rounded-lg bg-surface-container-high hover:bg-surface-variant text-on-surface text-xs font-semibold transition flex items-center gap-1"
+                    type="button"
+                    title={patient.surveyCompleted ? 'Capture 8s Gait Video' : 'Conduct WOMAC/KOOS Questionnaire'}
+                  >
+                    <span className="material-symbols-outlined text-[16px] text-primary">
+                      {patient.surveyCompleted ? 'directions_walk' : 'assignment'}
+                    </span>
+                    <span className="text-[11px]">{patient.surveyCompleted ? 'Gait' : 'Survey'}</span>
+                  </button>
+                )}
+
+                {isOfficer && (
+                  <button
+                    onClick={() => {
+                      onSelectPatient(patient);
+                      onNavigate('report');
+                    }}
+                    className="px-2.5 py-1.5 rounded-lg bg-surface-container-high hover:bg-surface-variant text-on-surface text-xs font-semibold transition flex items-center gap-1"
+                    type="button"
+                    title="Open Multimodal Diagnostic Report & X-Ray Staging"
+                  >
+                    <span className="material-symbols-outlined text-[16px] text-primary">radiology</span>
+                    <span className="text-[11px]">Report</span>
+                  </button>
+                )}
               </div>
             </div>
           );

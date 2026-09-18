@@ -12,7 +12,8 @@ export default function OverviewView({
   gaitResult,
   xrayResult,
   onOpenTeleconsult,
-  camera
+  camera,
+  currentUser
 }) {
   const profile = useMemo(() => getPatientClinicalProfile(activePatient), [activePatient?.id, activePatient?.dbId]);
 
@@ -258,14 +259,14 @@ export default function OverviewView({
                   Clinical Osteoarthritis Screening Protocol
                 </h2>
                 <span className="px-xs py-2xs rounded bg-surface-container-high text-primary font-data-mono text-data-mono font-bold">
-                  {profile.sessionCode}
+                  {currentUser?.roleId === 'officer' ? 'CLINICAL REVIEW DESK' : currentUser?.roleId === 'admin' ? 'SYSTEM TELEMETRY NOC' : 'FRONT-LINE TRIAGE'}
                 </span>
                 <span className="px-2 py-0.5 rounded bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider">
-                  Sequential Triage Flow
+                  {currentUser?.role || 'Clinical Screener'}
                 </span>
               </div>
               <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
-                Screening Station: <span className="font-semibold text-on-surface">{profile.stationName}</span> · Active Patient: <span className="font-bold text-on-surface">{activePatient?.name || 'Rajesh Khurana'}</span> ({activePatient?.age || 61}y {activePatient?.gender || 'Male'}, ID: #{activePatient?.id || 'IND-OA-2025-0101'})
+                Screening Station: <span className="font-semibold text-on-surface">{currentUser?.station || profile.stationName}</span> · Active Patient: <span className="font-bold text-on-surface">{activePatient?.name || 'Patient'}</span> ({activePatient?.age || 52}y {activePatient?.gender || 'Female'}, ID: #{activePatient?.id || 'IND-OA-2025-0101'})
               </p>
             </div>
           </div>
@@ -283,16 +284,38 @@ export default function OverviewView({
               </span>
             )}
 
-            {/* Fast Track to Gait CTA */}
-            <button
-              onClick={() => onNavigate('gait')}
-              className="px-sm py-1.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-sm text-label-sm font-bold shadow-sm transition flex items-center gap-1.5"
-              type="button"
-              title="Skip straight to live optical camera recording"
-            >
-              <span className="material-symbols-outlined text-[16px] animate-pulse">rocket_launch</span>
-              Fast-Track to Gait Screen →
-            </button>
+            {/* Fast Track Action CTA */}
+            {currentUser?.roleId === 'officer' ? (
+              <button
+                onClick={() => onNavigate('report')}
+                className="px-sm py-1.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-sm text-label-sm font-bold shadow-sm transition flex items-center gap-1.5"
+                type="button"
+                title="Review multimodal diagnostic report and KL X-Ray staging"
+              >
+                <span className="material-symbols-outlined text-[16px]">radiology</span>
+                Review Clinical Diagnostic Report →
+              </button>
+            ) : currentUser?.roleId === 'admin' ? (
+              <button
+                onClick={() => onNavigate('hardware')}
+                className="px-sm py-1.5 rounded-lg bg-cyan-700 hover:bg-cyan-600 text-white font-label-sm text-label-sm font-bold shadow-sm transition flex items-center gap-1.5"
+                type="button"
+                title="Open ESP32 Hardware Fleet manager"
+              >
+                <span className="material-symbols-outlined text-[16px]">router</span>
+                Open Hardware Fleet →
+              </button>
+            ) : (
+              <button
+                onClick={() => onNavigate('gait')}
+                className="px-sm py-1.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-sm text-label-sm font-bold shadow-sm transition flex items-center gap-1.5"
+                type="button"
+                title="Skip straight to live optical camera recording"
+              >
+                <span className="material-symbols-outlined text-[16px] animate-pulse">rocket_launch</span>
+                Fast-Track to Gait Screen →
+              </button>
+            )}
           </div>
         </div>
 

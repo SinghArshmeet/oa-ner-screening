@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ROLES, getAccountsForRole } from '../utils/auth';
+import { ROLES, getAccountsForRole, getRoleConfig, isTabAllowedForRole } from '../utils/auth';
 
 export default function Header({
   activeTab,
@@ -49,15 +49,18 @@ export default function Header({
 
   const currentRoleId = currentUser?.roleId || (currentUser?.role?.toLowerCase().includes('officer') ? 'officer' : currentUser?.role?.toLowerCase().includes('admin') ? 'admin' : 'screener');
   const roleAccounts = getAccountsForRole(currentRoleId);
+  const roleConfig = getRoleConfig(currentRoleId);
 
-  const navTabs = [
-    { id: 'overview', label: 'Overview', icon: 'dashboard', fullTitle: 'Overview & Screen' },
-    { id: 'gait', label: 'Gait', icon: 'directions_walk', fullTitle: 'Gait Biomechanics HUD' },
+  const allNavTabs = [
+    { id: 'overview', label: 'Overview', icon: 'dashboard', fullTitle: 'Overview & Triage' },
     { id: 'survey', label: 'Questionnaire', icon: 'assignment', fullTitle: 'Clinical Questionnaire (WOMAC/KOOS)' },
+    { id: 'gait', label: 'Gait', icon: 'directions_walk', fullTitle: 'Gait Biomechanics HUD' },
     { id: 'report', label: 'Report & X-Ray', icon: 'radiology', fullTitle: 'Multimodal Diagnostic Report & X-Ray Staging' },
-    { id: 'cohort', label: 'Patients', icon: 'groups', fullTitle: 'Cohort & Patients' },
+    { id: 'cohort', label: 'Patients', icon: 'groups', fullTitle: currentRoleId === 'screener' ? 'Station Triage Queue' : currentRoleId === 'officer' ? 'Clinical Review Roster' : 'ABDM Audit Registry' },
     { id: 'hardware', label: 'Hardware', icon: 'router', fullTitle: 'ESP32 Hardware Fleet' },
   ];
+
+  const navTabs = allNavTabs.filter((tab) => isTabAllowedForRole(currentRoleId, tab.id));
 
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-inverse-surface text-surface shadow-[0_2px_12px_rgba(0,0,0,0.18)]">
@@ -90,9 +93,13 @@ export default function Header({
                 <div className="px-2.5 py-2 border-b border-white/10 mb-1.5 flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-                    <span className="font-bold text-white text-[11px] uppercase tracking-wider">OrthoNex Modules</span>
+                    <span className="font-bold text-white text-[11px] uppercase tracking-wider">
+                      {currentRoleId === 'screener' ? 'Screener Modules' : currentRoleId === 'officer' ? 'Doctor Clinical Desk' : 'System Admin Console'}
+                    </span>
                   </div>
-                  <span className="text-[10px] text-cyan-300 font-data-mono">Triage Phase 2</span>
+                  <span className="text-[9px] text-cyan-300 font-data-mono uppercase tracking-wider">
+                    {roleConfig.dataScope.replace('_', ' ')}
+                  </span>
                 </div>
                 <div className="space-y-1">
                   {navTabs.map((tab) => {

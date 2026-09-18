@@ -923,24 +923,34 @@ export default function DiagnosticReportView({
               </kbd>
             </button>
 
-            <button
-              onClick={() => setSignedOff(true)}
-              disabled={signedOff}
-              className={`px-md py-2.5 rounded-lg font-label-md text-sm font-semibold transition flex items-center gap-1.5 ${
-                signedOff
-                  ? 'bg-tertiary-fixed text-on-tertiary-fixed font-bold'
-                  : 'bg-primary text-on-primary hover:bg-primary-container shadow-sm cursor-pointer active:scale-95'
-              }`}
-              type="button"
-              title={signedOff ? 'Dossier signed off' : 'Authorize and sign-off diagnosis as Medical Officer'}
-            >
-              <span className="material-symbols-outlined text-[18px]">
-                {signedOff ? 'verified' : 'draw'}
-              </span>
-              <span>
-                {signedOff ? 'Dossier Signed-Off (MO Verified)' : 'MO Sign-Off & Dispatch'}
-              </span>
-            </button>
+            {!isMedicalOfficerOrAdmin ? (
+              <div
+                className="px-3 py-2 rounded-lg bg-surface-container text-secondary text-xs flex items-center gap-1.5 border border-surface-container-high"
+                title="Clinical diagnosis sign-off requires Medical Officer credentials"
+              >
+                <span className="material-symbols-outlined text-[16px] text-amber-500">lock</span>
+                <span>MO Sign-Off (Restricted to Doctors)</span>
+              </div>
+            ) : (
+              <button
+                onClick={() => setSignedOff(true)}
+                disabled={signedOff}
+                className={`px-md py-2.5 rounded-lg font-label-md text-sm font-semibold transition flex items-center gap-1.5 ${
+                  signedOff
+                    ? 'bg-tertiary-fixed text-on-tertiary-fixed font-bold'
+                    : 'bg-primary text-on-primary hover:bg-primary-container shadow-sm cursor-pointer active:scale-95'
+                }`}
+                type="button"
+                title={signedOff ? 'Dossier signed off' : 'Authorize and sign-off diagnosis as Medical Officer'}
+              >
+                <span className="material-symbols-outlined text-[18px]">
+                  {signedOff ? 'verified' : 'draw'}
+                </span>
+                <span>
+                  {signedOff ? `Signed by ${currentUser?.name || 'Dr. R. Sharma, MO'}` : 'MO Sign-Off & Dispatch'}
+                </span>
+              </button>
+            )}
 
             {onOpenTeleconsult && (
               <button

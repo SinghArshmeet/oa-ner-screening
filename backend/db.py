@@ -108,6 +108,9 @@ def init_db() -> None:
         "height_cm": "REAL",
         "weight_kg": "REAL",
         "bmi": "REAL",
+        "assigned_station": "TEXT",
+        "triage_status": "TEXT",
+        "referral_status": "TEXT",
     }
     for col, col_type in new_patient_cols.items():
         if col not in patient_columns:

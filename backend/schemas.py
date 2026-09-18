@@ -20,6 +20,9 @@ class PatientCreate(BaseModel):
     height_cm: float | None = Field(default=None, ge=50, le=250)
     weight_kg: float | None = Field(default=None, ge=20, le=300)
     bmi: float | None = Field(default=None, ge=10, le=80)
+    assigned_station: str | None = Field(default=None, max_length=160)
+    triage_status: str | None = Field(default="pending_survey", max_length=60)
+    referral_status: str | None = Field(default="none", max_length=60)
     consent: bool = False
 
 

@@ -26,6 +26,9 @@ export const mockPatients = [
     occupation: 'Desk Executive / Sedentary Urban Worker',
     state: 'Delhi NCR',
     region: 'Safdarjung Enclave, South Delhi',
+    assignedStation: 'Safdarjung Hospital OPD Unit, New Delhi',
+    triageStatus: 'in_review',
+    referralStatus: 'referred_xray',
     abhaId: '91-1120-8849-0123',
     sopStatus: 'Stage 3 Req.',
     surveyCompleted: true,
@@ -45,6 +48,9 @@ export const mockPatients = [
     occupation: 'Desk Executive / Sedentary Urban Worker',
     state: 'Uttar Pradesh',
     region: 'Sector 62, Noida, Gautam Buddha Nagar',
+    assignedStation: 'District Hospital Sector 39, Noida',
+    triageStatus: 'completed',
+    referralStatus: 'none',
     abhaId: '91-8843-1029-7712',
     sopStatus: 'Complete',
     surveyCompleted: true,
@@ -64,6 +70,9 @@ export const mockPatients = [
     occupation: 'Paddy / Wheat Agro-Cultivator (Squatting & Heavy Lift)',
     state: 'Uttar Pradesh',
     region: 'Kasna, Greater Noida, Gautam Buddha Nagar',
+    assignedStation: 'GIMS Greater Noida Ortho Centre',
+    triageStatus: 'in_review',
+    referralStatus: 'referred_teleconsult',
     abhaId: '91-9034-6612-8823',
     sopStatus: 'Stage 3 Req.',
     surveyCompleted: true,
@@ -83,6 +92,9 @@ export const mockPatients = [
     occupation: 'General Rural / Semi-Urban Resident',
     state: 'Delhi NCR',
     region: 'Karol Bagh / Central Delhi',
+    assignedStation: 'Safdarjung Hospital OPD Unit, New Delhi',
+    triageStatus: 'completed',
+    referralStatus: 'none',
     abhaId: '91-2290-7711-4450',
     sopStatus: 'Complete',
     surveyCompleted: true,
@@ -102,6 +114,9 @@ export const mockPatients = [
     occupation: 'Construction Worker / Heavy Manual Labor',
     state: 'Uttar Pradesh',
     region: 'Sector 18, Noida, Gautam Buddha Nagar',
+    assignedStation: 'District Hospital Sector 39, Noida',
+    triageStatus: 'completed',
+    referralStatus: 'none',
     abhaId: '91-7719-2045-6610',
     sopStatus: 'Complete',
     surveyCompleted: true,
@@ -121,6 +136,9 @@ export const mockPatients = [
     occupation: 'Paddy / Wheat Agro-Cultivator (Squatting & Heavy Lift)',
     state: 'Punjab',
     region: 'CHC Ludhiana West, Punjab',
+    assignedStation: 'CHC Ludhiana West, Punjab',
+    triageStatus: 'in_review',
+    referralStatus: 'referred_teleconsult',
     abhaId: '91-4452-8921-3310',
     sopStatus: 'Stage 3 Req.',
     surveyCompleted: true,
@@ -140,6 +158,9 @@ export const mockPatients = [
     occupation: 'Handloom Weaver / Artisan (Floor Cross-Legged)',
     state: 'Tamil Nadu',
     region: 'PHC Kanchipuram, Tamil Nadu',
+    assignedStation: 'PHC Kanchipuram, Tamil Nadu',
+    triageStatus: 'completed',
+    referralStatus: 'none',
     abhaId: '91-3829-1940-5521',
     sopStatus: 'Complete',
     surveyCompleted: true,
@@ -159,6 +180,9 @@ export const mockPatients = [
     occupation: 'Construction Worker / Heavy Manual Labor',
     state: 'Maharashtra',
     region: 'Sub-District Hospital Pune, Maharashtra',
+    assignedStation: 'Sub-District Hospital Pune, Maharashtra',
+    triageStatus: 'completed',
+    referralStatus: 'none',
     abhaId: '91-7712-4019-8832',
     sopStatus: 'Complete',
     surveyCompleted: true,
@@ -178,15 +202,62 @@ export const mockPatients = [
     occupation: 'Tea Plantation / Mountain Slope Worker',
     state: 'Assam',
     region: 'Diphu CHC, Karbi Anglong, Assam',
+    assignedStation: 'Diphu PHC, Station A',
+    triageStatus: 'pending_gait',
+    referralStatus: 'none',
     abhaId: '91-6204-5519-7430',
     sopStatus: 'Stage 2 In-Progress',
+    surveyCompleted: true,
+    surveyScore: '22/40 (Moderate Strain)',
+    gaitTested: false,
+    gaitRisk: 'Pending',
+    combinedRisk: 'moderate',
+    consent: true,
+    enrolledDate: '2025-02-14'
+  },
+  {
+    id: 'IND-OA-2025-0110',
+    dbId: 10,
+    name: 'Rupali Teronpi',
+    age: 46,
+    gender: 'Female',
+    occupation: 'Tea Plucker / Mountain Porter',
+    state: 'Assam',
+    region: 'Diphu Rural, Karbi Anglong, Assam',
+    assignedStation: 'Diphu PHC, Station B',
+    triageStatus: 'pending_survey',
+    referralStatus: 'none',
+    abhaId: '91-3820-4491-0182',
+    sopStatus: 'Enrolled (Pending Survey)',
     surveyCompleted: false,
     surveyScore: 'Pending',
     gaitTested: false,
     gaitRisk: 'Pending',
     combinedRisk: 'low',
     consent: true,
-    enrolledDate: '2025-02-14'
+    enrolledDate: '2025-02-18'
+  },
+  {
+    id: 'IND-OA-2025-0111',
+    dbId: 11,
+    name: 'Biren Rongphar',
+    age: 63,
+    gender: 'Male',
+    occupation: 'Paddy Cultivator / Agro-Labor',
+    state: 'Assam',
+    region: 'Bokajan Sub-Division, Karbi Anglong',
+    assignedStation: 'Bokajan Sub-Centre',
+    triageStatus: 'in_review',
+    referralStatus: 'referred_teleconsult',
+    abhaId: '91-8842-1029-4419',
+    sopStatus: 'Stage 3 Req.',
+    surveyCompleted: true,
+    surveyScore: '30/40 (High Burden)',
+    gaitTested: true,
+    gaitRisk: 'High Risk (Antalgic Gait)',
+    combinedRisk: 'high',
+    consent: true,
+    enrolledDate: '2025-02-17'
   }
 ];
 
@@ -202,13 +273,13 @@ export async function checkBackendHealth() {
   return { status: 'offline', message: 'Local Edge Mode (Simulation)', model_loaded: false, xray_model_loaded: false };
 }
 
-export async function getPatients() {
+export async function getPatients(currentUser = null) {
   // 1. Try Supabase Cloud Database if configured
   if (isSupabaseConfigured) {
     try {
       const supaPatients = await fetchPatientsFromSupabase();
       if (Array.isArray(supaPatients) && supaPatients.length > 0) {
-        return supaPatients.map((p) => {
+        const mapped = supaPatients.map((p) => {
           const match = mockPatients.find(m => m.name === p.name || m.id === p.patient_id_code);
           return {
             id: p.patient_id_code || `IND-OA-2025-${String(p.id).padStart(4, '0')}`,
@@ -219,6 +290,9 @@ export async function getPatients() {
             occupation: p.occupation || match?.occupation || 'Urban Resident',
             state: p.state || match?.state || 'Delhi NCR',
             region: p.locality || p.district || p.state || match?.region || 'Delhi NCR',
+            assignedStation: p.assigned_station || match?.assignedStation || 'Diphu PHC, Station A',
+            triageStatus: p.triage_status || match?.triageStatus || 'pending_survey',
+            referralStatus: p.referral_status || match?.referralStatus || 'none',
             abhaId: p.abha_id || match?.abhaId || '91-4821-9034-1182',
             sopStatus: match?.sopStatus || 'Enrolled (Supabase)',
             surveyCompleted: match ? match.surveyCompleted : false,
@@ -230,45 +304,131 @@ export async function getPatients() {
             enrolledDate: p.created_at ? p.created_at.split('T')[0] : (match?.enrolledDate || '2025-02-18')
           };
         });
+        return getPatientsForRole(currentUser, mapped);
       }
     } catch (e) {
       console.warn('Supabase fetchPatients error, falling back:', e);
     }
   }
 
-  // 2. Try Local FastAPI Backend
+  // 2. Try Local FastAPI Backend with role and station headers
   try {
-    const res = await fetch(`${API_BASE}/api/patients`, { credentials: 'include', signal: AbortSignal.timeout(2000) });
+    const headers = {};
+    if (currentUser) {
+      if (currentUser.roleId) headers['X-User-Role'] = currentUser.roleId;
+      if (currentUser.station) headers['X-User-Station'] = currentUser.station;
+      if (currentUser.email) headers['X-User-Email'] = currentUser.email;
+      if (currentUser.name) headers['X-User-Name'] = currentUser.name;
+    }
+
+    const res = await fetch(`${API_BASE}/api/patients`, {
+      credentials: 'include',
+      headers,
+      signal: AbortSignal.timeout(2000)
+    });
+
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data) && data.length > 0) {
-        return data.map(p => ({
+        const backendMapped = data.map(p => ({
           id: p.id ? `IND-OA-2025-${String(p.id).padStart(4, '0')}` : 'IND-OA-2025-0001',
           dbId: p.id ?? null,
           name: p.name,
           age: p.age,
           gender: p.gender || 'Other',
           occupation: p.occupation || 'Rural Cultivator',
-          region: p.region || 'Delhi NCR',
+          state: p.state || 'Assam',
+          region: p.region || 'Diphu, Assam',
+          assignedStation: p.assigned_station || 'Diphu PHC',
+          triageStatus: p.triage_status || 'pending_survey',
+          referralStatus: p.referral_status || 'none',
           height_cm: p.height_cm ?? p.heightCm ?? 168,
           weight_kg: p.weight_kg ?? p.weightKg ?? 70,
           bmi: p.bmi ?? (p.height_cm && p.weight_kg ? Number((p.weight_kg / Math.pow(p.height_cm / 100, 2)).toFixed(1)) : 24.8),
-          sopStatus: 'Enrolled',
-          surveyCompleted: false,
-          surveyScore: 'Pending',
+          sopStatus: p.triage_status === 'completed' ? 'Complete' : 'Enrolled',
+          surveyCompleted: p.triage_status === 'completed',
+          surveyScore: p.triage_status === 'completed' ? 'Completed' : 'Pending',
           gaitTested: false,
           gaitRisk: 'Pending',
           combinedRisk: 'moderate',
           consent: Boolean(p.consent)
         }));
+        return backendMapped;
       }
     }
   } catch (error) {
     // offline
   }
 
-  // 3. Fallback to mock cohort (includes Delhi & Noida cohorts)
-  return mockPatients;
+  // 3. Fallback to role-partitioned mock cohort
+  return getPatientsForRole(currentUser, mockPatients);
+}
+
+export function getPatientsForRole(currentUser, allPatients = mockPatients) {
+  if (!currentUser) return allPatients;
+  const roleId = (currentUser.roleId || currentUser.role || 'screener').toLowerCase();
+  const userStation = (currentUser.station || '').toLowerCase();
+
+  if (roleId === 'screener') {
+    // Screeners only see their assigned station or local regional patients in their triage queue
+    const isAssam = userStation.includes('assam') || userStation.includes('diphu') || userStation.includes('bokajan');
+    const isDelhi = userStation.includes('delhi') || userStation.includes('safdarjung');
+    const isNoida = userStation.includes('noida');
+    const stationKeyword = userStation.split(',')[0].trim().toLowerCase();
+
+    return allPatients.filter((p) => {
+      const pStation = (p.assignedStation || '').toLowerCase();
+      const pRegion = (p.region || '').toLowerCase();
+      const pState = (p.state || '').toLowerCase();
+
+      if (stationKeyword && pStation.includes(stationKeyword)) return true;
+      if (isAssam && (pState.includes('assam') || pRegion.includes('diphu') || pRegion.includes('karbi') || pStation.includes('diphu') || pStation.includes('bokajan'))) return true;
+      if (isDelhi && (pState.includes('delhi') || pRegion.includes('delhi') || pStation.includes('safdarjung'))) return true;
+      if (isNoida && (pRegion.includes('noida') || pState.includes('uttar pradesh') || pStation.includes('noida'))) return true;
+      return false;
+    });
+  }
+
+  if (roleId === 'officer') {
+    // Medical Officers see clinical network cases (patients referred for teleconsult, needing X-ray, or moderate/high risk)
+    const isAssam = userStation.includes('assam') || userStation.includes('gmch') || userStation.includes('diphu');
+    const isDelhi = userStation.includes('delhi') || userStation.includes('aiims');
+    const isNoida = userStation.includes('noida') || userStation.includes('gims');
+
+    return allPatients.filter((p) => {
+      const pRegion = (p.region || '').toLowerCase();
+      const pState = (p.state || '').toLowerCase();
+      const pStation = (p.assignedStation || '').toLowerCase();
+
+      let regionMatch = true;
+      if (isAssam) {
+        regionMatch = pState.includes('assam') || pRegion.includes('diphu') || pStation.includes('diphu') || pStation.includes('bokajan') || p.combinedRisk === 'high';
+      } else if (isDelhi) {
+        regionMatch = pState.includes('delhi') || pRegion.includes('delhi') || p.combinedRisk === 'high';
+      } else if (isNoida) {
+        regionMatch = pRegion.includes('noida') || pState.includes('uttar pradesh') || p.combinedRisk === 'high';
+      }
+
+      return regionMatch && (p.combinedRisk === 'high' || p.combinedRisk === 'moderate' || p.sopStatus?.includes('Stage 3') || p.surveyCompleted);
+    });
+  }
+
+  if (roleId === 'admin') {
+    // System Administrators see all nodes and patients for ABDM audit, with private names de-identified for compliance
+    return allPatients.map((p) => {
+      const parts = (p.name || 'Patient').split(' ');
+      const maskedName = `${parts[0]} ${'*'.repeat(Math.max((parts[parts.length - 1] || '').length, 3))}`;
+      return {
+        ...p,
+        name: maskedName,
+        isAuditView: true,
+        meshSyncStatus: (p.dbId || 1) % 2 === 0 ? 'Synchronized (Mesh Node A)' : 'Buffered Local Edge',
+        consentVerified: true
+      };
+    });
+  }
+
+  return allPatients;
 }
 
 export async function createPatient(patientData) {

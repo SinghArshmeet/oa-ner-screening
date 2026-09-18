@@ -37,6 +37,49 @@ export const ROLES = {
   }
 };
 
+export const ROLE_PERMISSIONS = {
+  screener: {
+    allowedTabs: ['overview', 'survey', 'gait', 'cohort'],
+    defaultTab: 'overview',
+    canAnalyzeXray: false,
+    canManageHardware: false,
+    canSignOffTeleconsult: false,
+    dataScope: 'station_queue',
+    rosterTitle: 'Station Triage Queue',
+    rosterSubtitle: 'Frontline patient roster assigned to your screening node for WOMAC/KOOS and gait evaluation.',
+  },
+  officer: {
+    allowedTabs: ['overview', 'report', 'cohort', 'survey', 'gait'],
+    defaultTab: 'overview',
+    canAnalyzeXray: true,
+    canManageHardware: false,
+    canSignOffTeleconsult: true,
+    dataScope: 'clinical_referral',
+    rosterTitle: 'Clinical Review & Referral Roster',
+    rosterSubtitle: 'Referred patients and high/moderate risk clinical cases awaiting radiographic staging and teleconsult sign-off.',
+  },
+  admin: {
+    allowedTabs: ['hardware', 'cohort', 'overview'],
+    defaultTab: 'hardware',
+    canAnalyzeXray: true,
+    canManageHardware: true,
+    canSignOffTeleconsult: false,
+    dataScope: 'system_audit',
+    rosterTitle: 'System Telemetry & ABDM Audit Registry',
+    rosterSubtitle: 'ABDM compliance, de-identified demographic telemetry, offline mesh cache status, and hardware node health.',
+  },
+};
+
+export function getRoleConfig(roleId) {
+  const cleanId = (roleId || 'screener').toLowerCase().trim();
+  return ROLE_PERMISSIONS[cleanId] || ROLE_PERMISSIONS.screener;
+}
+
+export function isTabAllowedForRole(roleId, tabId) {
+  const config = getRoleConfig(roleId);
+  return config.allowedTabs.includes(tabId);
+}
+
 export const DEMO_ACCOUNTS = [
   // Clinical Screeners
   {
