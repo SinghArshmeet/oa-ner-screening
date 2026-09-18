@@ -37,8 +37,9 @@ artifacts/*
 !artifacts/xray_model_report.json
 
 # Local revision & expo files (kept local only)
+Overview/
+overview/
 EXPO_PROJECT_OVERVIEW.*
 OA_MODELS_BENCHMARKS_AND_METRICS.xlsx
-
 PROJECT_LINKS_AND_INFO.txt
 
