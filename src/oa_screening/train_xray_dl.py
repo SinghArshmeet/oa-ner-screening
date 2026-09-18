@@ -54,13 +54,14 @@ def get_data_transforms() -> tuple[transforms.Compose, transforms.Compose]:
     return train_transform, eval_transform
 
 
-def train_epoch(model: nn.Module, loader: DataLoader, criterion: nn.Module, optimizer: torch.optim.Optimizer, device: torch.device) -> tuple[float, float]:
+def train_epoch(model: nn.Module, loader: DataLoader, criterion: nn.Module, optimizer: torch.optim.Optimizer, device: torch.device, print_every: int = 40) -> tuple[float, float]:
     model.train()
     running_loss = 0.0
     correct = 0
     total = 0
+    total_batches = len(loader)
 
-    for images, targets in loader:
+    for batch_idx, (images, targets) in enumerate(loader, start=1):
         images, targets = images.to(device), targets.to(device)
         optimizer.zero_grad()
         outputs = model(images)
@@ -68,14 +69,21 @@ def train_epoch(model: nn.Module, loader: DataLoader, criterion: nn.Module, opti
         loss.backward()
         optimizer.step()
 
-        running_loss += loss.item() * images.size(0)
+        batch_sz = images.size(0)
+        running_loss += loss.item() * batch_sz
         _, preds = torch.max(outputs, 1)
         correct += torch.sum(preds == targets.data).item()
-        total += images.size(0)
+        total += batch_sz
+
+        if batch_idx % print_every == 0 or batch_idx == total_batches:
+            cur_loss = running_loss / max(total, 1)
+            cur_acc = correct / max(total, 1)
+            print(f"    Batch [{batch_idx:03d}/{total_batches:03d}] ({batch_idx/total_batches*100:4.1f}%) - Loss: {cur_loss:.4f} | Acc: {cur_acc*100:5.2f}%", flush=True)
 
     epoch_loss = running_loss / max(total, 1)
     epoch_acc = correct / max(total, 1)
     return epoch_loss, epoch_acc
+
 
 
 def eval_epoch(model: nn.Module, loader: DataLoader, criterion: nn.Module, device: torch.device) -> tuple[float, float, list[int], list[int]]:
@@ -109,9 +117,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Train ResNet-18 on Knee X-Ray dataset for KL grading.")
     parser.add_argument("--data-dir", type=Path, default=DEFAULT_DATA_DIR, help="Path to Dataset/xray directory")
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR, help="Path to save artifacts")
-    parser.add_argument("--epochs", type=int, default=10, help="Number of training epochs")
+    parser.add_argument("--epochs", type=int, default=5, help="Number of training epochs")
     parser.add_argument("--batch-size", type=int, default=32, help="Batch size for training")
     parser.add_argument("--lr", type=float, default=2e-4, help="Initial learning rate")
+    parser.add_argument("--freeze-backbone", action="store_true", default=True, help="Freeze early conv layers and fine-tune layer4 + fc")
+    parser.add_argument("--max-samples-per-class", type=int, default=0, help="Optional cap on training samples per class (0 for all)")
     args = parser.parse_args()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -129,25 +139,51 @@ def main() -> None:
     val_dataset = datasets.ImageFolder(str(val_dir), transform=eval_transform)
     test_dataset = datasets.ImageFolder(str(test_dir), transform=eval_transform) if test_dir.exists() else None
 
+    # Optional subset sampling per class for rapid fine-tuning if requested
+    if args.max_samples_per_class > 0:
+        indices = []
+        counts = {c: 0 for c in range(len(train_dataset.classes))}
+        for idx, (_, target) in enumerate(train_dataset.samples):
+            if counts[target] < args.max_samples_per_class:
+                indices.append(idx)
+                counts[target] += 1
+        train_dataset = torch.utils.data.Subset(train_dataset, indices)
+        print(f"Subset active: limited to max {args.max_samples_per_class} per class. Total: {len(train_dataset)}")
+
     print(f"Loaded datasets: Train={len(train_dataset)}, Val={len(val_dataset)}, Test={len(test_dataset) if test_dataset else 0}")
-    print(f"Classes: {train_dataset.classes}")
+    print(f"Classes: {val_dataset.classes}")
 
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=0)
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=0)
 
     # Class imbalance compensation
-    class_counts = [0] * len(train_dataset.classes)
-    for _, label in train_dataset.samples:
-        class_counts[label] += 1
+    class_counts = [0] * len(val_dataset.classes)
+    raw_samples = train_dataset.dataset.samples if isinstance(train_dataset, torch.utils.data.Subset) else train_dataset.samples
+    subset_indices = set(train_dataset.indices) if isinstance(train_dataset, torch.utils.data.Subset) else None
+    for idx, (_, label) in enumerate(raw_samples):
+        if subset_indices is None or idx in subset_indices:
+            class_counts[label] += 1
     total_samples = sum(class_counts)
     class_weights = torch.tensor([total_samples / max(c, 1) for c in class_counts], dtype=torch.float).to(device)
     class_weights = class_weights / class_weights.sum() * len(class_counts)
     print(f"Class counts: {class_counts}")
 
-    model = build_model(num_classes=len(train_dataset.classes), pretrained=True).to(device)
+    model = build_model(num_classes=len(val_dataset.classes), pretrained=True).to(device)
+
+    if args.freeze_backbone:
+        print("Fine-tuning strategy: Freezing conv1 and layers 1-3. Training layer4 and fc classification head.")
+        for name, param in model.named_parameters():
+            if not name.startswith(("layer4", "fc")):
+                param.requires_grad = False
+
+    trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    total_params = sum(p.numel() for p in model.parameters())
+    print(f"Trainable parameters: {trainable_params:,} / {total_params:,} ({trainable_params/total_params*100:.1f}%)")
+
     criterion = nn.CrossEntropyLoss(weight=class_weights, label_smoothing=0.1)
-    optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-2)
+    optimizer = torch.optim.AdamW(filter(lambda p: p.requires_grad, model.parameters()), lr=args.lr, weight_decay=1e-2)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
+
 
     best_val_acc = 0.0
     checkpoint_path = args.output_dir / "xray_checkpoint.pth"
@@ -172,7 +208,7 @@ def main() -> None:
                 "model_state_dict": model.state_dict(),
                 "val_acc": val_acc,
                 "val_loss": val_loss,
-                "classes": train_dataset.classes,
+                "classes": val_dataset.classes,
                 "architecture": "resnet18",
                 "label_map": {
                     "0": "KL 0: Normal / None",
@@ -201,7 +237,7 @@ def main() -> None:
             "epochs_trained": args.epochs,
             "best_val_accuracy": round(best_val_acc, 4),
             "test_accuracy": round(test_acc, 4),
-            "classes": train_dataset.classes,
+            "classes": val_dataset.classes,
             "training_samples": len(train_dataset),
             "validation_samples": len(val_dataset),
             "test_samples": len(test_dataset)

@@ -1,0 +1,16 @@
+{
+  "model_architecture": "resnet18",
+  "epochs_trained": 3,
+  "best_val_accuracy": 0.4019,
+  "test_accuracy": 0.381,
+  "classes": [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4"
+  ],
+  "training_samples": 1373,
+  "validation_samples": 826,
+  "test_samples": 1656
+}
