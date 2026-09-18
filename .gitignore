@@ -33,6 +33,8 @@ artifacts/*
 !artifacts/knee_bone_density_model.joblib
 !artifacts/clinical_biomechanical_oa_model.joblib
 !artifacts/clinical_biomechanical_oa_model.report.json
+!artifacts/xray_checkpoint.pth
+!artifacts/xray_model_report.json
 
 # Local revision & expo files (kept local only)
 EXPO_PROJECT_OVERVIEW.*

@@ -100,7 +100,100 @@ class XRayModelSpec:
         if img_bgr is None:
             raise ValueError("Could not decode image file as a valid radiograph.")
 
-        # Real inference with trained bone density model bundle if available
+        # 1. Primary: Real Deep Learning PyTorch Inference with authentic Grad-CAM
+        if self.checkpoint_path and self.checkpoint_path.exists():
+            try:
+                import torch
+                import torch.nn as nn
+                import torch.nn.functional as F
+                from torchvision import models, transforms
+                from PIL import Image
+
+                checkpoint = torch.load(self.checkpoint_path, map_location="cpu")
+                model = models.resnet18(weights=None)
+                in_features = model.fc.in_features
+                model.fc = nn.Sequential(
+                    nn.Dropout(p=0.3),
+                    nn.Linear(in_features, self.num_classes)
+                )
+                model.load_state_dict(checkpoint["model_state_dict"])
+                model.eval()
+
+                # Register hooks for real Grad-CAM
+                activations = []
+                gradients = []
+                def forward_hook(module, inp, out):
+                    activations.append(out)
+                def backward_hook(module, grad_in, grad_out):
+                    gradients.append(grad_out[0])
+
+                target_layer = model.layer4[-1]
+                h_f = target_layer.register_forward_hook(forward_hook)
+                h_b = target_layer.register_full_backward_hook(backward_hook)
+
+                # Preprocess image
+                pil_img = Image.open(image).convert("RGB")
+                orig_w, orig_h = pil_img.size
+                norm = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+                preprocess = transforms.Compose([
+                    transforms.Resize(self.image_size),
+                    transforms.ToTensor(),
+                    norm
+                ])
+                tensor = preprocess(pil_img).unsqueeze(0)
+
+                # Forward pass
+                outputs = model(tensor)
+                probs = F.softmax(outputs, dim=1)[0]
+                pred_grade = int(torch.argmax(probs).item())
+                conf = float(probs[pred_grade].item())
+
+                # Backward pass for class activation mapping
+                model.zero_grad()
+                outputs[0, pred_grade].backward()
+
+                h_f.remove()
+                h_b.remove()
+
+                # Compute Grad-CAM heatmap
+                grad = gradients[0].cpu().data.numpy()[0]
+                act = activations[0].cpu().data.numpy()[0]
+                weights = np.mean(grad, axis=(1, 2))
+                cam = np.zeros(act.shape[1:], dtype=np.float32)
+                for i, w_val in enumerate(weights):
+                    cam += w_val * act[i, :, :]
+                cam = np.maximum(cam, 0)
+                if np.max(cam) > 0:
+                    cam = cam / np.max(cam)
+
+                cam_resized = cv2.resize(cam, (orig_w, orig_h))
+                cam_uint8 = np.uint8(255 * cam_resized)
+                colored_cam = cv2.applyColorMap(cam_uint8, cv2.COLORMAP_JET)
+                img_cv = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
+                blended = cv2.addWeighted(img_cv, 0.65, colored_cam, 0.35, 0)
+
+                _, buffer = cv2.imencode(".jpg", blended, [int(cv2.IMWRITE_JPEG_QUALITY), 90])
+                gradcam_b64 = base64.b64encode(buffer).decode("utf-8")
+
+                prob_dict = {
+                    f"KL{i}": round(float(probs[i].item()), 4)
+                    for i in range(self.num_classes)
+                }
+
+                return XRayPrediction(
+                    kl_grade=pred_grade,
+                    risk_level=KL_GRADE_TO_RISK.get(pred_grade, "moderate"),
+                    label=KL_GRADE_LABELS.get(pred_grade, f"KL {pred_grade}"),
+                    confidence=round(conf, 2),
+                    probabilities=prob_dict,
+                    findings=KL_GRADE_FINDINGS.get(pred_grade, "Radiographic evaluation completed."),
+                    gradcam_base64=gradcam_b64,
+                    recommendation="Orthopedic consultation & weight-bearing radiograph protocol recommended." if pred_grade >= 2 else "Routine preventive monitoring."
+                )
+            except Exception as dl_err:
+                print(f"Deep learning inference fallback: {dl_err}")
+
+        # 2. Secondary: Real inference with trained bone density model bundle if available
         trained_bundle_path = Path(__file__).resolve().parents[2] / "artifacts" / "knee_bone_density_model.joblib"
         if trained_bundle_path.exists():
             try:
