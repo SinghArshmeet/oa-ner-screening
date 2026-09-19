@@ -39,9 +39,9 @@ export const ROLES = {
 
 export const ROLE_PERMISSIONS = {
   screener: {
-    allowedTabs: ['overview', 'survey', 'gait', 'cohort'],
+    allowedTabs: ['overview', 'survey', 'gait', 'report', 'cohort'],
     defaultTab: 'overview',
-    canAnalyzeXray: false,
+    canAnalyzeXray: true,
     canManageHardware: false,
     canSignOffTeleconsult: false,
     dataScope: 'station_queue',
@@ -49,21 +49,21 @@ export const ROLE_PERMISSIONS = {
     rosterSubtitle: 'Frontline patient roster assigned to your screening node for WOMAC/KOOS and gait evaluation.',
   },
   officer: {
-    allowedTabs: ['overview', 'report', 'cohort', 'survey', 'gait'],
+    allowedTabs: ['overview', 'survey', 'gait', 'report', 'cohort', 'hardware'],
     defaultTab: 'overview',
     canAnalyzeXray: true,
-    canManageHardware: false,
+    canManageHardware: true,
     canSignOffTeleconsult: true,
     dataScope: 'clinical_referral',
     rosterTitle: 'Clinical Review & Referral Roster',
     rosterSubtitle: 'Referred patients and high/moderate risk clinical cases awaiting radiographic staging and teleconsult sign-off.',
   },
   admin: {
-    allowedTabs: ['hardware', 'cohort', 'overview'],
+    allowedTabs: ['overview', 'survey', 'gait', 'report', 'cohort', 'hardware'],
     defaultTab: 'hardware',
     canAnalyzeXray: true,
     canManageHardware: true,
-    canSignOffTeleconsult: false,
+    canSignOffTeleconsult: true,
     dataScope: 'system_audit',
     rosterTitle: 'System Telemetry & ABDM Audit Registry',
     rosterSubtitle: 'ABDM compliance, de-identified demographic telemetry, offline mesh cache status, and hardware node health.',

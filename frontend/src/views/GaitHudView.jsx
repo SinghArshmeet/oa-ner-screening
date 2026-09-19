@@ -41,6 +41,25 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
     }
   };
 
+  const handleLoadSampleXray = async () => {
+    setXrayLoading(true);
+    setAnalysisError('');
+    try {
+      const response = await fetch('/sample_knee_xray.png');
+      const blob = await response.blob();
+      const sampleFile = new File([blob], 'sample_knee_xray.png', { type: 'image/png' });
+      const res = await analyzeXrayImage(sampleFile);
+      if (res.status === 'success' || res.kl_grade !== undefined) {
+        setLocalXrayData(res);
+        if (onXrayAnalyzed) onXrayAnalyzed(res);
+      }
+    } catch (err) {
+      setAnalysisError(err.message || 'Sample X-Ray could not be loaded.');
+    } finally {
+      setXrayLoading(false);
+    }
+  };
+
   // Live video telemetry
   const [videoResolution, setVideoResolution] = useState({ width: 1280, height: 720 });
   const [actualFps, setActualFps] = useState(30);
@@ -964,6 +983,17 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
                 AI
               </span>
             )}
+          </button>
+
+          <button
+            onClick={handleLoadSampleXray}
+            disabled={xrayLoading}
+            className="px-3 py-2.5 rounded-lg bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-md text-xs font-semibold border border-primary/30 hover:border-primary active:scale-95 transition flex items-center gap-1 shadow-xs"
+            type="button"
+            title="Instantly test Grad-CAM heatmap with a clinical knee radiograph"
+          >
+            <span className="material-symbols-outlined text-[16px] text-primary">science</span>
+            <span>Sample X-Ray</span>
           </button>
         </div>
 

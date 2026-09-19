@@ -780,7 +780,7 @@ export async function analyzeVideoFile(fileOrBlob, filename = 'webcam_gait_sessi
       method: 'POST',
       credentials: 'include',
       body: formData,
-      signal: AbortSignal.timeout(30000)
+      signal: AbortSignal.timeout(3500)
     });
     if (res.ok) return await res.json();
     const detail = await res.json().catch(() => ({}));
@@ -827,7 +827,7 @@ export async function analyzeXrayImage(file) {
       method: 'POST',
       credentials: 'include',
       body: formData,
-      signal: AbortSignal.timeout(20000)
+      signal: AbortSignal.timeout(3500)
     });
     if (res.ok) return await res.json();
   } catch {

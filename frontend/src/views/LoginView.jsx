@@ -9,9 +9,9 @@ export default function LoginView({ onLogin }) {
   // Authentication Mode: 'login' | 'register'
   const [authMode, setAuthMode] = useState('login');
 
-  // Sign In State
-  const [selectedRole, setSelectedRole] = useState('screener');
-  const [identifier, setIdentifier] = useState('screener@phc.assam.gov.in');
+  // Sign In State (Default to Medical Officer for full Expo access to Reports & X-Rays)
+  const [selectedRole, setSelectedRole] = useState('officer');
+  const [identifier, setIdentifier] = useState('mo.sharma@gmch.gov.in');
   const [password, setPassword] = useState('demo123');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberDevice, setRememberDevice] = useState(true);
