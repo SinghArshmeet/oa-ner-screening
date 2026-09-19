@@ -53,6 +53,7 @@ app = FastAPI(title="OA Risk Screening App", version="0.4.0")
 
 allowed_origins = list(dict.fromkeys([
     FRONTEND_ORIGIN,
+    "https://orthonex.vercel.app",
     "https://oa-ner-scanning-project.vercel.app",
     "http://localhost:5173",
     "http://127.0.0.1:5173"
@@ -639,7 +640,7 @@ def combine_analysis(payload: AnalysisRequest, _: dict[str, object] = Depends(re
 
 
 @app.post("/api/xray/analyze")
-async def analyze_xray_image(file: UploadFile = File(...), user: dict[str, object] = Depends(require_role("officer", "admin"))) -> dict[str, object]:
+async def analyze_xray_image(file: UploadFile = File(...), user: dict[str, object] = Depends(require_authenticated_user)) -> dict[str, object]:
     raw_filename = Path(file.filename or "").name
     suffix = Path(raw_filename).suffix.lower()
     if suffix not in ALLOWED_IMAGE_EXTENSIONS:
