@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import CameraViewport from '../components/CameraViewport';
 import { getPatientClinicalProfile } from '../utils/clinicalProfiles';
 import { isSupabaseConfigured } from '../utils/supabase';
-import { predictClinicalRisk, updatePatientVitals } from '../utils/api';
+import { predictClinicalRisk, updatePatientVitals, analyzeXrayImage } from '../utils/api';
 
 export default function OverviewView({
   activePatient,
@@ -11,6 +11,7 @@ export default function OverviewView({
   onSurveySubmitted,
   gaitResult,
   xrayResult,
+  onXrayAnalyzed,
   onOpenTeleconsult,
   camera,
   currentUser
@@ -34,13 +35,82 @@ export default function OverviewView({
 
   const [clinicalPrediction, setClinicalPrediction] = useState(surveyResult?.clinical_prediction || null);
   const [isPredicting, setIsPredicting] = useState(false);
+
+  // Step 3 Radiographic Staging & Grad-CAM State
+  const [localXrayData, setLocalXrayData] = useState(xrayResult || null);
+  const xrayData = xrayResult || localXrayData;
+  const [xrayLoading, setXrayLoading] = useState(false);
+  const [xrayError, setXrayError] = useState('');
+  const [isDraggingXray, setIsDraggingXray] = useState(false);
+  const xrayInputRef = useRef(null);
+
+  useEffect(() => {
+    if (xrayResult) {
+      setLocalXrayData(xrayResult);
+    }
+  }, [xrayResult]);
+
   const [completedSteps, setCompletedSteps] = useState(() => {
     const steps = [1];
     if (surveyResult) steps.push(2);
-    if (camera?.isWebcamActive || camera?.sourceMode === 'sample') steps.push(3);
+    if (xrayResult || localXrayData) steps.push(3);
     if (gaitResult) steps.push(4);
     return steps;
   });
+
+  const processXrayFile = async (file) => {
+    if (!file) return;
+    setXrayLoading(true);
+    setXrayError('');
+    const previewUrl = URL.createObjectURL(file);
+    try {
+      const res = await analyzeXrayImage(file);
+      if (res.status === 'success' || res.kl_grade !== undefined) {
+        const enriched = { ...res, preview_url: previewUrl };
+        setLocalXrayData(enriched);
+        if (onXrayAnalyzed) onXrayAnalyzed(enriched);
+        setCompletedSteps((prev) => Array.from(new Set([...prev, 3])));
+      }
+    } catch (err) {
+      setXrayError(err.message || 'X-Ray analysis could not be completed.');
+    } finally {
+      setXrayLoading(false);
+      if (xrayInputRef.current) xrayInputRef.current.value = '';
+    }
+  };
+
+  const handleXrayUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (file) processXrayFile(file);
+  };
+
+  const handleXrayDrop = (e) => {
+    e.preventDefault();
+    setIsDraggingXray(false);
+    const file = e.dataTransfer?.files?.[0];
+    if (file) processXrayFile(file);
+  };
+
+  const handleLoadSampleXray = async () => {
+    setXrayLoading(true);
+    setXrayError('');
+    try {
+      const response = await fetch('/sample_knee_xray.png');
+      const blob = await response.blob();
+      const sampleFile = new File([blob], 'sample_knee_xray.png', { type: 'image/png' });
+      const res = await analyzeXrayImage(sampleFile);
+      if (res.status === 'success' || res.kl_grade !== undefined) {
+        const enriched = { ...res, preview_url: '/sample_knee_xray.png' };
+        setLocalXrayData(enriched);
+        if (onXrayAnalyzed) onXrayAnalyzed(enriched);
+        setCompletedSteps((prev) => Array.from(new Set([...prev, 3])));
+      }
+    } catch (err) {
+      setXrayError(err.message || 'Sample X-Ray could not be loaded.');
+    } finally {
+      setXrayLoading(false);
+    }
+  };
 
   // Step 1: Vitals & Anthropometrics State
   const [heightCm, setHeightCm] = useState(profile.vitals?.heightCm || 170);
@@ -230,16 +300,16 @@ export default function OverviewView({
     },
     {
       id: 3,
-      title: 'Optical Setup & Calibration',
-      shortTitle: '3. Camera Calibration',
-      subtitle: '90° Sagittal, Runway & Lux Sensor',
-      icon: 'videocam'
+      title: 'Radiographic Staging & Knee X-Ray',
+      shortTitle: '3. X-Ray & Grad-CAM',
+      subtitle: 'KL Grading & Articular Joint Space Heatmap',
+      icon: 'radiology'
     },
     {
       id: 4,
-      title: 'Final Gait Recording Studio',
+      title: 'Standardized 8s Gait Recording Studio',
       shortTitle: '4. Gait Recording',
-      subtitle: '8s Walk Test & Biomechanical AI',
+      subtitle: '8s Walk Test & Sagittal Kinematics AI',
       icon: 'directions_walk'
     }
   ];
@@ -710,20 +780,20 @@ export default function OverviewView({
             </section>
           )}
 
-          {/* ================= STEP 3: OPTICAL SETUP & CALIBRATION ================= */}
+          {/* ================= STEP 3: RADIOGRAPHIC STAGING & KNEE X-RAY ================= */}
           {activeStep === 3 && (
             <section className="w-full bg-surface-container-lowest rounded-xl shadow-md p-card-padding border border-surface-container animate-fade-in">
               <div className="flex items-center justify-between pb-sm border-b border-outline-variant/30 mb-md">
                 <div className="flex items-center gap-xs">
                   <div className="w-9 h-9 rounded-lg bg-primary-container text-on-primary flex items-center justify-center">
-                    <span className="material-symbols-outlined text-[20px]">videocam</span>
+                    <span className="material-symbols-outlined text-[20px]">radiology</span>
                   </div>
                   <div>
                     <h3 className="font-headline-sm text-headline-sm text-on-surface font-bold">
-                      Step 3 · Optical Setup & Space Calibration
+                      Step 3 · Radiographic Staging & Knee X-Ray (Grad-CAM)
                     </h3>
                     <p className="text-xs text-on-surface-variant">
-                      Ensure 90° lateral perspective, 2.5m runway distance, and adequate illumination
+                      Upload knee radiograph or test with clinical sample for automated Kellgren-Lawrence (KL 0–4) grading
                     </p>
                   </div>
                 </div>
@@ -733,86 +803,152 @@ export default function OverviewView({
               </div>
 
               <div className="space-y-md">
-                {/* Source Switcher */}
-                <div className="flex items-center justify-between gap-sm bg-surface-container-low p-2 rounded-lg border border-outline-variant/20">
-                  <span className="text-xs font-semibold text-on-surface flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[16px] text-primary">sensors</span>
-                    Optical Capture Source:
-                  </span>
-                  <div className="flex items-center gap-1">
-                    {[
-                      { id: 'webcam', label: 'Laptop Webcam', icon: 'videocam' },
-                      { id: 'sample', label: 'Clinical Reference Clip', icon: 'smart_display' },
-                      { id: 'esp32', label: 'ESP32 Cam', icon: 'router' }
-                    ].map((s) => (
-                      <button
-                        key={s.id}
-                        type="button"
-                        onClick={() => {
-                          setActiveCamSource(s.id);
-                          if (s.id === 'sample') camera?.switchToSampleVideo?.();
-                          else if (s.id === 'webcam') camera?.startCamera?.();
-                        }}
-                        className={`px-2.5 py-1 rounded text-xs font-bold transition flex items-center gap-1 ${
-                          (s.id === 'sample' ? camera?.sourceMode === 'sample' : (s.id === 'webcam' ? camera?.isWebcamActive || activeCamSource === 'webcam' : activeCamSource === s.id))
-                            ? 'bg-primary text-on-primary shadow-xs'
-                            : 'bg-surface-container text-on-surface-variant hover:text-on-surface'
-                        }`}
-                      >
-                        <span className="material-symbols-outlined text-[14px]">{s.icon}</span>
-                        {s.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Camera Viewport Live Feed */}
-                <CameraViewport
-                  camera={camera}
-                  onEnterFullHud={() => onNavigate('gait')}
+                {/* Hidden File Input */}
+                <input
+                  type="file"
+                  ref={xrayInputRef}
+                  onChange={handleXrayUpload}
+                  accept="image/png,image/jpeg,image/jpg"
+                  className="hidden"
                 />
 
-                {/* Calibration Checklist */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-sm">
-                  <div className="p-3 rounded-lg bg-surface-container-low border border-emerald-500/30">
-                    <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold text-xs mb-1">
-                      <span className="material-symbols-outlined text-[16px]">check_circle</span>
-                      1. Lateral Distance
-                    </div>
-                    <p className="text-[11px] text-on-surface-variant">
-                      Position patient 2.5m perpendicular from camera lens.
-                    </p>
-                    <span className="text-[10px] font-data-mono font-bold text-emerald-600 block mt-1">
-                      2.5m Calibrated (±0.1m)
-                    </span>
+                {/* Error Banner */}
+                {xrayError && (
+                  <div className="p-2.5 rounded-lg bg-error-container text-on-error-container text-xs font-medium flex items-center gap-1.5 border border-error/30">
+                    <span className="material-symbols-outlined text-[16px]">error</span>
+                    <span>{xrayError}</span>
                   </div>
+                )}
 
-                  <div className="p-3 rounded-lg bg-surface-container-low border border-emerald-500/30">
-                    <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold text-xs mb-1">
-                      <span className="material-symbols-outlined text-[16px]">light_mode</span>
-                      2. Ambient Illumination
-                    </div>
-                    <p className="text-[11px] text-on-surface-variant">
-                      Minimum 300 lux diffuse room lighting required.
-                    </p>
-                    <span className="text-[10px] font-data-mono font-bold text-emerald-600 block mt-1">
-                      420 Lux (Optimal Diffuse)
-                    </span>
-                  </div>
+                {/* State A: X-Ray Analyzed -> Show Input & Grad-CAM Heatmap Side-by-Side */}
+                {xrayData ? (
+                  <div className="space-y-md">
+                    <div className="p-3.5 rounded-xl bg-surface-container-low border border-surface-container flex flex-col md:flex-row items-start md:items-center justify-between gap-md">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-md grow">
+                        {xrayData.gradcam_base64 && (
+                          <div className="relative w-40 h-32 rounded-lg overflow-hidden bg-black/90 shrink-0 border border-white/10 shadow-sm">
+                            <img
+                              src={`data:image/jpeg;base64,${xrayData.gradcam_base64}`}
+                              alt="Grad-CAM Articular Joint Space ROI"
+                              className="w-full h-full object-contain"
+                            />
+                            <span className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-black/80 text-[9px] font-data-mono text-cyan-300 font-bold">
+                              Grad-CAM Heatmap
+                            </span>
+                          </div>
+                        )}
 
-                  <div className="p-3 rounded-lg bg-surface-container-low border border-emerald-500/30">
-                    <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold text-xs mb-1">
-                      <span className="material-symbols-outlined text-[16px]">directions_walk</span>
-                      3. Runway Walkway
+                        <div className="space-y-1">
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span
+                              className={`px-2.5 py-0.5 rounded-full font-data-mono text-[11px] font-bold ${
+                                xrayData.kl_grade >= 3
+                                  ? 'bg-error-container text-on-error-container border border-error/30'
+                                  : xrayData.kl_grade >= 2
+                                  ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                                  : 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                              }`}
+                            >
+                              KL GRADE {xrayData.kl_grade}
+                            </span>
+                            <span className="font-headline-sm text-xs text-on-surface font-bold">
+                              {xrayData.label}
+                            </span>
+                            <span className="font-data-mono text-xs text-secondary">
+                              · Confidence: {xrayData.confidence}%
+                            </span>
+                          </div>
+                          <p className="font-body-sm text-xs text-on-surface-variant max-w-xl">
+                            {xrayData.findings}
+                          </p>
+                          <div className="flex flex-wrap gap-3 pt-1 text-[11px] text-secondary font-medium">
+                            <span>Joint Space: <strong className="text-on-surface">{xrayData.kl_grade >= 3 ? 'Marked Narrowing' : xrayData.kl_grade >= 2 ? 'Definite Narrowing' : 'Preserved'}</strong></span>
+                            <span>Osteophytes: <strong className="text-on-surface">{xrayData.kl_grade >= 2 ? 'Present' : 'Absent / Doubtful'}</strong></span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
+                        <button
+                          type="button"
+                          onClick={() => xrayInputRef.current?.click()}
+                          disabled={xrayLoading}
+                          className="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-semibold border border-outline-variant/30 flex items-center gap-1 transition"
+                        >
+                          <span className="material-symbols-outlined text-[15px]">upload_file</span>
+                          Change Image
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleLoadSampleXray}
+                          disabled={xrayLoading}
+                          className="px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold border border-primary/30 flex items-center gap-1 transition"
+                        >
+                          <span className="material-symbols-outlined text-[15px]">science</span>
+                          Sample
+                        </button>
+                      </div>
                     </div>
-                    <p className="text-[11px] text-on-surface-variant">
-                      Standard straight path unobstructed for 4 full strides.
-                    </p>
-                    <span className="text-[10px] font-data-mono font-bold text-emerald-600 block mt-1">
-                      8-Second Protocol Ready
-                    </span>
                   </div>
-                </div>
+                ) : (
+                  /* State B: No X-Ray Uploaded -> High-Visibility Dropzone + 1-Click Sample */
+                  <div
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setIsDraggingXray(true);
+                    }}
+                    onDragLeave={() => setIsDraggingXray(false)}
+                    onDrop={handleXrayDrop}
+                    onClick={() => xrayInputRef.current?.click()}
+                    className={`relative overflow-hidden rounded-xl border-2 border-dashed p-6 text-center cursor-pointer transition-all duration-200 group ${
+                      isDraggingXray
+                        ? 'border-primary bg-primary/20 ring-4 ring-primary/25 scale-[1.01]'
+                        : 'border-primary/60 hover:border-primary bg-gradient-to-b from-primary/10 via-primary/[0.04] to-transparent hover:bg-primary/[0.08] shadow-sm hover:shadow-md'
+                    }`}
+                  >
+                    <div className="w-14 h-14 mx-auto rounded-full bg-primary/15 text-primary flex items-center justify-center group-hover:scale-110 group-hover:bg-primary group-hover:text-on-primary transition-all duration-200 mb-2.5 shadow-xs">
+                      <span className={`material-symbols-outlined text-[30px] ${xrayLoading ? 'animate-spin' : ''}`}>
+                        {xrayLoading ? 'refresh' : 'radiology'}
+                      </span>
+                    </div>
+
+                    <div className="font-headline-sm text-sm font-bold text-on-surface mb-1">
+                      {xrayLoading ? 'Processing Radiograph with ResNet-18...' : 'Click or Drag Knee Radiograph (AP View)'}
+                    </div>
+                    <p className="text-xs text-secondary mb-4 max-w-sm mx-auto">
+                      Automated Kellgren-Lawrence (0–4) grading, joint space narrowing detection & Grad-CAM attention heatmap.
+                    </p>
+
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        type="button"
+                        disabled={xrayLoading}
+                        onClick={() => xrayInputRef.current?.click()}
+                        className="w-full sm:w-auto py-2 px-4 rounded-lg bg-primary hover:bg-primary/90 text-on-primary font-label-md text-xs font-bold shadow-md hover:shadow-lg active:scale-95 transition flex items-center justify-center gap-1.5"
+                      >
+                        <span className={`material-symbols-outlined text-[16px] ${xrayLoading ? 'animate-spin' : ''}`}>
+                          {xrayLoading ? 'refresh' : 'upload_file'}
+                        </span>
+                        <span>{xrayLoading ? 'Analyzing...' : 'Select X-Ray Image'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={xrayLoading}
+                        onClick={handleLoadSampleXray}
+                        className="w-full sm:w-auto py-2 px-3.5 rounded-lg bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-md text-xs font-semibold border border-primary/30 hover:border-primary active:scale-95 transition flex items-center justify-center gap-1.5 shadow-xs"
+                        title="Instantly test Grad-CAM with a clinical knee radiograph"
+                      >
+                        <span className="material-symbols-outlined text-[16px] text-primary">science</span>
+                        <span>⚡ Test Clinical Sample X-Ray</span>
+                      </button>
+                    </div>
+
+                    <div className="mt-3 text-[10px] text-outline font-medium">
+                      Supports PNG · JPG · DICOM Export (Weight-Bearing Bilateral / Unilateral Knee)
+                    </div>
+                  </div>
+                )}
 
                 {/* Step 3 Actions */}
                 <div className="pt-sm border-t border-outline-variant/30 flex items-center justify-between">
@@ -823,16 +959,31 @@ export default function OverviewView({
                   >
                     ← Back to Step 2
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      markStepComplete(3);
-                      setActiveStep(4);
-                    }}
-                    className="px-md py-2 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-bold text-xs transition shadow-md flex items-center gap-1.5"
-                  >
-                    Calibration Verified · Proceed to Launchpad →
-                  </button>
+
+                  <div className="flex items-center gap-2">
+                    {!xrayData && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          markStepComplete(3);
+                          setActiveStep(4);
+                        }}
+                        className="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-secondary hover:text-on-surface font-semibold text-xs transition"
+                      >
+                        Skip Radiograph (Proceed to Gait) →
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        markStepComplete(3);
+                        setActiveStep(4);
+                      }}
+                      className="px-md py-2 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-bold text-xs transition shadow-md flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <span>{xrayData ? 'Confirm X-Ray Staging · Proceed to Step 4 →' : 'Proceed to Step 4 (Gait Studio) →'}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </section>

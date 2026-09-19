@@ -362,6 +362,7 @@ export default function App() {
             onSurveySubmitted={handleSurveySubmitted}
             gaitResult={gaitResult}
             xrayResult={xrayResult}
+            onXrayAnalyzed={setXrayResult}
             onOpenTeleconsult={() => setShowTeleconsult(true)}
             camera={camera}
             currentUser={currentUser}
