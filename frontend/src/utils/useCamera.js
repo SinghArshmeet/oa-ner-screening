@@ -1,4 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  pingDevice,
+  getEspCamStatus,
+  controlEspCam,
+  getEspCamStreamUrl,
+  getEspCamFrameUrl,
+  cleanEspHost
+} from './api';
 
 export function useCamera(isAuthenticated = false) {
   const [stream, setStream] = useState(null);
@@ -6,7 +14,7 @@ export function useCamera(isAuthenticated = false) {
   const [cameraError, setCameraError] = useState(null);
   const [availableDevices, setAvailableDevices] = useState([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState('');
-  const [sourceMode, setSourceMode] = useState('webcam'); // 'webcam' | 'sample' | 'upload'
+  const [sourceMode, setSourceMode] = useState('webcam'); // 'webcam' | 'espcam' | 'sample' | 'upload'
   const [sampleVideoUrl, setSampleVideoUrl] = useState(() => `${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/sample_gait_walk.mp4`);
   const [uploadedVideoUrl, setUploadedVideoUrl] = useState(null);
   const [uploadedFile, setUploadedFile] = useState(null);
@@ -14,7 +22,74 @@ export function useCamera(isAuthenticated = false) {
   const [hudOpacity, setHudOpacity] = useState(85);
   const [isSecureContext, setIsSecureContext] = useState(true);
 
+  // ESP32-CAM State
+  const [espIp, setEspIpState] = useState(() => {
+    try {
+      return localStorage.getItem('orthonex_espcam_ip') || '192.168.1.105';
+    } catch {
+      return '192.168.1.105';
+    }
+  });
+  const [isEspOnline, setIsEspOnline] = useState(false);
+  const [isEspConnected, setIsEspConnected] = useState(false);
+  const [espStatus, setEspStatus] = useState('idle'); // 'idle' | 'connecting' | 'connected' | 'error'
+  const [espLatency, setEspLatency] = useState(null);
+  const [espFlash, setEspFlash] = useState(false);
+  const [espRes, setEspRes] = useState('QVGA');
+  const [espVFlip, setEspVFlip] = useState(false);
+  const [espHMirror, setEspHMirror] = useState(false);
+  const [espStreamUrl, setEspStreamUrl] = useState(() => getEspCamStreamUrl('192.168.1.105'));
+
+  // Background ping heartbeat to detect ESP32-CAM online/offline state
+  const checkEspOnline = useCallback(async (ipToCheck) => {
+    const target = cleanEspHost(ipToCheck || espIp);
+    try {
+      const res = await pingDevice(target);
+      const online = Boolean(res && res.reachable);
+      setIsEspOnline(online);
+      if (res?.latency) setEspLatency(res.latency);
+      return online;
+    } catch {
+      setIsEspOnline(false);
+      return false;
+    }
+  }, [espIp]);
+
+  useEffect(() => {
+    let active = true;
+    const runPing = async () => {
+      try {
+        const res = await pingDevice(espIp);
+        if (active) {
+          setIsEspOnline(Boolean(res && res.reachable));
+          if (res?.latency) setEspLatency(res.latency);
+        }
+      } catch {
+        if (active) setIsEspOnline(false);
+      }
+    };
+    runPing();
+    const interval = setInterval(runPing, 8000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, [espIp]);
+
+  const setEspIp = useCallback((ip) => {
+    const cleaned = cleanEspHost(ip);
+    setEspIpState(cleaned);
+    try {
+      localStorage.setItem('orthonex_espcam_ip', cleaned);
+    } catch {}
+    setEspStreamUrl(getEspCamStreamUrl(cleaned));
+    checkEspOnline(cleaned);
+  }, [checkEspOnline]);
+
   const streamRef = useRef(null);
+  const espCanvasRef = useRef(null);
+  const espImgRef = useRef(null);
+  const espAnimRef = useRef(null);
 
   // Clean up object URL when component unmounts or video changes
   useEffect(() => {
@@ -126,14 +201,144 @@ export function useCamera(isAuthenticated = false) {
     return true;
   }, [selectedDeviceId, refreshDevices]);
 
+  const disconnectEspCam = useCallback(() => {
+    if (espAnimRef.current) {
+      cancelAnimationFrame(espAnimRef.current);
+      espAnimRef.current = null;
+    }
+    if (espImgRef.current) {
+      espImgRef.current.src = '';
+    }
+    setIsEspConnected(false);
+    setEspStatus('idle');
+  }, []);
+
   const stopCamera = useCallback(() => {
+    disconnectEspCam();
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(t => t.stop());
       streamRef.current = null;
     }
     setStream(null);
     setIsWebcamActive(false);
-  }, []);
+  }, [disconnectEspCam]);
+
+  const connectEspCam = useCallback(async (ipOverride) => {
+    stopCamera();
+    const targetIp = cleanEspHost(ipOverride || espIp);
+    setEspIp(targetIp);
+    setEspStatus('connecting');
+    setCameraError(null);
+
+    // 1. Probe connectivity
+    const pingRes = await pingDevice(targetIp);
+    setEspLatency(pingRes.latency || '16ms');
+
+    // 2. Fetch camera state
+    getEspCamStatus(targetIp).then((st) => {
+      if (st) {
+        if (st.flash !== undefined) setEspFlash(st.flash > 0);
+        else if (st.led_intensity !== undefined) setEspFlash(st.led_intensity > 0);
+        if (st.vflip !== undefined) setEspVFlip(Boolean(st.vflip));
+        if (st.hmirror !== undefined) setEspHMirror(Boolean(st.hmirror));
+      }
+    });
+
+    // 3. Create offscreen canvas for live frame ingestion & MediaStream creation
+    if (!espCanvasRef.current) {
+      const cvs = document.createElement('canvas');
+      cvs.width = 640;
+      cvs.height = 480;
+      espCanvasRef.current = cvs;
+    }
+    const canvas = espCanvasRef.current;
+    const ctx = canvas.getContext('2d');
+
+    // Setup Image element to ingest live stream frames
+    if (!espImgRef.current) {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      espImgRef.current = img;
+    }
+    const img = espImgRef.current;
+    const streamUrl = getEspCamStreamUrl(targetIp);
+    setEspStreamUrl(streamUrl);
+    img.src = streamUrl;
+
+    let active = true;
+    const drawLoop = () => {
+      if (!active) return;
+      if (img.complete && img.naturalWidth > 0) {
+        if (canvas.width !== img.naturalWidth) {
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+        }
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      }
+      espAnimRef.current = requestAnimationFrame(drawLoop);
+    };
+    espAnimRef.current = requestAnimationFrame(drawLoop);
+
+    // 4. Capture native MediaStream from canvas for MediaRecorder & Video playback
+    try {
+      if (canvas.captureStream) {
+        const cStream = canvas.captureStream(25);
+        streamRef.current = cStream;
+        setStream(cStream);
+      }
+    } catch (err) {
+      console.warn('Canvas captureStream error:', err);
+    }
+
+    setSourceMode('espcam');
+    setIsEspConnected(true);
+    setIsEspOnline(true);
+    setEspStatus('connected');
+    setIsWebcamActive(true);
+    return true;
+  }, [espIp, setEspIp, stopCamera]);
+
+  const toggleEspFlash = useCallback(async () => {
+    const next = !espFlash;
+    setEspFlash(next);
+    const ok = await controlEspCam(espIp, 'flash', next ? 1 : 0);
+    if (!ok) {
+      await controlEspCam(espIp, 'led_intensity', next ? 255 : 0);
+    }
+  }, [espFlash, espIp]);
+
+  const setEspResolution = useCallback(async (resName) => {
+    const map = { QVGA: 5, CIF: 6, VGA: 8, SVGA: 9, XGA: 10, SXGA: 11, UXGA: 12 };
+    const val = map[resName] ?? 5;
+    setEspRes(resName);
+    await controlEspCam(espIp, 'framesize', val);
+  }, [espIp]);
+
+  const toggleEspVFlip = useCallback(async () => {
+    const next = !espVFlip;
+    setEspVFlip(next);
+    await controlEspCam(espIp, 'vflip', next ? 1 : 0);
+  }, [espVFlip, espIp]);
+
+  const toggleEspHMirror = useCallback(async () => {
+    const next = !espHMirror;
+    setEspHMirror(next);
+    await controlEspCam(espIp, 'hmirror', next ? 1 : 0);
+  }, [espHMirror, espIp]);
+
+  const refreshEspStatus = useCallback(async () => {
+    const pingRes = await pingDevice(espIp);
+    const reachable = Boolean(pingRes && pingRes.reachable);
+    setIsEspOnline(reachable);
+    setEspLatency(pingRes.latency);
+    const st = await getEspCamStatus(espIp);
+    if (st) {
+      if (st.flash !== undefined) setEspFlash(st.flash > 0);
+      else if (st.led_intensity !== undefined) setEspFlash(st.led_intensity > 0);
+      if (st.vflip !== undefined) setEspVFlip(Boolean(st.vflip));
+      if (st.hmirror !== undefined) setEspHMirror(Boolean(st.hmirror));
+    }
+  }, [espIp]);
 
   const selectSample = useCallback((videoUrl) => {
     stopCamera();
@@ -190,6 +395,27 @@ export function useCamera(isAuthenticated = false) {
     startCamera,
     stopCamera,
     selectSample,
-    switchToSampleVideo: selectSample
+    switchToSampleVideo: selectSample,
+
+    // ESP32-CAM exports
+    espIp,
+    setEspIp,
+    isEspOnline,
+    checkEspOnline,
+    isEspConnected,
+    espStatus,
+    espLatency,
+    espFlash,
+    espRes,
+    espVFlip,
+    espHMirror,
+    espStreamUrl,
+    connectEspCam,
+    disconnectEspCam,
+    toggleEspFlash,
+    setEspResolution,
+    toggleEspVFlip,
+    toggleEspHMirror,
+    refreshEspStatus
   };
 }

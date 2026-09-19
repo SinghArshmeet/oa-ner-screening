@@ -922,15 +922,123 @@ export async function analyzeXrayImage(file) {
   });
 }
 
+export function cleanEspHost(ip) {
+  if (!ip) return '192.168.1.105';
+  return ip.trim().replace(/^https?:\/\//i, '').replace(/\/$/, '');
+}
+
+export function getEspCamStreamUrl(ip, forceProxy = false) {
+  const host = cleanEspHost(ip);
+  const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+  if (forceProxy || isHttps) {
+    return `${API_BASE}/api/esp/stream?ip=${encodeURIComponent(host)}`;
+  }
+  return host.includes(':') ? `http://${host}/stream` : `http://${host}:81/stream`;
+}
+
+export function getEspCamFrameUrl(ip, forceProxy = false) {
+  const host = cleanEspHost(ip);
+  const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+  const cb = Date.now();
+  if (forceProxy || isHttps) {
+    return `${API_BASE}/api/esp/frame?ip=${encodeURIComponent(host)}&_cb=${cb}`;
+  }
+  const baseUrl = host.includes(':') ? `http://${host.split(':')[0]}` : `http://${host}`;
+  return `${baseUrl}/capture?_cb=${cb}`;
+}
+
 export async function pingDevice(ip) {
+  const host = cleanEspHost(ip);
+  const t0 = performance.now();
+
+  // Try direct probe first if in HTTP context
+  if (typeof window !== 'undefined' && window.location.protocol !== 'https:') {
+    try {
+      const directUrl = host.includes(':') ? `http://${host}/status` : `http://${host}/status`;
+      const directRes = await fetch(directUrl, { signal: AbortSignal.timeout(1500), mode: 'cors' });
+      if (directRes.ok) {
+        const latency = Math.round(performance.now() - t0);
+        return { reachable: true, target: host, latency: `${latency}ms`, mode: 'direct' };
+      }
+    } catch {}
+  }
+
+  // Fallback to backend ping
   try {
-    const res = await fetch(`${API_BASE}/api/hardware/ping?ip=${encodeURIComponent(ip)}`, {
+    const res = await fetch(`${API_BASE}/api/hardware/ping?ip=${encodeURIComponent(host)}`, {
       credentials: 'include',
-      signal: AbortSignal.timeout(3000)
+      signal: AbortSignal.timeout(3500)
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return {
+        reachable: Boolean(data.reachable),
+        target: host,
+        latency: data.latency_ms ? `${data.latency_ms}ms` : `${Math.round(performance.now() - t0)}ms`,
+        mode: 'proxy'
+      };
+    }
+  } catch {}
+
+  return { reachable: false, target: host, latency: 'Unreachable', mode: 'offline' };
+}
+
+export async function getEspCamStatus(ip) {
+  const host = cleanEspHost(ip);
+
+  // 1. Direct browser fetch if HTTP
+  if (typeof window !== 'undefined' && window.location.protocol !== 'https:') {
+    try {
+      const baseUrl = host.includes(':') ? `http://${host.split(':')[0]}` : `http://${host}`;
+      const res = await fetch(`${baseUrl}/status`, { signal: AbortSignal.timeout(2000), mode: 'cors' });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {}
+  }
+
+  // 2. Fallback to backend proxy
+  try {
+    const res = await fetch(`${API_BASE}/api/esp/status?ip=${encodeURIComponent(host)}`, {
+      credentials: 'include',
+      signal: AbortSignal.timeout(3500)
     });
     if (res.ok) return await res.json();
-  } catch {
-    // offline simulation
-  }
-  return { reachable: false, target: ip, latency: 'Timeout / Simulated' };
+  } catch {}
+
+  return null;
 }
+
+export async function controlEspCam(ip, variable, value) {
+  const host = cleanEspHost(ip);
+  const intVal = parseInt(value, 10);
+
+  // 1. Direct browser fetch if HTTP
+  if (typeof window !== 'undefined' && window.location.protocol !== 'https:') {
+    try {
+      const baseUrl = host.includes(':') ? `http://${host.split(':')[0]}` : `http://${host}`;
+      if (variable === 'flash') {
+        try {
+          const fRes = await fetch(`${baseUrl}/flash?val=${intVal}`, { signal: AbortSignal.timeout(2000), mode: 'cors' });
+          if (fRes.ok) return true;
+        } catch {}
+      }
+      const res = await fetch(`${baseUrl}/control?var=${variable}&val=${intVal}`, { signal: AbortSignal.timeout(2000), mode: 'cors' });
+      if (res.ok) return true;
+    } catch {}
+  }
+
+  // 2. Fallback to backend proxy
+  try {
+    const res = await fetch(
+      `${API_BASE}/api/esp/control?ip=${encodeURIComponent(host)}&var=${encodeURIComponent(variable)}&val=${intVal}`,
+      { credentials: 'include', signal: AbortSignal.timeout(3500) }
+    );
+    if (res.ok) return true;
+  } catch (err) {
+    console.warn(`Control ${variable}=${value} failed:`, err);
+  }
+
+  return false;
+}
+

@@ -419,6 +419,7 @@ export default function App() {
           <HardwareFleetView
             currentUser={currentUser}
             onNavigate={handleNavigate}
+            camera={camera}
           />
         )}
       </main>

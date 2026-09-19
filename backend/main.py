@@ -17,7 +17,7 @@ import httpx
 import joblib
 from fastapi import Cookie, Depends, FastAPI, File, Header, HTTPException, Query, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, StreamingResponse
 
 from .db import get_connection, init_db
 from .schemas import AnalysisRequest, ClinicalPredictRequest, DeviceConfig, PatientCreate, PatientVitalsUpdate, QuestionnairePayload, ScreeningCreate
@@ -836,16 +836,113 @@ def list_devices(user: dict[str, object] = Depends(require_role("admin", "office
     return [dict(row) for row in rows]
 
 
+def _clean_esp_host(host_or_ip: str) -> tuple[str, int]:
+    raw = host_or_ip.strip().replace("http://", "").replace("https://", "").rstrip("/")
+    if ":" in raw:
+        parts = raw.split(":", 1)
+        try:
+            return parts[0], int(parts[1])
+        except ValueError:
+            return parts[0], 80
+    return raw, 80
+
+
 @app.get("/api/hardware/ping")
-def ping_hardware(ip: str = Query(...), user: dict[str, object] = Depends(require_role("admin"))) -> dict[str, object]:
+def ping_hardware(ip: str = Query(...)) -> dict[str, object]:
+    host, port = _clean_esp_host(ip)
+    t0 = time.time()
     try:
-        address = ipaddress.ip_address(ip)
-    except ValueError as error:
-        raise HTTPException(status_code=422, detail="Use a private IP address without a URL or port.") from error
-    if not address.is_private:
-        raise HTTPException(status_code=403, detail="Only private-network hardware addresses are allowed.")
+        url = f"http://{host}:{port}/status" if port != 80 else f"http://{host}/status"
+        with urllib.request.urlopen(url, timeout=1.2) as response:
+            latency = round((time.time() - t0) * 1000)
+            return {"reachable": True, "latency_ms": latency, "status_code": response.status, "target": host}
+    except Exception as e:
+        return {"reachable": False, "target": host, "error": "Device did not respond"}
+
+
+@app.get("/api/esp/ping")
+def esp_ping(ip: str = Query(...)) -> dict[str, object]:
+    return ping_hardware(ip)
+
+
+@app.get("/api/esp/status")
+async def esp_status(ip: str = Query(...)) -> dict[str, object]:
+    host, port = _clean_esp_host(ip)
+    base_url = f"http://{host}"
     try:
-        with urllib.request.urlopen(f"http://{address}", timeout=2.5) as response:
-            return {"reachable": True, "status_code": response.status, "target": str(address)}
-    except Exception:
-        return {"reachable": False, "target": str(address), "error": "Device did not respond."}
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            resp = await client.get(f"{base_url}/status")
+            if resp.status_code == 200:
+                try:
+                    return resp.json()
+                except Exception:
+                    return {"raw": resp.text, "status": "ok"}
+            raise HTTPException(status_code=resp.status_code, detail=f"ESP returned status {resp.status_code}")
+    except httpx.RequestError as exc:
+        raise HTTPException(status_code=502, detail=f"Cannot reach ESP32-CAM at {host}: {exc}") from exc
+
+
+@app.get("/api/esp/control")
+async def esp_control(
+    ip: str = Query(...),
+    var: str = Query(...),
+    val: int = Query(...)
+) -> dict[str, object]:
+    host, port = _clean_esp_host(ip)
+    base_url = f"http://{host}"
+    try:
+        async with httpx.AsyncClient(timeout=3.5) as client:
+            if var == "flash":
+                # Try dedicated /flash first, fallback to /control?var=flash
+                try:
+                    resp = await client.get(f"{base_url}/flash?val={val}")
+                    if resp.status_code == 200:
+                        return {"status": "ok", "variable": var, "val": val, "response": resp.json() if resp.headers.get("content-type", "").startswith("application/json") else resp.text}
+                except Exception:
+                    pass
+            resp = await client.get(f"{base_url}/control?var={var}&val={val}")
+            return {"status": "ok" if resp.status_code == 200 else "error", "status_code": resp.status_code, "variable": var, "val": val}
+    except httpx.RequestError as exc:
+        raise HTTPException(status_code=502, detail=f"Failed to send command to ESP32-CAM at {host}: {exc}") from exc
+
+
+@app.get("/api/esp/frame")
+async def esp_frame(ip: str = Query(...)):
+    host, port = _clean_esp_host(ip)
+    capture_url = f"http://{host}/capture"
+    try:
+        async with httpx.AsyncClient(timeout=4.0) as client:
+            resp = await client.get(capture_url)
+            if resp.status_code == 200:
+                return Response(content=resp.content, media_type="image/jpeg", headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+            raise HTTPException(status_code=resp.status_code, detail="Failed to capture frame from ESP32-CAM")
+    except httpx.RequestError as exc:
+        raise HTTPException(status_code=502, detail=f"Failed to fetch frame from ESP32-CAM at {host}: {exc}") from exc
+
+
+@app.get("/api/esp/stream")
+async def esp_stream(ip: str = Query(...)):
+    host, port = _clean_esp_host(ip)
+    stream_url = f"http://{host}:{port}/stream" if port != 80 else f"http://{host}:81/stream"
+
+    async def stream_generator():
+        client = httpx.AsyncClient(timeout=None)
+        try:
+            async with client.stream("GET", stream_url) as response:
+                async for chunk in response.aiter_bytes():
+                    yield chunk
+        except Exception:
+            pass
+        finally:
+            await client.aclose()
+
+    return StreamingResponse(
+        stream_generator(),
+        media_type="multipart/x-mixed-replace; boundary=123456789000000000000987654321",
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0",
+            "Access-Control-Allow-Origin": "*"
+        }
+    )

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { pingDevice } from '../utils/api';
 
-export default function HardwareFleetView({ currentUser }) {
+export default function HardwareFleetView({ currentUser, onNavigate, camera }) {
   const isAdmin = currentUser?.roleId === 'admin' || currentUser?.role?.toLowerCase().includes('admin');
   const [nodes, setNodes] = useState([
     {
@@ -236,16 +236,33 @@ export default function HardwareFleetView({ currentUser }) {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-xs border-t border-surface-container">
-                <span className="font-data-mono text-[11px] text-primary font-semibold">
-                  {pingStatus[node.id] || 'Ready'}
-                </span>
+              <div className="flex flex-col gap-2 pt-xs border-t border-surface-container">
+                <div className="flex items-center justify-between">
+                  <span className="font-data-mono text-[11px] text-primary font-semibold">
+                    {pingStatus[node.id] || 'Ready'}
+                  </span>
+                  <button
+                    onClick={() => handlePing(node.id, node.ip)}
+                    className="px-sm py-1 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-xs font-semibold transition cursor-pointer"
+                    type="button"
+                  >
+                    Ping Node
+                  </button>
+                </div>
                 <button
-                  onClick={() => handlePing(node.id, node.ip)}
-                  className="px-sm py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-xs font-semibold transition"
+                  onClick={() => {
+                    if (camera?.connectEspCam) {
+                      camera.connectEspCam(node.ip);
+                    }
+                    if (onNavigate) {
+                      onNavigate('gait');
+                    }
+                  }}
+                  className="w-full py-1.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-sm text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer shadow-xs"
                   type="button"
                 >
-                  Ping Device
+                  <span className="material-symbols-outlined text-[15px]">sensors</span>
+                  Launch Gait HUD with this Node
                 </button>
               </div>
             </div>

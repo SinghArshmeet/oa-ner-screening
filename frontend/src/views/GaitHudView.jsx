@@ -208,6 +208,9 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
         camera.selectSample();
       }
       await new Promise((r) => setTimeout(r, 600));
+    } else if (camera.sourceMode === 'espcam' && !camera.isEspConnected) {
+      await camera.connectEspCam();
+      await new Promise((r) => setTimeout(r, 600));
     }
 
     // Start MediaRecorder if live stream is present
@@ -272,7 +275,7 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
         kneeAngleAsymmetry: `${(result.features?.knee_angle_asymmetry ?? 0).toFixed(1)}°`,
         affectedLimb: 'Movement analysis complete',
         recommendation: result.recommendation,
-        sourceType: recordedChunksRef.current.length > 0 ? 'Live Webcam Recording' : 'Clinical Sample Walk'
+        sourceType: recordedChunksRef.current.length > 0 ? (camera.sourceMode === 'espcam' ? 'ESP32-CAM AI-Thinker Wireless Stream' : 'Live Webcam Recording') : 'Clinical Sample Walk'
       };
       setGaitAnalysis(formattedOutcome);
       if (onAnalysisComplete) onAnalysisComplete(formattedOutcome);
@@ -399,14 +402,19 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
                 handleLoadSampleVideo();
               } else if (val === 'upload') {
                 fileInputRef.current?.click();
+              } else if (val === 'espcam') {
+                camera.connectEspCam();
               } else {
                 camera.setSelectedDeviceId(val);
                 camera.setSourceMode('webcam');
                 camera.startCamera(val);
               }
             }}
-            className="bg-surface-container-low text-on-surface font-label-md text-[12px] rounded px-2 py-1 focus:outline-none cursor-pointer border border-outline-variant/30 max-w-[220px] truncate"
+            className="bg-surface-container-low text-on-surface font-label-md text-[12px] rounded px-2.5 py-1 focus:outline-none cursor-pointer border border-outline-variant/30 max-w-[280px] truncate font-medium"
           >
+            <option value="espcam">
+              📡 ESP32-CAM AI-Thinker (OV3660 Wireless) · {camera.isEspOnline ? `Online (${camera.espLatency || '14ms'})` : 'Offline'}
+            </option>
             {camera.availableDevices?.length > 0 ? (
               camera.availableDevices.map((d, i) => (
                 <option key={d.deviceId || i} value={d.deviceId}>
@@ -419,6 +427,24 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
             <option value="sample">Clinical Walk Sample (KOA Dataset)</option>
             <option value="upload">Upload Video File (.mp4/.mov)</option>
           </select>
+
+          {/* ESP32-CAM Live Status Badge */}
+          <div
+            className={`px-2 py-1 rounded text-[11px] font-bold border flex items-center gap-1.5 transition select-none ${
+              camera.isEspOnline
+                ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
+                : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
+            }`}
+            title={
+              camera.isEspOnline
+                ? `ESP32-CAM detected at ${camera.espIp} (${camera.espLatency || '14ms'})`
+                : `ESP32-CAM not responding at ${camera.espIp} (Standby)`
+            }
+          >
+            <span className={`w-2 h-2 rounded-full ${camera.isEspOnline ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+            <span>ESP-CAM: {camera.isEspOnline ? `Online (${camera.espLatency || '14ms'})` : 'Offline'}</span>
+          </div>
+
           <input
             type="file"
             ref={fileInputRef}
@@ -429,18 +455,28 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
 
           {/* Camera On/Off Toggle Button */}
           <button
-            onClick={camera.isWebcamActive ? camera.stopCamera : () => camera.startCamera()}
+            onClick={
+              camera.sourceMode === 'espcam'
+                ? camera.isEspConnected
+                  ? camera.disconnectEspCam
+                  : () => camera.connectEspCam()
+                : camera.isWebcamActive
+                ? camera.stopCamera
+                : () => camera.startCamera()
+            }
             className={`px-sm py-1 rounded text-xs font-bold transition flex items-center gap-1 ${
-              camera.isWebcamActive
+              (camera.sourceMode === 'espcam' ? camera.isEspConnected : camera.isWebcamActive)
                 ? 'bg-error text-on-error hover:bg-error/90 shadow-sm'
                 : 'bg-primary text-on-primary hover:bg-primary-container shadow-sm'
             }`}
             type="button"
           >
             <span className="material-symbols-outlined text-[15px]">
-              {camera.isWebcamActive ? 'videocam_off' : 'videocam'}
+              {(camera.sourceMode === 'espcam' ? camera.isEspConnected : camera.isWebcamActive) ? 'videocam_off' : 'videocam'}
             </span>
-            {camera.isWebcamActive ? 'Disconnect Cam' : 'Enable Camera'}
+            {camera.sourceMode === 'espcam'
+              ? (camera.isEspConnected ? 'Disconnect ESP' : 'Connect ESP')
+              : (camera.isWebcamActive ? 'Disconnect Cam' : 'Enable Camera')}
           </button>
 
           {/* Battery Saver Mode Toggle */}
@@ -539,6 +575,119 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
         </div>
       )}
 
+      {/* ESP32-CAM Hardware Configuration & Flash Control Strip */}
+      {camera.sourceMode === 'espcam' && (
+        <div className="w-full bg-surface-container-lowest p-3 sm:p-4 rounded-xl shadow-xs border-2 border-primary/30 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 animate-fade-in">
+          {/* Left: Device Info & IP Input */}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary-container text-on-primary font-bold text-xs">
+                ESP
+              </span>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-on-surface">AI-Thinker ESP32-CAM (OV3660)</span>
+                  <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded font-data-mono text-[10px] font-bold ${
+                    camera.isEspConnected ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : 'bg-amber-500/15 text-amber-700'
+                  }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${camera.isEspConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`}></span>
+                    {camera.isEspConnected ? `Online (${camera.espLatency || '14ms'})` : 'Connecting...'}
+                  </span>
+                </div>
+                <span className="text-[11px] text-on-surface-variant font-data-mono">
+                  MJPEG Feed: {camera.espIp}:81/stream
+                </span>
+              </div>
+            </div>
+
+            {/* IP Config Input */}
+            <div className="flex items-center gap-1.5 bg-surface-container-low px-2 py-1 rounded-lg border border-outline-variant/30">
+              <span className="text-[11px] text-surface-dim font-data-mono">IP:</span>
+              <input
+                type="text"
+                value={camera.espIp}
+                onChange={(e) => camera.setEspIp(e.target.value)}
+                placeholder="192.168.1.105"
+                className="w-32 bg-transparent text-xs font-data-mono text-on-surface focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => camera.connectEspCam(camera.espIp)}
+                className="px-2 py-0.5 rounded bg-surface-container-high hover:bg-surface-container text-[11px] font-semibold text-on-surface transition cursor-pointer"
+                title="Reconnect to this IP address"
+              >
+                Connect
+              </button>
+            </div>
+          </div>
+
+          {/* Right: Hardware Controls (Flash, Resolution, VFlip, HMirror) */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* High-Power Flash LED Button */}
+            <button
+              type="button"
+              onClick={camera.toggleEspFlash}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm border cursor-pointer ${
+                camera.espFlash
+                  ? 'bg-amber-500 text-black border-amber-400 shadow-amber-500/30'
+                  : 'bg-surface-container-low text-on-surface hover:bg-surface-container border-outline-variant/40'
+              }`}
+              title="Toggle onboard GPIO 4 high-power Flash LED for low-light clinics"
+            >
+              <span className={`material-symbols-outlined text-[16px] ${camera.espFlash ? 'text-black fill-current' : 'text-amber-500'}`}>
+                {camera.espFlash ? 'light_mode' : 'flash_off'}
+              </span>
+              <span>{camera.espFlash ? 'FLASH ON' : 'FLASH OFF'}</span>
+            </button>
+
+            {/* Resolution Selector */}
+            <div className="flex items-center gap-1 bg-surface-container-low px-2 py-1 rounded-lg border border-outline-variant/30">
+              <span className="text-[11px] text-surface-dim">Res:</span>
+              <select
+                value={camera.espRes}
+                onChange={(e) => camera.setEspResolution(e.target.value)}
+                className="bg-transparent text-xs font-semibold text-on-surface focus:outline-none cursor-pointer"
+              >
+                <option value="QVGA">QVGA 320x240 (30+ FPS · Recommended)</option>
+                <option value="CIF">CIF 400x296 (25 FPS)</option>
+                <option value="VGA">VGA 640x480 (20 FPS)</option>
+                <option value="SVGA">SVGA 800x600 (15 FPS)</option>
+                <option value="UXGA">UXGA 1600x1200 (Still HQ)</option>
+              </select>
+            </div>
+
+            {/* Orientation Controls */}
+            <button
+              type="button"
+              onClick={camera.toggleEspVFlip}
+              className={`px-2 py-1 rounded-lg text-xs font-semibold transition flex items-center gap-1 border cursor-pointer ${
+                camera.espVFlip
+                  ? 'bg-primary-container text-on-primary-container border-primary/40'
+                  : 'bg-surface-container-low text-on-surface hover:bg-surface-container border-outline-variant/30'
+              }`}
+              title="Vertical Flip (useful when camera is inverted on tripod or gimbal)"
+            >
+              <span className="material-symbols-outlined text-[15px]">swap_vert</span>
+              <span>V-Flip</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={camera.toggleEspHMirror}
+              className={`px-2 py-1 rounded-lg text-xs font-semibold transition flex items-center gap-1 border cursor-pointer ${
+                camera.espHMirror
+                  ? 'bg-primary-container text-on-primary-container border-primary/40'
+                  : 'bg-surface-container-low text-on-surface hover:bg-surface-container border-outline-variant/30'
+              }`}
+              title="Horizontal Mirror"
+            >
+              <span className="material-symbols-outlined text-[15px]">swap_horiz</span>
+              <span>Mirror</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Primary Clinical HUD Terminal (16:9 Viewport) */}
       <div className="relative w-full rounded-2xl bg-black overflow-hidden shadow-2xl aspect-video min-h-[440px] max-h-[720px] flex flex-col justify-between p-md select-none text-surface-bright border border-white/15">
         {/* Layer 1: Real Webcam Live Video Feed */}
@@ -562,6 +711,21 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
           }}
           className="absolute inset-0 w-full h-full object-cover z-0 transition-opacity duration-300"
         />
+
+        {/* Layer 1.5: ESP32-CAM Direct MJPEG Stream View */}
+        {camera.sourceMode === 'espcam' && camera.isEspConnected && (
+          <img
+            src={camera.espStreamUrl}
+            alt="ESP32-CAM Live Feed"
+            style={{
+              opacity: camera.hudOpacity / 100
+            }}
+            className="absolute inset-0 w-full h-full object-cover z-0 transition-opacity duration-300 pointer-events-none"
+            onError={() => {
+              console.warn('Direct stream img failed, relying on canvas stream');
+            }}
+          />
+        )}
 
         {/* Layer 2: Sample Clinical Walk Video Element */}
         <video
@@ -669,6 +833,8 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
                 <span className="font-data-mono text-[12px] font-bold tracking-wider uppercase text-surface-bright">
                   {isRecording
                     ? `REC SESSION: 00:0${timerSeconds} / 00:08`
+                    : camera.sourceMode === 'espcam'
+                    ? `ESP32-CAM (OV3660) · ${camera.espRes} · ${camera.espLatency || '14ms'}`
                     : camera.isWebcamActive
                     ? 'OPTICAL CAM ACTIVE · LIVE 30FPS'
                     : camera.sourceMode === 'sample'
@@ -680,6 +846,13 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
                 <span className="px-1.5 py-0.5 rounded bg-white/10 font-data-mono text-[9px] text-surface-dim">
                   {videoResolution.width}x{videoResolution.height}
                 </span>
+                {camera.sourceMode === 'espcam' && (
+                  <span className={`px-1.5 py-0.5 rounded font-data-mono text-[9px] font-bold ${
+                    camera.espFlash ? 'bg-amber-500 text-black shadow-xs' : 'bg-white/10 text-surface-dim'
+                  }`}>
+                    FLASH {camera.espFlash ? 'ON' : 'OFF'}
+                  </span>
+                )}
               </div>
               <div className="hidden sm:flex items-center gap-1 px-xs py-1 rounded-lg bg-tertiary-container/30 backdrop-blur-md text-tertiary-fixed font-data-mono text-[11px] border border-white/10">
                 <span className="material-symbols-outlined text-[15px]">center_focus_strong</span>
@@ -907,7 +1080,7 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
             <button
               onClick={handleAnalyzeUploadedVideo}
               disabled={analyzing}
-              className="px-lg py-2.5 rounded-lg bg-tertiary hover:bg-tertiary-container text-on-tertiary font-label-md text-label-md font-bold shadow-md transition flex items-center gap-xs disabled:opacity-50"
+              className="px-lg py-2.5 rounded-lg bg-tertiary hover:bg-tertiary-container text-on-tertiary font-label-md text-label-md font-bold shadow-md transition flex items-center gap-xs disabled:opacity-50 cursor-pointer"
               type="button"
             >
               <span className={`material-symbols-outlined text-[20px] ${analyzing ? 'animate-spin' : ''}`}>
@@ -919,10 +1092,10 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
             <button
               onClick={isRecording ? () => setIsRecording(false) : handleStart8sTest}
               disabled={analyzing}
-              className={`px-lg py-2.5 rounded-lg font-label-md text-label-md font-bold shadow-md transition flex items-center gap-xs ${
+              className={`px-lg py-2.5 rounded-lg font-label-md text-label-md font-bold shadow-md transition flex items-center gap-xs cursor-pointer ${
                 isRecording
-                  ? 'bg-tertiary text-on-tertiary hover:bg-tertiary-container'
-                  : 'bg-error text-on-error hover:bg-error/90'
+                  ? 'bg-tertiary text-on-tertiary hover:bg-tertiary-container ring-4 ring-tertiary/30'
+                  : 'bg-error text-on-error hover:bg-error/90 ring-2 ring-error/20'
               }`}
               type="button"
               title="Click or press Spacebar to start/stop walking trial"
@@ -937,77 +1110,41 @@ export default function GaitHudView({ activePatient, onAnalysisComplete, onOpenT
             </button>
           )}
 
-          <button
-            onClick={handleLoadSampleVideo}
-            className="px-md py-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-xs font-semibold transition flex items-center gap-1.5 border border-outline-variant/30"
-            type="button"
-          >
-            <span className="material-symbols-outlined text-[18px] text-tertiary">play_circle</span>
-            Sample Walk Clip
-          </button>
-
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="px-md py-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-xs font-semibold transition flex items-center gap-1.5 border border-outline-variant/30"
-            type="button"
-          >
-            <span className="material-symbols-outlined text-[18px]">upload_file</span>
-            Upload Walk Video
-          </button>
-
-          {/* Direct X-Ray Upload Button in Gait Area */}
-          <input
-            type="file"
-            ref={xrayInputRef}
-            onChange={handleXrayUpload}
-            accept="image/png,image/jpeg,image/jpg"
-            className="hidden"
-          />
-          <button
-            onClick={() => xrayInputRef.current?.click()}
-            disabled={xrayLoading}
-            className={`px-md py-2.5 rounded-lg font-label-md text-xs font-bold transition flex items-center gap-2 shadow-xs active:scale-95 ${
-              xrayData
-                ? 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/40'
-                : 'bg-gradient-to-r from-primary/20 via-primary/10 to-tertiary-container/30 hover:from-primary/30 hover:to-tertiary-container/50 text-on-surface border-2 border-primary/50 hover:border-primary shadow-sm'
-            }`}
-            type="button"
-            title="Upload knee radiograph image to generate KL Grade and Grad-CAM attention heatmap"
-          >
-            <span className={`material-symbols-outlined text-[18px] ${xrayLoading ? 'animate-spin text-primary' : xrayData ? 'text-emerald-400' : 'text-primary'}`}>
-              {xrayLoading ? 'refresh' : 'radiology'}
-            </span>
-            <span>{xrayLoading ? 'Processing X-Ray...' : xrayData ? `X-Ray: KL ${xrayData.kl_grade} Loaded` : 'Upload Knee X-Ray'}</span>
-            {!xrayData && !xrayLoading && (
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-primary text-on-primary tracking-wide">
-                AI
+          {/* Quick ESP-CAM Flash LED Button during walk trial */}
+          {camera.sourceMode === 'espcam' && (
+            <button
+              onClick={camera.toggleEspFlash}
+              type="button"
+              className={`px-md py-2.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 border cursor-pointer ${
+                camera.espFlash
+                  ? 'bg-amber-500 text-black border-amber-400 shadow-md shadow-amber-500/20'
+                  : 'bg-surface-container hover:bg-surface-container-high text-on-surface border-outline-variant/30'
+              }`}
+              title="Toggle onboard GPIO 4 high-power Flash LED"
+            >
+              <span className={`material-symbols-outlined text-[18px] ${camera.espFlash ? 'text-black fill-current' : 'text-amber-500'}`}>
+                {camera.espFlash ? 'light_mode' : 'flash_off'}
               </span>
-            )}
-          </button>
-
-          <button
-            onClick={handleLoadSampleXray}
-            disabled={xrayLoading}
-            className="px-3 py-2.5 rounded-lg bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-md text-xs font-semibold border border-primary/30 hover:border-primary active:scale-95 transition flex items-center gap-1 shadow-xs"
-            type="button"
-            title="Instantly test Grad-CAM heatmap with a clinical knee radiograph"
-          >
-            <span className="material-symbols-outlined text-[16px] text-primary">science</span>
-            <span>Sample X-Ray</span>
-          </button>
+              <span>{camera.espFlash ? 'Flash LED: ON' : 'Flash LED: OFF'}</span>
+            </button>
+          )}
         </div>
 
-        <button
-          onClick={camera.sourceMode === 'upload' && camera.uploadedFile ? handleAnalyzeUploadedVideo : finishWalkingTest}
-          disabled={analyzing}
-          className="px-lg py-2.5 rounded-lg bg-tertiary-container hover:bg-tertiary text-on-tertiary font-label-md text-label-md font-bold shadow-md transition flex items-center gap-xs disabled:opacity-50"
-          type="button"
-        >
-          <span className={`material-symbols-outlined text-[18px] ${analyzing ? 'animate-spin' : ''}`}>
-            {analyzing ? 'refresh' : 'bolt'}
-          </span>
-          {analyzing ? 'Processing Gait AI...' : camera.sourceMode === 'upload' ? '⚡ Analyze Uploaded Video' : '⚡ Analyze Walking Trial'}
-        </button>
+        {/* Analyze / Finish button if recording has finished or in live trial */}
+        {!(camera.sourceMode === 'upload' && camera.uploadedFile) && (
+          <button
+            onClick={finishWalkingTest}
+            disabled={analyzing || isRecording}
+            className="px-lg py-2.5 rounded-lg bg-tertiary-container hover:bg-tertiary text-on-tertiary font-label-md text-label-md font-bold shadow-md transition flex items-center gap-xs disabled:opacity-50 cursor-pointer"
+            type="button"
+            title="Calculate kinematic features and generate joint impairment prediction"
+          >
+            <span className={`material-symbols-outlined text-[18px] ${analyzing ? 'animate-spin' : ''}`}>
+              {analyzing ? 'refresh' : 'bolt'}
+            </span>
+            {analyzing ? 'Processing Gait AI...' : '⚡ Analyze Walking Trial'}
+          </button>
+        )}
       </div>
 
       {/* Direct X-Ray Grad-CAM Assessment Card inside Gait HUD */}
